@@ -100,40 +100,42 @@
   align-items: center;
   gap: 40px;
   padding: 40px 20px;
-  max-width: 700px;
+  max-width: 800px;
   margin: auto;
 }
 
 .feature {
   position: relative;
   width: 100%;
-  max-width: 380px; /* Smaller image size */
-  border-radius: 16px;
+  max-width: 400px;        /* ~Play Store image width */
+  aspect-ratio: 16 / 9;     /* Keep landscape proportion */
+  border-radius: 12px;
   overflow: hidden;
   box-shadow: 0 6px 16px rgba(0, 0, 0, 0.1);
 }
 
 .feature img {
   width: 100%;
-  height: auto;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 12px;
   display: block;
-  border-radius: 16px;
 }
 
 .feature-text {
   position: absolute;
-  bottom: 16px;
-  left: 16px;
+  bottom: 12px;
+  left: 12px;
   background: rgba(255, 255, 255, 0.9);
-  padding: 12px;
-  border-radius: 10px;
-  max-width: 80%;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
+  padding: 10px 14px;
+  border-radius: 8px;
+  max-width: 85%;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .feature-text h3 {
   margin: 0 0 6px;
-  font-size: 16px;
+  font-size: 15px;
 }
 
 .feature-text p {
