@@ -93,6 +93,59 @@
     .legal p, .legal ul {
       margin-bottom: 1rem;
     }
+
+.features-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 40px;
+  padding: 60px 20px;
+  max-width: 1200px;
+  margin: auto;
+}
+
+.feature {
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
+}
+
+.feature img {
+  width: 100%;
+  height: auto;
+  display: block;
+  border-radius: 20px;
+}
+
+.feature-text {
+  position: absolute;
+  bottom: 20px;
+  left: 20px;
+  background: rgba(255, 255, 255, 0.92);
+  padding: 16px;
+  border-radius: 12px;
+  max-width: 80%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.feature-text.top-right {
+  bottom: auto;
+  top: 20px;
+  left: auto;
+  right: 20px;
+}
+
+.feature-text h3 {
+  margin: 0 0 8px;
+  font-size: 18px;
+}
+
+.feature-text p {
+  margin: 0;
+  font-size: 14px;
+  color: #555;
+}
+    
   </style>
 </head>
 <body>
