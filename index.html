@@ -94,25 +94,27 @@
       margin-bottom: 1rem;
     }
 
-.features-section {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 40px;
+.features-vertical {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 60px;
   padding: 60px 20px;
-  max-width: 1200px;
+  max-width: 800px;
   margin: auto;
 }
 
 .feature {
   position: relative;
-  overflow: hidden;
+  width: 100%;
+  max-width: 500px;
   border-radius: 20px;
+  overflow: hidden;
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.1);
 }
 
 .feature img {
   width: 100%;
-  height: auto;
   display: block;
   border-radius: 20px;
 }
@@ -124,19 +126,12 @@
   background: rgba(255, 255, 255, 0.92);
   padding: 16px;
   border-radius: 12px;
-  max-width: 80%;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-}
-
-.feature-text.top-right {
-  bottom: auto;
-  top: 20px;
-  left: auto;
-  right: 20px;
+  max-width: 85%;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .feature-text h3 {
-  margin: 0 0 8px;
+  margin: 0 0 6px;
   font-size: 18px;
 }
 
@@ -145,6 +140,7 @@
   font-size: 14px;
   color: #555;
 }
+
     
   </style>
 </head>
@@ -181,16 +177,25 @@
 
   <section class="features-section">
 
-    <div class="feature">
-    <img src="tr_sessionbrowse.jpg" alt="GPS tracking">
-    <div class="feature-text top-right">
+    <section class="features-vertical">
+  <div class="feature">
+    <img src="tr_sessionbrowse.jpg" alt="Report damage">
+    <div class="feature-text">
+      <h3>Quickly Report Damage</h3>
+      <p>Capture incidents in seconds and send them to the system.</p>
+    </div>
+  </div>
+
+  <div class="feature">
+    <img src="tr_sessionview.jpb" alt="GPS tracking">
+    <div class="feature-text">
       <h3>Precise GPS Location</h3>
       <p>All reports are tagged with exact map location.</p>
     </div>
   </div>
 
   <div class="feature">
-    <img src="tr_sessionview.jpg" alt="Attach photo">
+    <img src="tr_sessionview_fullscreen_hybrid.jpg" alt="Attach photo">
     <div class="feature-text">
       <h3>Attach Photo Evidence</h3>
       <p>Upload pictures directly from your phone to each report.</p>
@@ -198,38 +203,12 @@
   </div>
 
   <div class="feature">
-    <img src="tr_navigatetotrack.jpg" alt="Report history">
-    <div class="feature-text top-right">
-      <h3>Track Report History</h3>
-      <p>Easily browse and manage past issues and their status.</p>
-    </div>
-  </div>
-
-
-  <div class="feature">
     <img src="tr_sessionspeed_fullscreen.jpg" alt="Report history">
-    <div class="feature-text top-right">
+    <div class="feature-text">
       <h3>Track Report History</h3>
       <p>Easily browse and manage past issues and their status.</p>
     </div>
   </div>
-
-    <div class="feature">
-    <img src="tr_photogallery.jpg" alt="Report history">
-    <div class="feature-text top-right">
-      <h3>Track Report History</h3>
-      <p>Easily browse and manage past issues and their status.</p>
-    </div>
-  </div>
-
-        <div class="feature">
-    <img src="tr_sessionview_playback.jpg" alt="Report history">
-    <div class="feature-text top-right">
-      <h3>Track Report History</h3>
-      <p>Easily browse and manage past issues and their status.</p>
-    </div>
-  </div>
-
     
 </section>
   
