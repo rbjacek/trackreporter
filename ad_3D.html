@@ -16,8 +16,8 @@
     }
 
     .cube-container {
-      width: 300px;
-      height: 300px;
+      width: 400px;
+      height: 400px;
       position: relative;
       transform-style: preserve-3d;
       animation: rotateFaces 12s infinite linear;
@@ -25,20 +25,20 @@
 
     .face {
       position: absolute;
-      width: 300px;
-      height: 300px;
+      width: 400px;
+      height: 400px;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       border: 1px solid #333;
     }    
 
-    .front  { transform: translateZ(100px); background-image: url('tr_sessionview_square.jpg'); }
-    .back   { transform: rotateY(180deg) translateZ(150px); background-image: url('tr_sessionbrowse_square.jpg'); }
-    .right  { transform: rotateY(90deg) translateZ(150px); background-image: url('tr_sessionview_playback_square.jpg'); }
-    .left   { transform: rotateY(-90deg) translateZ(150px); background-image: url('tr_sessionplayback_normal_square.jpg'); }
-    .top    { transform: rotateX(90deg) translateZ(150px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
-    .bottom { transform: rotateX(-90deg) translateZ(150px); background-image: url('tr_photogallery_square.jpg'); }
+    .front  { transform: translateZ(200px); background-image: url('tr_sessionview_square.jpg'); }
+    .back   { transform: rotateY(180deg) translateZ(200px); background-image: url('tr_sessionbrowse_square.jpg'); }
+    .right  { transform: rotateY(90deg) translateZ(200px); background-image: url('tr_sessionview_playback_square.jpg'); }
+    .left   { transform: rotateY(-90deg) translateZ(200px); background-image: url('tr_sessionplayback_normal_square.jpg'); }
+    .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
+    .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
 
     @keyframes rotateFaces {
       0%    { transform: rotateY(0deg) rotateX(0deg); }
