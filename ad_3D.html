@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>Rotating Cube - Each Face to Front</title>
   <style>
+
     body {
       margin: 0;
       height: 100vh;
@@ -26,15 +27,11 @@
       position: absolute;
       width: 200px;
       height: 200px;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
-      font-size: 24px;
-      font-weight: bold;
-      border: 1px solid #888;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
+      background-size: cover;
+      background-position: center;
+      background-repeat: no-repeat;
+      border: 1px solid #333;
+    }    
 
     .front  { transform: translateZ(100px); background-image: url('tr_sessionview_square.jpg'); }
     .back   { transform: rotateY(180deg) translateZ(100px); background-image: url('tr_sessionbrowse_square.jpg'); }
