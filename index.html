@@ -15,6 +15,17 @@
       perspective: 1000px;
     }
 
+    a.fullscreen-link {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      text-decoration: none;
+      z-index: 9999;
+    }
+
     .cube-container {
       width: 400px;
       height: 400px;
@@ -115,5 +126,8 @@
   <div class="scrolling-banner">
   <div class="scroll-text">Track Reporter app -> Install now for free !</div>
 </div>
+
+  <a href="https://example.com" class="fullscreen-link" target="_blank" title="Click anywhere to go to site"></a>
+
   
 </html>
