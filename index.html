@@ -51,15 +51,14 @@
     .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
     .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
 
-    @keyframes rotateFaces {
-      0%    { transform: rotateY(0deg) rotateX(0deg); }
-      16.66%{ transform: rotateY(90deg) rotateX(0deg); }
-      33.33%{ transform: rotateY(180deg) rotateX(0deg); }
-      50%   { transform: rotateY(270deg) rotateX(0deg); }
-      66.66%{ transform: rotateY(360deg) rotateX(0deg); }
-      83.33%{ transform: rotateY(450deg) rotateX(0deg); }
-      100%  { transform: rotateY(540deg) rotateX(0deg); }
-    }
+@keyframes showWalls {
+  0%   { transform: rotateX(0deg) rotateY(0deg); }        /* Front */
+  20%  { transform: rotateX(0deg) rotateY(90deg); }       /* Right */
+  40%  { transform: rotateX(0deg) rotateY(180deg); }      /* Back */
+  60%  { transform: rotateX(0deg) rotateY(270deg); }      /* Left */
+  80%  { transform: rotateX(90deg) rotateY(270deg); }     /* Top */
+  100% { transform: rotateX(-90deg) rotateY(270deg); }    /* Bottom */
+}
 
 .scrolling-banner {
   width: 100%;
