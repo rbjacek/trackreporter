@@ -141,7 +141,24 @@
   text-shadow: 0 0 4px rgba(0,0,0,0.4);
 }    
 
+/* Google Play button */
+.google-play-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
 
+.google-play-btn img {
+  height: 50px;
+  transition: transform 0.3s ease;
+}
+
+.google-play-btn img:hover {
+  transform: scale(1.05);
+}
+    
 
     
     
@@ -157,6 +174,11 @@
   <img src="logo.png" alt="Track Reporter Logo" class="logo">
   <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
   <div class="website">www.trackreporter.app</div>
+
+        <a href="https://play.google.com/store/apps/details?id=com.trackreporter" class="google-play-btn" target="_blank" title="Pobierz w Google Play">
+    <img src="google-play-badge.png" alt="Pobierz z Google Play">
+  </a>
+      
 </div>
     
     <div class="face front"></div>
