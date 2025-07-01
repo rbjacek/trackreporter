@@ -51,13 +51,19 @@
     .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
     .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
 
-@keyframes rotateFaces {
+        @keyframes rotateFaces {
+      0%   { transform: rotateY(0deg); }
+      100% { transform: rotateY(360deg); }
+    }
+<!--
+    @keyframes rotateFaces {
   0%   { transform: rotateX(0deg) rotateY(0deg); }        /* Front */
   25%  { transform: rotateX(0deg) rotateY(90deg); }       /* Right */
   50%  { transform: rotateX(0deg) rotateY(180deg); }      /* Back */
   75%  { transform: rotateX(0deg) rotateY(270deg); }      /* Left */
   100%  { transform: rotateX(0deg) rotateY(360deg); }      /* Front */
 }
+-->
 
 .scrolling-banner {
   width: 100%;
