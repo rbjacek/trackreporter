@@ -29,7 +29,7 @@
 
     .cube-container {
       width: 400px;
-      height: 400px;
+      height: 888px;
       position: relative;
       transform-style: preserve-3d;
       animation: rotateFaces 20s infinite linear;
@@ -38,17 +38,17 @@
     .face {
       position: absolute;
       width: 400px;
-      height: 400px;
+      height: 888px;
       background-size: cover;
       background-position: center;
       background-repeat: no-repeat;
       border: 1px solid #333;
     }    
 
-    .front  { transform: translateZ(200px); background-image: url('tr_sessionview_square.jpg'); }
-    .back   { transform: rotateY(180deg) translateZ(200px); background-image: url('tr_sessionbrowse_square.jpg'); }
-    .right  { transform: rotateY(90deg) translateZ(200px); background-image: url('tr_sessionview_playback_square.jpg'); }
-    .left   { transform: rotateY(-90deg) translateZ(200px); background-image: url('tr_sessionplayback_normal_square.jpg'); }
+    .front  { transform: translateZ(200px); background-image: url('tr_sessionview.jpg'); }
+    .back   { transform: rotateY(180deg) translateZ(200px); background-image: url('tr_sessionplayback_normal.jpg'); }
+    .right  { transform: rotateY(90deg) translateZ(200px); background-image: url('tr_photogallery.jpg'); }
+    .left   { transform: rotateY(-90deg) translateZ(200px); background-image: url('tr_sessionbrowse2.jpg'); }
     .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
     .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
 
