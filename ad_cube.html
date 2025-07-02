@@ -2,125 +2,72 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>10 Images on Cube</title>
+  <title>10 Images RotateY</title>
   <style>
     body {
       margin: 0;
-      background: #000;
-      height: 100vh;
+      background: #111;
       display: flex;
       justify-content: center;
       align-items: center;
+      height: 100vh;
       perspective: 1000px;
     }
 
-    .cube {
-      width: 200px;
-      height: 200px;
+    .scene {
+      width: 300px;
+      height: 300px;
       position: relative;
       transform-style: preserve-3d;
-      animation: spin 20s infinite linear;
+      transform: rotateY(0deg);
+      transition: transform 1s;
     }
 
     .face {
       position: absolute;
-      width: 200px;
-      height: 200px;
-      transform-style: preserve-3d;
-    }
-
-    .flip {
-      width: 100%;
-      height: 100%;
-      position: relative;
-      transform-style: preserve-3d;
-      animation: flip 4s infinite linear;
-    }
-
-    .flip img {
-      position: absolute;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
+      width: 300px;
+      height: 300px;
+      background-size: cover;
+      background-position: center;
       backface-visibility: hidden;
     }
 
-    .flip .back {
-      transform: rotateY(180deg);
-    }
-
-    /* Cube face positions */
-    .front  { transform: rotateY(0deg) translateZ(100px); }
-    .back   { transform: rotateY(180deg) translateZ(100px); }
-    .right  { transform: rotateY(90deg) translateZ(100px); }
-    .left   { transform: rotateY(-90deg) translateZ(100px); }
-    .top    { transform: rotateX(90deg) translateZ(100px); }
-    .bottom { transform: rotateX(-90deg) translateZ(100px); }
-
-    @keyframes spin {
-      0%   { transform: rotateY(0deg); }
-      10%  { transform: rotateY(90deg); }
-      20%  { transform: rotateY(180deg); }
-      30%  { transform: rotateY(270deg); }
-      40%  { transform: rotateY(360deg); }
-      50%  { transform: rotateY(450deg); }
-      60%  { transform: rotateY(540deg); }
-      70%  { transform: rotateY(630deg); }
-      80%  { transform: rotateY(720deg); }
-      90%  { transform: rotateY(810deg); }
-      100% { transform: rotateY(900deg); }
-    }
-
-    @keyframes flip {
-      0%, 49% {
-        transform: rotateY(0deg);
-      }
-      50%, 100% {
-        transform: rotateY(180deg);
-      }
-    }
+    /* Place 10 faces around a circle */
+    .face:nth-child(1)  { transform: rotateY(0deg)    translateZ(500px); }
+    .face:nth-child(2)  { transform: rotateY(36deg)   translateZ(500px); }
+    .face:nth-child(3)  { transform: rotateY(72deg)   translateZ(500px); }
+    .face:nth-child(4)  { transform: rotateY(108deg)  translateZ(500px); }
+    .face:nth-child(5)  { transform: rotateY(144deg)  translateZ(500px); }
+    .face:nth-child(6)  { transform: rotateY(180deg)  translateZ(500px); }
+    .face:nth-child(7)  { transform: rotateY(216deg)  translateZ(500px); }
+    .face:nth-child(8)  { transform: rotateY(252deg)  translateZ(500px); }
+    .face:nth-child(9)  { transform: rotateY(288deg)  translateZ(500px); }
+    .face:nth-child(10) { transform: rotateY(324deg)  translateZ(500px); }
   </style>
 </head>
 <body>
 
-<div class="cube">
-  <div class="face front">
-    <div class="flip">
-      <img src="tr_sessionbrowse2.jpg" class="front">
-      <img src="tr_sessioncreate.jpg" class="back">
-    </div>
-  </div>
-  <div class="face back">
-    <div class="flip">
-      <img src="tr_sessionplayback_normal.jpg" class="front">
-      <img src="tr_sessionview_fullscreen_normal.jpg" class="back">
-    </div>
-  </div>
-  <div class="face right">
-    <div class="flip">
-      <img src="tr_photogallery.jpg" class="front">
-      <img src="tr_navigatetotrack.jpg" class="back">
-    </div>
-  </div>
-  <div class="face left">
-    <div class="flip">
-      <img src="tr_sessionspeed_fullscreen.jpg" class="front">
-      <img src="tr_sessionview_fullscreen_hybrid_photos.jpg" class="back">
-    </div>
-  </div>
-  <div class="face top">
-    <div class="flip">
-      <img src="tr_sessionview_fullscreen_hybrid_nophotos.jpg" class="front">
-      <img src="tr_sessionview_fullscreen_hybrid_phtos.jpg" class="back">
-    </div>
-  </div>
-  <div class="face bottom">
-    <div class="flip">
-      <img src="tr_sessionbrowse2.jpg" class="front">
-      <img src="tr_sessioncreate.jpg" class="back">
-    </div>
-  </div>
+<div class="scene" id="carousel">
+  <div class="face" style="background-image: url('tr_sessionbrowse2.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview_fullscreen_hybrid.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview_fullscreen_normal.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview_fullscreen_normal.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionspeed_fullscreen.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessioncreate.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview_fullscreen_hybrid_nophotos.jpg')"></div>
+  <div class="face" style="background-image: url('tr_sessionview_fullscreen_hybrid_photos2.jpg')"></div>
+  <div class="face" style="background-image: url('tr_photogallery.jpg')"></div>
 </div>
+
+<script>
+  let angle = 0;
+  const carousel = document.getElementById('carousel');
+  document.body.addEventListener('click', () => {
+    angle += 36;
+    carousel.style.transform = `rotateY(-${angle}deg)`;
+  });
+</script>
 
 </body>
 </html>
