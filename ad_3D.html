@@ -1,82 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <title>Track Reporter application</title>
+  <meta charset="UTF-8">
+  <title>Track Reporter application screen samples</title>
   <style>
-    /* Ogólne resetowanie */
-    * {
-      box-sizing: border-box;
-    }
 
+    @media (max-width: 600px) {
+  .cube-container, .face {
+    width: 90vw;
+    height: 70vh;
+  }
+}
+
+    @media (min-width: 768px) {
+  .scrolling-banner {
+    font-size: 1.2em;
+  }
+}
+    
+    
     body {
       margin: 0;
-      padding-bottom: 40px; /* miejsce na banner */
+      height: 100vh;
       background: #111;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       perspective: 1000px;
       position: relative;
+      padding-bottom: 60px;
     }
 
-    .branding {
+    a.fullscreen-link {
+      display: block;
       position: absolute;
       top: 0;
       left: 0;
       width: 100%;
-      height: 150px; /* ograniczenie wysokości */
-      z-index: 10001;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
-    }
-
-    .branding .logo {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      height: 100px;
-      width: auto;
-    }
-
-    .branding .slogan {
-      position: absolute;
-      top: 30px;
-      left: 50%;
-      transform: translateX(-50%);
-      font-size: 2em;
-      font-weight: bold;
-      text-shadow: 0 0 6px rgba(0,0,0,0.6);
-    }
-
-    .branding .website {
-      position: absolute;
-      right: 20px;
-      bottom: 20px;
-      font-size: 1.2em;
-      opacity: 0.8;
-      text-shadow: 0 0 4px rgba(0,0,0,0.4);
-    }
-
-    .google-play-btn {
-      position: absolute;
-      left: 50%;
-      bottom: 20px;
-      transform: translateX(-50%);
-      pointer-events: auto;
-    }
-
-    .google-play-btn img {
-      height: 50px;
-      transition: transform 0.3s ease;
-    }
-
-    .google-play-btn img:hover {
-      transform: scale(1.05);
-    }
-
-    .main-content {
-      display: flex;
-      justify-content: center;
-      margin-top: 160px; /* poniżej branding */
-      width: 100%;
+      height: 100%;
+      text-decoration: none;
+      z-index: 99999;
     }
 
     .cube-container {
@@ -96,135 +59,164 @@
       background-position: center;
       background-repeat: no-repeat;
       border: 1px solid #333;
-    }
+    }    
 
     .front  { transform: translateZ(150px); background-image: url('tr_sessionview.jpg'); }
     .back   { transform: rotateY(180deg) translateZ(150px); background-image: url('tr_sessionplayback_normal.jpg'); }
     .right  { transform: rotateY(90deg) translateZ(150px); background-image: url('tr_photogallery.jpg'); }
     .left   { transform: rotateY(-90deg) translateZ(150px); background-image: url('tr_sessionbrowse2.jpg'); }
+    /*
+    .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
+    .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
+    */
 
-    @keyframes rotateFaces {
+        @keyframes rotateFaces {
       0%   { transform: rotateY(0deg); }
       100% { transform: rotateY(360deg); }
     }
 
-    .scrolling-banner {
-      width: 100%;
-      overflow: hidden;
-      white-space: nowrap;
-      background: #000;
-      padding: 0.5em 0;
-      position: fixed;
-      bottom: 0;
-      font-family: "Segoe UI", "Roboto", sans-serif;
-      font-size: 2.8vw;
-      border-top: 1px solid #fff;
-      z-index: 999;
-      text-align: center;
-    }
 
-    .scroll-text {
-      display: inline-block;
-      padding-left: 100%;
-      animation: scrollText 12s linear infinite, colorFlow 6s linear infinite;
-      background: linear-gradient(
-        90deg,
-        #ff0000,
-        #ff9900,
-        #ffff00,
-        #00ff00,
-        #00ccff,
-        #9900ff,
-        #ff0000
-      );
-      background-size: 300%;
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-    }
+.scrolling-banner {
+  width: 100%;
+  overflow: hidden;
+  white-space: nowrap;
+  background: #000;
+  padding: 0.5em 0; /* MNIEJSZY padding = niższy banner */
+  position: fixed;  /* przyklejony do dołu */
+  bottom: 0;
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  font-size: 2.8vw;  /* MNIEJSZY rozmiar tekstu */
+  border-top: 1px solid #fff; /* cieńszy pasek */
+  z-index: 999;
+  text-align: center;
+}
 
-    @keyframes scrollText {
-      0%   { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
-    }
+.scroll-text {
+  display: inline-block;
+  padding-left: 100%;
+  animation: scrollText 12s linear infinite, colorFlow 6s linear infinite;
+  background: linear-gradient(
+    90deg,
+    #ff0000,
+    #ff9900,
+    #ffff00,
+    #00ff00,
+    #00ccff,
+    #9900ff,
+    #ff0000
+  );
+  background-size: 300%;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+}
 
-    @keyframes colorFlow {
-      0%   { background-position: 0%; }
-      100% { background-position: 300%; }
-    }
+@keyframes scrollText {
+  0%   { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
 
-    /* Responsywność */
-    @media (max-width: 600px) {
-      .cube-container, .face {
-        width: 95vw;
-        height: 70vh;
-      }
+@keyframes colorFlow {
+  0%   { background-position: 0%; }
+  100% { background-position: 300%; }
+}
 
-      .front  { transform: translateZ(47.5vw); }
-      .back   { transform: rotateY(180deg) translateZ(47.5vw); }
-      .right  { transform: rotateY(90deg) translateZ(47.5vw); }
-      .left   { transform: rotateY(-90deg) translateZ(47.5vw); }
+.branding {
+ position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 10001;
+  font-family: 'Segoe UI', sans-serif;
+  color: #fff;
+}
 
-      .branding {
-        height: 120px;
-      }
+.branding .logo {
+  position: absolute;
+  top: 20px;
+  left: 20px;
+  height: 50px;
+  width: auto;
+  background: red; 
+}
 
-      .branding .logo {
-        height: 60px;
-      }
+.branding .slogan {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1.5em;
+  font-weight: bold;
+  text-shadow: 0 0 6px rgba(0,0,0,0.6);
+}
 
-      .branding .slogan {
-        font-size: 1.2em;
-        top: 20px;
-      }
+.branding .website {
+  position: absolute;
+  right: 20px;
+  bottom: 20px;
+  font-size: 1em;
+  opacity: 0.8;
+  text-shadow: 0 0 4px rgba(0,0,0,0.4);
+}    
 
-      .branding .website {
-        font-size: 1em;
-      }
+/* Google Play button */
+.google-play-btn {
+  position: absolute;
+  left: 50%;
+  bottom: 20px;
+  transform: translateX(-50%);
+  pointer-events: auto;
+}
 
-      .main-content {
-        margin-top: 130px;
-      }
+.google-play-btn img {
+  height: 50px;
+  transition: transform 0.3s ease;
+}
 
-      .scrolling-banner {
-        font-size: 3.2vw;
-      }
-    }
+.google-play-btn img:hover {
+  transform: scale(1.05);
+}
+    
+
+    
+    
   </style>
 </head>
+  
+
 <body>
 
-  <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
-     class="fullscreen-link"
-     target="_blank"
-     rel="noopener noreferrer"
-     title="Track Reporter in Google Play Store"></a>
+<a href="https://play.google.com/store/apps/details?id=com.trackreporter" class="fullscreen-link" target="_blank" title="Track Reporter in Google Play Store"></a>
+   
+<div class="branding">
+  <img src="trackreporter1024x1024-black.png" alt="Track Reporter Logo" class="logo">
+  <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
+  <div class="website">www.trackreporter.com</div>
 
-  <div class="branding">
-    <img src="trackreporter1024x1024-black.png" alt="Track Reporter Logo" class="logo">
-    <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
-    <div class="website">www.trackreporter.com</div>
-    <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
-       class="google-play-btn"
-       target="_blank"
-       rel="noopener noreferrer"
-       title="Pobierz w Google Play">
-      <img src="google-play-badge.png" alt="Pobierz z Google Play">
-    </a>
-  </div>
-
-  <div class="main-content">
-    <div class="cube-container">
-      <div class="face front"></div>
-      <div class="face back"></div>
-      <div class="face right"></div>
-      <div class="face left"></div>
-    </div>
+        <a href="https://play.google.com/store/apps/details?id=com.trackreporter" class="google-play-btn" target="_blank" title="Pobierz w Google Play">
+    <img src="google-play-badge.png" alt="Pobierz z Google Play">
+  </a>
+      
+</div>
+  
+  <div class="cube-container">  
+    <div class="face front"></div>
+    <div class="face back"></div>
+    <div class="face right"></div>
+    <div class="face left"></div>
+    <!--
+    <div class="face top"></div>
+    <div class="face bottom"></div>
+    -->
   </div>
 
   <div class="scrolling-banner">
-    <div class="scroll-text">Track Reporter Android application → Click to install now for free!</div>
-  </div>
-
+  <div class="scroll-text">Track Reporter Android application -> Click to install now for free !</div>
+</div>
+  
 </body>
+
+
+  
 </html>
