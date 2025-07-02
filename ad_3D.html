@@ -11,6 +11,13 @@
     height: 70vh;
   }
 }
+
+    @media (min-width: 768px) {
+  .scrolling-banner {
+    font-size: 1.2em;
+  }
+}
+    
     
     body {
       margin: 0;
@@ -74,12 +81,12 @@
   overflow: hidden;
   white-space: nowrap;
   background: #000;
-  padding: 1em 0;
-  position: fixed; /* zamiast absolute */
+  padding: 0.5em 0; /* MNIEJSZY padding = niższy banner */
+  position: fixed;  /* przyklejony do dołu */
   bottom: 0;
-  font-family: sans-serif;
-  font-size: 4vw;  /* responsive text size */
-  border-top: 2px solid #fff;
+  font-family: "Segoe UI", "Roboto", sans-serif;
+  font-size: 2.8vw;  /* MNIEJSZY rozmiar tekstu */
+  border-top: 1px solid #fff; /* cieńszy pasek */
   z-index: 999;
   text-align: center;
 }
