@@ -14,6 +14,8 @@
       perspective: 1000px;
     }
 
+    
+
     .scene {
       width: 300px;
       height: 300px;
@@ -43,6 +45,20 @@
     .face:nth-child(8)  { transform: rotateY(252deg)  translateZ(500px); }
     .face:nth-child(9)  { transform: rotateY(288deg)  translateZ(500px); }
     .face:nth-child(10) { transform: rotateY(324deg)  translateZ(500px); }
+
+@keyframes autoRotate {
+  from {
+    transform: rotateY(0deg);
+  }
+  to {
+    transform: rotateY(-360deg);
+  }
+}
+
+.scene {
+  animation: autoRotate 20s linear infinite;
+}
+    
   </style>
 </head>
 <body>
@@ -60,6 +76,7 @@
   <div class="face" style="background-image: url('tr_photogallery.jpg')"></div>
 </div>
 
+<!--  
 <script>
   let angle = 0;
   const carousel = document.getElementById('carousel');
@@ -68,6 +85,7 @@
     carousel.style.transform = `rotateY(-${angle}deg)`;
   });
 </script>
+  -->
 
 </body>
 </html>
