@@ -5,6 +5,13 @@
   <title>Track Reporter application screen samples</title>
   <style>
 
+    @media (max-width: 600px) {
+  .cube-container, .face {
+    width: 90vw;
+    height: 70vh;
+  }
+}
+    
     body {
       margin: 0;
       height: 100vh;
@@ -49,10 +56,10 @@
     .back   { transform: rotateY(180deg) translateZ(200px); background-image: url('tr_sessionplayback_normal.jpg'); }
     .right  { transform: rotateY(90deg) translateZ(200px); background-image: url('tr_photogallery.jpg'); }
     .left   { transform: rotateY(-90deg) translateZ(200px); background-image: url('tr_sessionbrowse2.jpg'); }
-    <!--
+    /*
     .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
     .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
-    -->
+    */
 
         @keyframes rotateFaces {
       0%   { transform: rotateY(0deg); }
@@ -194,10 +201,13 @@
     <div class="face bottom"></div>
     -->
   </div>
-</body>
 
   <div class="scrolling-banner">
   <div class="scroll-text">Track Reporter Android application -> Click to install now for free !</div>
 </div>
+  
+</body>
+
+
   
 </html>
