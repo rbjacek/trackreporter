@@ -33,6 +33,10 @@
       backface-visibility: hidden;
     }
 
+     .paused {
+      animation-play-state: paused !important;
+    }
+
     /* Place 10 faces around a circle */
     .face:nth-child(1)  { transform: rotateY(0deg)    translateZ(480px); }
     .face:nth-child(2)  { transform: rotateY(36deg)   translateZ(480px); }
@@ -75,16 +79,14 @@
   <div class="face" style="background-image: url('tr_photogallery.jpg')"></div>
 </div>
 
-<!--  
 <script>
-  let angle = 0;
   const carousel = document.getElementById('carousel');
+
   document.body.addEventListener('click', () => {
-    angle += 36;
-    carousel.style.transform = `rotateY(-${angle}deg)`;
+    carousel.classList.toggle('paused');
   });
 </script>
-  -->
+  
 
 </body>
 </html>
