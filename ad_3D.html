@@ -7,17 +7,23 @@
    
     
     body {
-      margin: 0;
       height: 100vh;
-      background: #111;
       display: flex;
       justify-content: center;
-      /*align-items: center;*/
       align-items: flex-start;
+      margin: 0;
+      padding-bottom: 40px; /* dla bannera */
+      background: #111;
+      height: 100vh;
       perspective: 1000px;
       position: relative;
-      padding-bottom: 60px;
     }
+
+.main-content {
+  display: flex;
+  justify-content: center;
+  margin-top: 120px; /* przesunięcie pod branding */
+}    
 
     a.fullscreen-link {
       display: block;
@@ -187,7 +193,8 @@
   </a>
       
 </div>
-  
+
+<div class="main-content">  
   <div class="cube-container">  
     <div class="face front"></div>
     <div class="face back"></div>
@@ -198,6 +205,7 @@
     <div class="face bottom"></div>
     -->
   </div>
+</div>  
 
   <div class="scrolling-banner">
   <div class="scroll-text">Track Reporter Android application -> Click to install now for free !</div>
