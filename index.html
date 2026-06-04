@@ -2,26 +2,18 @@
 <html lang="en">
 <head>
   <!-- Google tag -->
+<!-- Google tag (gtag.js) --> 
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
-  <script>
-    window.dataLayer = window.dataLayer || [];
-    function gtag(){dataLayer.push(arguments);}
-    gtag('js', new Date());
-    gtag('config', 'AW-17236374089');
+  <script> window.dataLayer = window.dataLayer || []; 
+    function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'AW-17236374089'); 
+  </script> 
 
+  <script> 
     function gtag_report_conversion(url) {
-      gtag('event', 'conversion', {
-        'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA',
-        'value': 1.0,
-        'currency': 'PLN'
-      });
-
-      setTimeout(function() {
-        window.open(url, '_blank');
-      }, 300);
-
-      return false;
-    }
+      var callback = function () { if (typeof(url) != 'undefined') { window.location = url; } }; 
+      gtag('event', 'conversion', { 'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA', 'value': 1.0, 'currency': 'PLN', 'event_callback': callback }); 
+      return false; 
+    } 
   </script>
 
   <meta charset="UTF-8">
@@ -225,7 +217,7 @@
   <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
      class="fullscreen-link"
      title="Track Reporter in Google Play Store"
-     onclick="return gtag_report_conversion(this.href);"></a>
+     onclick="return gtag_report_conversion('https://trackreporter.com/index.html');"></a>
 
   <div class="branding">
     <img src="trackreporter1024x1024-transparent.png" alt="Track Reporter Logo" class="logo">
@@ -235,7 +227,7 @@
     <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
        class="google-play-btn"
        title="Get it on Google Play"
-       onclick="return gtag_report_conversion(this.href);">
+       onclick="return gtag_report_conversion('https://trackreporter.com/index.html');">
       <img src="google-play-badge.png" alt="Get it on Google Play">
     </a>
   </div>
