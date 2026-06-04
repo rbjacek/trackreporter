@@ -1,74 +1,50 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
-  
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){dataLayer.push(arguments);}
-  gtag('js', new Date());
-  gtag('config', 'AW-17236374089');
-</script>
-  
-<script>
-function gtag_report_conversion(url) {
-  var callback = function () {
-    if (typeof(url) != 'undefined') {
-      window.location = url;
+  <!-- Google tag -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-17236374089');
+
+    function gtag_report_conversion(url) {
+      gtag('event', 'conversion', {
+        'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA',
+        'value': 1.0,
+        'currency': 'PLN'
+      });
+
+      setTimeout(function() {
+        window.open(url, '_blank');
+      }, 300);
+
+      return false;
     }
-  };
-  gtag('event', 'conversion', {
-      'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA',
-      'value': 1.0,
-      'currency': 'PLN',
-      'event_callback': callback
-  });
-  return false;
-}
-</script>
+  </script>
 
-
-
-<!-- SEO Meta Tags -->
-  <meta name="description" content="Track Reporter - Track GPS routes with photos. Replay animation with speed chart, search & favorite trips." />
-  <meta name="keywords" content="step counter, www.trackreporter.com, marketing, Track Reporter, 3D building view, CSV, business solution, email report, encrypted database, end-to-end reporting solution, online, standalone application, GPS, activity, activity reporting, chart, madeinpoland, map, playback, route, speed, sport, steps, tracker, training, travel, work, work reporting, 3D route animation" />
-  <meta name="author" content="Track Reporter project" />
-
-  <!-- Social Sharing Meta (Open Graph for Facebook, LinkedIn, etc.) -->
-  <meta property="og:title" content="Track Reporter" />
-  <meta property="og:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips." />
-  <meta property="og:image" content="https://trackreporter.com/trackreporter1024x1024.png" />
-  <meta property="og:url" content="https://trackreporter.com/" />
-  <meta property="og:type" content="website" />
-  <meta property="fb:app_id" content="712593768125312" />
-
-  <!-- Twitter Card -->
-  <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Track Reporter" />
-  <meta name="twitter:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips." />
-  <meta name="twitter:image" content="https://trackreporter.com/trackreporter1024x1024.png" />
-  
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  
   <meta charset="UTF-8">
-  <title>Track Reporter - Track GPS routes with photos. Replay animation with speed chart, search & favorite trips.</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <meta name="description" content="Track Reporter - Track GPS routes with photos. Replay animation with speed chart, search & favorite trips.">
+  <meta name="keywords" content="Track Reporter, GPS, route, tracker, report, photos, work reporting, activity reporting, map, playback, speed chart">
+  <meta name="author" content="Track Reporter project">
+
+  <meta property="og:title" content="Track Reporter">
+  <meta property="og:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips.">
+  <meta property="og:image" content="https://trackreporter.com/trackreporter1024x1024.png">
+  <meta property="og:url" content="https://trackreporter.com/">
+  <meta property="og:type" content="website">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Track Reporter">
+  <meta name="twitter:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips.">
+  <meta name="twitter:image" content="https://trackreporter.com/trackreporter1024x1024.png">
+
+  <title>Track Reporter - Track GPS routes with photos</title>
+
   <style>
-
-    @media (max-width: 600px) {
-  .cube-container, .face {
-    width: 90vw;
-    height: 70vh;
-  }
-}
-
-    @media (min-width: 768px) {
-  .scrolling-banner {
-    font-size: 1.2em;
-  }
-}
-    
-    
     body {
       margin: 0;
       height: 100vh;
@@ -79,15 +55,13 @@ function gtag_report_conversion(url) {
       perspective: 1000px;
       position: relative;
       padding-bottom: 60px;
+      overflow: hidden;
     }
 
-    a.fullscreen-link {
+    .fullscreen-link {
       display: block;
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      position: fixed;
+      inset: 0;
       text-decoration: none;
       z-index: 99999;
     }
@@ -109,167 +83,172 @@ function gtag_report_conversion(url) {
       background-position: center;
       background-repeat: no-repeat;
       border: 1px solid #333;
-    }    
+    }
 
-    .front  { transform: translateZ(150px); background-image: url('tr_routeview.jpg'); }
-    .back   { transform: rotateY(180deg) translateZ(150px); background-image: url('tr_routeplayback.jpg'); }
-    .right  { transform: rotateY(90deg) translateZ(150px); background-image: url('tr_photogallery.jpg'); }
-    .left   { transform: rotateY(-90deg) translateZ(150px); background-image: url('tr_routebrowse.jpg'); }
-    /*
-    .top    { transform: rotateX(90deg) translateZ(200px); background-image: url('tr_sessionview_fullscreen_normal_square.jpg'); }
-    .bottom { transform: rotateX(-90deg) translateZ(200px); background-image: url('tr_photogallery_square.jpg'); }
-    */
+    .front { transform: translateZ(150px); background-image: url('tr_routeview.jpg'); }
+    .back { transform: rotateY(180deg) translateZ(150px); background-image: url('tr_routeplayback.jpg'); }
+    .right { transform: rotateY(90deg) translateZ(150px); background-image: url('tr_photogallery.jpg'); }
+    .left { transform: rotateY(-90deg) translateZ(150px); background-image: url('tr_routebrowse.jpg'); }
 
-        @keyframes rotateFaces {
-      0%   { transform: rotateY(0deg); }
+    @keyframes rotateFaces {
+      0% { transform: rotateY(0deg); }
       100% { transform: rotateY(360deg); }
     }
 
+    .scrolling-banner {
+      width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      background: #000;
+      padding: 0.5em 0;
+      position: fixed;
+      bottom: 80px;
+      font-family: "Segoe UI", "Roboto", sans-serif;
+      font-size: 2.8vw;
+      border-top: 1px solid #fff;
+      z-index: 999;
+      text-align: center;
+    }
 
-.scrolling-banner {
-  width: 100%;
-  overflow: hidden;
-  white-space: nowrap;
-  background: #000;
-  padding: 0.5em 0; /* MNIEJSZY padding = niższy banner */
-  position: fixed;  /* przyklejony do dołu */
-  /*bottom: 0;*/
-  bottom: 80px;
-  font-family: "Segoe UI", "Roboto", sans-serif;
-  font-size: 2.8vw;  /* MNIEJSZY rozmiar tekstu */
-  border-top: 1px solid #fff; /* cieńszy pasek */
-  z-index: 999;
-  text-align: center;
-}
+    .scroll-text {
+      display: inline-block;
+      padding-left: 100%;
+      animation: scrollText 12s linear infinite, colorFlow 6s linear infinite;
+      background: linear-gradient(
+        90deg,
+        #ff0000,
+        #ff9900,
+        #ffff00,
+        #00ff00,
+        #00ccff,
+        #9900ff,
+        #ff0000
+      );
+      background-size: 300%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
+    }
 
-.scroll-text {
-  display: inline-block;
-  padding-left: 100%;
-  animation: scrollText 12s linear infinite, colorFlow 6s linear infinite;
-  background: linear-gradient(
-    90deg,
-    #ff0000,
-    #ff9900,
-    #ffff00,
-    #00ff00,
-    #00ccff,
-    #9900ff,
-    #ff0000
-  );
-  background-size: 300%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
-}
+    @keyframes scrollText {
+      0% { transform: translateX(0); }
+      100% { transform: translateX(-100%); }
+    }
 
-@keyframes scrollText {
-  0%   { transform: translateX(0); }
-  100% { transform: translateX(-100%); }
-}
+    @keyframes colorFlow {
+      0% { background-position: 0%; }
+      100% { background-position: 300%; }
+    }
 
-@keyframes colorFlow {
-  0%   { background-position: 0%; }
-  100% { background-position: 300%; }
-}
+    .branding {
+      position: absolute;
+      inset: 0;
+      z-index: 10001;
+      font-family: 'Segoe UI', sans-serif;
+      color: #fff;
+      pointer-events: none;
+    }
 
-.branding {
- position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  z-index: 10001;
-  font-family: 'Segoe UI', sans-serif;
-  color: #fff;
-}
+    .branding .logo {
+      position: absolute;
+      top: 20px;
+      left: 20px;
+      height: 50px;
+      width: auto;
+      background: red;
+    }
 
-.branding .logo {
-  position: absolute;
-  top: 20px;
-  left: 20px;
-  height: 50px;
-  width: auto;
-  background: red; 
-}
+    .branding .slogan {
+      position: absolute;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 1.5em;
+      font-weight: bold;
+      text-shadow: 0 0 6px rgba(0,0,0,0.6);
+      text-align: center;
+    }
 
-.branding .slogan {
-  position: absolute;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 1.5em;
-  font-weight: bold;
-  text-shadow: 0 0 6px rgba(0,0,0,0.6);
-}
+    .branding .website {
+      position: absolute;
+      right: 20px;
+      bottom: 20px;
+      font-size: 1em;
+      opacity: 0.8;
+      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    }
 
-.branding .website {
-  position: absolute;
-  right: 20px;
-  bottom: 20px;
-  font-size: 1em;
-  opacity: 0.8;
-  text-shadow: 0 0 4px rgba(0,0,0,0.4);
-}    
+    .google-play-btn {
+      position: absolute;
+      left: 50%;
+      bottom: 20px;
+      transform: translateX(-50%);
+      z-index: 100000;
+      pointer-events: auto;
+    }
 
-/* Google Play button */
-.google-play-btn {
-  position: absolute;
-  left: 50%;
-  bottom: 20px;
-  transform: translateX(-50%);
-  pointer-events: auto;
-}
+    .google-play-btn img {
+      height: 50px;
+      transition: transform 0.3s ease;
+    }
 
-.google-play-btn img {
-  height: 50px;
-  transition: transform 0.3s ease;
-}
+    .google-play-btn img:hover {
+      transform: scale(1.05);
+    }
 
-.google-play-btn img:hover {
-  transform: scale(1.05);
-}
-    
+    @media (max-width: 600px) {
+      .cube-container,
+      .face {
+        width: 90vw;
+        height: 70vh;
+      }
 
-    
-    
+      .scrolling-banner {
+        font-size: 5vw;
+      }
+
+      .branding .slogan {
+        font-size: 1em;
+        width: 70%;
+      }
+    }
+
+    @media (min-width: 768px) {
+      .scrolling-banner {
+        font-size: 1.2em;
+      }
+    }
   </style>
 </head>
-  
 
 <body>
+  <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
+     class="fullscreen-link"
+     title="Track Reporter in Google Play Store"
+     onclick="return gtag_report_conversion(this.href);"></a>
 
-<a href="https://play.google.com/store/apps/details?id=com.trackreporter" class="fullscreen-link" target="_blank" title="Track Reporter in Google Play Store"></a>
-   
-<div class="branding">
-  <img src="trackreporter1024x1024-transparent.png" alt="Track Reporter Logo" class="logo">
-  <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
-  <div class="website">www.trackreporter.com</div>
-  
-<a href="https://play.google.com/store/apps/details?id=com.trackreporter"
-   class="fullscreen-link"
-   target="_blank"
-   title="Track Reporter in Google Play Store"
-   onclick="return gtag_report_conversion(this.href);"></a>
-  
-</div>
-  
-  <div class="cube-container">  
+  <div class="branding">
+    <img src="trackreporter1024x1024-transparent.png" alt="Track Reporter Logo" class="logo">
+    <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
+    <div class="website">www.trackreporter.com</div>
+
+    <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
+       class="google-play-btn"
+       title="Get it on Google Play"
+       onclick="return gtag_report_conversion(this.href);">
+      <img src="google-play-badge.png" alt="Get it on Google Play">
+    </a>
+  </div>
+
+  <div class="cube-container">
     <div class="face front"></div>
     <div class="face back"></div>
     <div class="face right"></div>
     <div class="face left"></div>
-    <!--
-    <div class="face top"></div>
-    <div class="face bottom"></div>
-    -->
   </div>
 
   <div class="scrolling-banner">
-  <div class="scroll-text">Track Reporter Android application -> Click to install now !</div>
-</div>
-  
+    <div class="scroll-text">Track Reporter Android application -> Click to install now !</div>
+  </div>
 </body>
-
-
-  
 </html>
