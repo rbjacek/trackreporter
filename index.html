@@ -395,68 +395,104 @@
       transform: rotate(-2deg);
     }
 
-    .report-page:nth-child(2) {
-      transform: translateY(-14px) rotate(2deg);
-    }
 
-    .report-page:nth-child(3) {
-      transform: rotate(-1deg);
-    }
 
-    .report-page h4 {
-      margin: 0 0 10px;
-      font-size: 0.9rem;
-    }
+.report-section {
+  display: grid;
+  grid-template-columns: 0.9fr 1.1fr;
+  gap: 40px;
+  align-items: center;
+  padding: 40px;
+  border-radius: 34px;
+  background:
+      linear-gradient(
+          135deg,
+          rgba(74,222,128,.12),
+          rgba(56,189,248,.10)
+      ),
+      rgba(255,255,255,.05);
+  border: 1px solid var(--card-border);
+}
 
-    .report-line {
-      height: 8px;
-      border-radius: 999px;
-      background: #cbd5e1;
-      margin-bottom: 8px;
-    }
+.report-copy h2 {
+  margin: 0 0 16px;
+  font-size: clamp(2rem,4vw,3rem);
+  letter-spacing: -0.05em;
+}
 
-    .report-line.short {
-      width: 62%;
-    }
+.report-copy p {
+  color: var(--muted);
+  line-height: 1.7;
+  margin-bottom: 24px;
+}
 
-    .report-map {
-      height: 86px;
-      border-radius: 14px;
-      margin: 14px 0;
-      background:
-        linear-gradient(135deg, rgba(56,189,248,0.35), rgba(74,222,128,0.4)),
-        #e2e8f0;
-      position: relative;
-      overflow: hidden;
-    }
+.report-points {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px;
+  display: grid;
+  gap: 10px;
+}
 
-    .report-map::after {
-      content: "";
-      position: absolute;
-      width: 70%;
-      height: 3px;
-      left: 16px;
-      top: 42px;
-      border-radius: 999px;
-      background: #0f172a;
-      transform: rotate(-12deg);
-      opacity: 0.75;
-    }
+.report-points li {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255,255,255,.06);
+  border: 1px solid rgba(255,255,255,.08);
+}
 
-    .report-photo-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 8px;
-      margin-top: 14px;
-    }
+.report-preview {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 22px;
+  min-height: 420px;
+}
 
-    .report-photo {
-      height: 54px;
-      border-radius: 12px;
-      background:
-        linear-gradient(135deg, rgba(15,23,42,0.25), rgba(56,189,248,0.32)),
-        #e2e8f0;
-    }
+.report-preview img {
+  width: 220px;
+  border-radius: 18px;
+  background: white;
+  box-shadow: 0 30px 70px rgba(0,0,0,.35);
+  transition: transform .3s ease;
+}
+
+.report-preview img:nth-child(1) {
+  transform: rotate(-8deg);
+}
+
+.report-preview img:nth-child(2) {
+  transform: translateY(-20px);
+  z-index: 2;
+}
+
+.report-preview img:nth-child(3) {
+  transform: rotate(8deg);
+}
+
+.report-preview img:hover {
+  transform: translateY(-8px) scale(1.03);
+}
+
+@media (max-width: 900px) {
+  .report-section {
+    grid-template-columns: 1fr;
+  }
+
+  .report-preview {
+    flex-direction: column;
+  }
+
+  .report-preview img {
+    width: min(280px, 100%);
+  }
+
+  .report-preview img:nth-child(1),
+  .report-preview img:nth-child(2),
+  .report-preview img:nth-child(3) {
+    transform: none;
+  }
+}
 
     .final-cta {
       text-align: center;
@@ -679,70 +715,54 @@
       </div>
     </section>
 
-    <section class="section report-section">
-      <div class="report-copy">
-        <h2>From route tracking to ready PDF reports.</h2>
+<section class="section report-section">
 
-        <p>
-          Track Reporter turns field activity into clear documentation with route maps,
-          photo evidence, comments, timestamps and activity summaries.
-        </p>
+  <div class="report-copy">
+    <h2>Professional PDF Reports Ready to Share</h2>
 
-        <ul class="report-points">
-          <li>GPS route map with distance and time</li>
-          <li>Location-based photo evidence</li>
-          <li>Categories, notes and inspection details</li>
-          <li>Ready to share with clients or teams</li>
-        </ul>
+    <p>
+      Generate professional reports containing GPS routes, maps,
+      photo evidence, timestamps, comments and work summaries.
+      Perfect for inspections, deliveries, patrols and field work.
+    </p>
 
-        <div class="actions">
-          <a class="secondary"
-             href="sample-report.pdf"
-             target="_blank">
-            View Sample PDF
-          </a>
+    <ul class="report-points">
+      <li>GPS verified route history</li>
+      <li>Location-based photo evidence</li>
+      <li>Inspection notes and comments</li>
+      <li>Professional PDF export</li>
+    </ul>
 
-          <a class="secondary"
-             href="https://play.google.com/store/apps/details?id=com.trackreporter"
-             onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
-            Create Your Own Report
-          </a>
-        </div>
-      </div>
+    <div class="actions">
+      <a class="secondary"
+         href="sample-report.pdf"
+         target="_blank">
+        View Sample PDF
+      </a>
 
-      <div class="report-preview" aria-label="Sample report preview">
-        <div class="report-page">
-          <h4>Route Summary</h4>
-          <div class="report-line"></div>
-          <div class="report-line short"></div>
-          <div class="report-map"></div>
-          <div class="report-line"></div>
-          <div class="report-line short"></div>
-        </div>
+      <a class="secondary"
+         href="https://play.google.com/store/apps/details?id=com.trackreporter"
+         onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
+        Create Your Own Report
+      </a>
+    </div>
+  </div>
 
-        <div class="report-page">
-          <h4>Photo Evidence</h4>
-          <div class="report-photo-grid">
-            <div class="report-photo"></div>
-            <div class="report-photo"></div>
-            <div class="report-photo"></div>
-            <div class="report-photo"></div>
-          </div>
-          <div class="report-line" style="margin-top:16px;"></div>
-          <div class="report-line short"></div>
-        </div>
+  <div class="report-preview">
 
-        <div class="report-page">
-          <h4>Work Details</h4>
-          <div class="report-line"></div>
-          <div class="report-line"></div>
-          <div class="report-line short"></div>
-          <div class="report-map"></div>
-          <div class="report-line"></div>
-        </div>
-      </div>
-    </section>
+    <img src="report-page-1.jpg"
+         alt="Track Reporter PDF report page 1">
 
+    <img src="report-page-2.jpg"
+         alt="Track Reporter PDF report page 2">
+
+    <img src="report-page-3.jpg"
+         alt="Track Reporter PDF report page 3">
+
+  </div>
+
+</section>
+    
     <section class="section final-cta">
       <h2>Start reporting with GPS evidence.</h2>
       <p>
