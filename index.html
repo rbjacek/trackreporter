@@ -1,246 +1,550 @@
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <!-- Google tag -->
-<!-- Google tag (gtag.js) --> 
+  <!-- Google tag (gtag.js) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
-  <script> window.dataLayer = window.dataLayer || []; 
-    function gtag(){dataLayer.push(arguments);} gtag('js', new Date()); gtag('config', 'AW-17236374089'); 
-  </script> 
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'AW-17236374089');
+  </script>
 
-  <script> 
+  <script>
     function gtag_report_conversion(url) {
-      var callback = function () { if (typeof(url) != 'undefined') { window.location = url; } }; 
-      gtag('event', 'conversion', { 'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA', 'value': 1.0, 'currency': 'PLN', 'event_callback': callback }); 
-      return false; 
-    } 
+      var callback = function () {
+        if (typeof(url) !== 'undefined') {
+          window.location = url;
+        }
+      };
+      gtag('event', 'conversion', {
+        'send_to': 'AW-17236374089/kYMGCPri6bccEMnk-JpA',
+        'value': 1.0,
+        'currency': 'PLN',
+        'event_callback': callback
+      });
+      return false;
+    }
   </script>
 
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="description" content="Track Reporter - Track GPS routes with photos. Replay animation with speed chart, search & favorite trips.">
-  <meta name="keywords" content="Track Reporter, GPS, route, tracker, report, photos, work reporting, activity reporting, map, playback, speed chart">
-  <meta name="author" content="Track Reporter project">
+  <meta name="description" content="Track Reporter helps you record GPS routes, capture photo evidence and generate professional field reports.">
+  <meta name="keywords" content="Track Reporter, GPS report, route tracking, photo evidence, site inspection, field work report, delivery verification">
+  <meta name="author" content="Track Reporter">
 
-  <meta property="og:title" content="Track Reporter">
-  <meta property="og:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips.">
+  <meta property="og:title" content="Track Reporter - GPS routes, photos and field reports">
+  <meta property="og:description" content="Record routes, capture photo evidence and create professional reports from field work.">
   <meta property="og:image" content="https://trackreporter.com/trackreporter1024x1024.png">
   <meta property="og:url" content="https://trackreporter.com/">
   <meta property="og:type" content="website">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Track Reporter">
-  <meta name="twitter:description" content="Track Reporter - Track GPS routes with photos. Replay with speed chart, search & favorite trips.">
+  <meta name="twitter:description" content="GPS route tracking with photos and professional reports.">
   <meta name="twitter:image" content="https://trackreporter.com/trackreporter1024x1024.png">
 
-  <title>Track Reporter - Track GPS routes with photos</title>
+  <title>Track Reporter - GPS routes, photos and reports</title>
 
   <style>
+    :root {
+      --bg: #070b12;
+      --card: rgba(255,255,255,0.08);
+      --card-border: rgba(255,255,255,0.14);
+      --text: #ffffff;
+      --muted: #aeb8c8;
+      --accent: #4ade80;
+      --accent2: #38bdf8;
+      --shadow: 0 30px 90px rgba(0,0,0,0.55);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
     body {
       margin: 0;
-      height: 100vh;
-      background: #111;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      perspective: 1000px;
-      position: relative;
-      padding-bottom: 60px;
-      overflow: hidden;
+      min-height: 100vh;
+      font-family: Inter, "Segoe UI", Roboto, Arial, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at top left, rgba(56,189,248,0.22), transparent 34%),
+        radial-gradient(circle at top right, rgba(74,222,128,0.18), transparent 30%),
+        linear-gradient(135deg, #05070c 0%, #0a1020 55%, #05070c 100%);
+      overflow-x: hidden;
     }
 
-    .fullscreen-link {
-      display: block;
-      position: fixed;
-      inset: 0;
+    a {
+      color: inherit;
       text-decoration: none;
-      z-index: 99999;
     }
 
-    .cube-container {
-      width: 300px;
-      height: 666px;
-      position: relative;
-      z-index: 1000;
-      transform-style: preserve-3d;
-      animation: rotateFaces 20s infinite linear;
+    .page {
+      width: min(1180px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0 42px;
     }
 
-    .face {
-      position: absolute;
-      width: 300px;
-      height: 666px;
-      background-size: cover;
-      background-position: center;
-      background-repeat: no-repeat;
-      border: 1px solid #333;
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 56px;
     }
 
-    .front { transform: translateZ(150px); background-image: url('tr_routeview.jpg'); }
-    .back { transform: rotateY(180deg) translateZ(150px); background-image: url('tr_routeplayback.jpg'); }
-    .right { transform: rotateY(90deg) translateZ(150px); background-image: url('tr_photogallery.jpg'); }
-    .left { transform: rotateY(-90deg) translateZ(150px); background-image: url('tr_routebrowse.jpg'); }
-
-    @keyframes rotateFaces {
-      0% { transform: rotateY(0deg); }
-      100% { transform: rotateY(360deg); }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      font-size: 1.25rem;
     }
 
-    .scrolling-banner {
-      width: 100%;
-      overflow: hidden;
-      white-space: nowrap;
-      background: #000;
-      padding: 0.5em 0;
-      position: fixed;
-      bottom: 80px;
-      font-family: "Segoe UI", "Roboto", sans-serif;
-      font-size: 2.8vw;
-      border-top: 1px solid #fff;
-      z-index: 999;
-      text-align: center;
+    .brand img {
+      width: 46px;
+      height: 46px;
+      border-radius: 14px;
+      box-shadow: 0 12px 34px rgba(0,0,0,0.35);
     }
 
-    .scroll-text {
-      display: inline-block;
-      padding-left: 100%;
-      animation: scrollText 12s linear infinite, colorFlow 6s linear infinite;
-      background: linear-gradient(
-        90deg,
-        #ff0000,
-        #ff9900,
-        #ffff00,
-        #00ff00,
-        #00ccff,
-        #9900ff,
-        #ff0000
-      );
-      background-size: 300%;
+    .nav-cta {
+      padding: 11px 18px;
+      border: 1px solid var(--card-border);
+      border-radius: 999px;
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(16px);
+      font-weight: 700;
+      color: #eaf7ff;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.05fr 0.95fr;
+      gap: 58px;
+      align-items: center;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 8px 13px;
+      border: 1px solid rgba(74,222,128,0.35);
+      border-radius: 999px;
+      background: rgba(74,222,128,0.08);
+      color: #b8ffd3;
+      font-weight: 700;
+      font-size: 0.9rem;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(2.6rem, 6vw, 5.25rem);
+      line-height: 0.95;
+      letter-spacing: -0.07em;
+    }
+
+    .gradient {
+      background: linear-gradient(90deg, var(--accent), var(--accent2));
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
-      text-shadow: 0 0 8px rgba(255, 255, 255, 0.3);
     }
 
-    @keyframes scrollText {
-      0% { transform: translateX(0); }
-      100% { transform: translateX(-100%); }
+    .subtitle {
+      margin: 24px 0 30px;
+      max-width: 640px;
+      color: var(--muted);
+      font-size: clamp(1.08rem, 2vw, 1.35rem);
+      line-height: 1.55;
     }
 
-    @keyframes colorFlow {
-      0% { background-position: 0%; }
-      100% { background-position: 300%; }
+    .actions {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+      flex-wrap: wrap;
+      margin-bottom: 28px;
     }
 
-    .branding {
+    .play-btn img {
+      height: 64px;
+      transition: transform 0.25s ease, filter 0.25s ease;
+      filter: drop-shadow(0 18px 35px rgba(0,0,0,0.35));
+    }
+
+    .play-btn img:hover {
+      transform: translateY(-2px) scale(1.03);
+    }
+
+    .secondary {
+      padding: 16px 20px;
+      border-radius: 18px;
+      border: 1px solid var(--card-border);
+      background: rgba(255,255,255,0.07);
+      color: #dce7f5;
+      font-weight: 700;
+    }
+
+    .trust {
+      display: flex;
+      gap: 14px;
+      flex-wrap: wrap;
+      color: #c5cfdd;
+      font-size: 0.95rem;
+    }
+
+    .trust span {
+      padding: 8px 12px;
+      border-radius: 999px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .phone-stage {
+      position: relative;
+      min-height: 650px;
+      display: grid;
+      place-items: center;
+    }
+
+    .glow {
       position: absolute;
-      inset: 0;
-      z-index: 10001;
-      font-family: 'Segoe UI', sans-serif;
-      color: #fff;
-      pointer-events: none;
+      width: 440px;
+      height: 440px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(56,189,248,0.24), transparent 65%);
+      filter: blur(12px);
     }
 
-    .branding .logo {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-      height: 50px;
-      width: auto;
-      background: red;
+    .phone {
+      position: relative;
+      width: 310px;
+      height: 670px;
+      border-radius: 42px;
+      padding: 12px;
+      background: linear-gradient(145deg, #1d2736, #06080d);
+      box-shadow: var(--shadow);
+      transform: rotate(-4deg);
     }
 
-    .branding .slogan {
+    .phone::before {
+      content: "";
       position: absolute;
-      top: 20px;
+      top: 18px;
       left: 50%;
       transform: translateX(-50%);
-      font-size: 1.5em;
-      font-weight: bold;
-      text-shadow: 0 0 6px rgba(0,0,0,0.6);
+      width: 92px;
+      height: 25px;
+      border-radius: 999px;
+      background: #05070c;
+      z-index: 2;
+    }
+
+    .phone img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 32px;
+      display: block;
+    }
+
+    .floating {
+      position: absolute;
+      width: 170px;
+      border-radius: 28px;
+      padding: 10px;
+      background: rgba(255,255,255,0.09);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+    }
+
+    .floating img {
+      width: 100%;
+      border-radius: 20px;
+      display: block;
+    }
+
+    .floating.one {
+      top: 44px;
+      right: 10px;
+      transform: rotate(7deg);
+    }
+
+    .floating.two {
+      bottom: 78px;
+      left: -4px;
+      transform: rotate(-8deg);
+    }
+
+    .section {
+      margin-top: 72px;
+    }
+
+    .features {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      padding: 26px;
+      border-radius: 28px;
+      background: var(--card);
+      border: 1px solid var(--card-border);
+      backdrop-filter: blur(20px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.22);
+    }
+
+    .card h3 {
+      margin: 0 0 10px;
+      font-size: 1.15rem;
+    }
+
+    .card p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    .screens {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-top: 20px;
+    }
+
+    .screen {
+      border-radius: 26px;
+      overflow: hidden;
+      border: 1px solid var(--card-border);
+      background: rgba(255,255,255,0.06);
+      box-shadow: 0 24px 60px rgba(0,0,0,0.28);
+    }
+
+    .screen img {
+      width: 100%;
+      display: block;
+    }
+
+    .final-cta {
       text-align: center;
+      padding: 46px 24px;
+      border-radius: 34px;
+      background:
+        linear-gradient(135deg, rgba(74,222,128,0.16), rgba(56,189,248,0.13)),
+        rgba(255,255,255,0.07);
+      border: 1px solid var(--card-border);
     }
 
-    .branding .website {
-      position: absolute;
-      right: 20px;
-      bottom: 20px;
-      font-size: 1em;
-      opacity: 0.8;
-      text-shadow: 0 0 4px rgba(0,0,0,0.4);
+    .final-cta h2 {
+      margin: 0 0 14px;
+      font-size: clamp(2rem, 4vw, 3.2rem);
+      letter-spacing: -0.05em;
     }
 
-    .google-play-btn {
-      position: absolute;
-      left: 50%;
-      bottom: 20px;
-      transform: translateX(-50%);
-      z-index: 100000;
-      pointer-events: auto;
+    .final-cta p {
+      margin: 0 auto 24px;
+      max-width: 620px;
+      color: var(--muted);
+      line-height: 1.6;
+      font-size: 1.1rem;
     }
 
-    .google-play-btn img {
-      height: 50px;
-      transition: transform 0.3s ease;
+    footer {
+      margin-top: 34px;
+      text-align: center;
+      color: rgba(255,255,255,0.55);
+      font-size: 0.9rem;
     }
 
-    .google-play-btn img:hover {
-      transform: scale(1.05);
-    }
-
-    @media (max-width: 600px) {
-      .cube-container,
-      .face {
-        width: 90vw;
-        height: 70vh;
+    @media (max-width: 900px) {
+      .hero {
+        grid-template-columns: 1fr;
+        gap: 30px;
       }
 
-      .scrolling-banner {
-        font-size: 5vw;
+      .phone-stage {
+        min-height: 560px;
       }
 
-      .branding .slogan {
-        font-size: 1em;
-        width: 70%;
+      .phone {
+        width: 260px;
+        height: 562px;
+      }
+
+      .floating {
+        width: 135px;
+      }
+
+      .features,
+      .screens {
+        grid-template-columns: 1fr 1fr;
       }
     }
 
-    @media (min-width: 768px) {
-      .scrolling-banner {
-        font-size: 1.2em;
+    @media (max-width: 560px) {
+      .page {
+        width: min(100% - 22px, 1180px);
+        padding-top: 18px;
+      }
+
+      .nav {
+        margin-bottom: 36px;
+      }
+
+      .nav-cta {
+        display: none;
+      }
+
+      .actions {
+        align-items: stretch;
+      }
+
+      .play-btn img {
+        height: 58px;
+      }
+
+      .secondary {
+        width: 100%;
+        text-align: center;
+      }
+
+      .features,
+      .screens {
+        grid-template-columns: 1fr;
+      }
+
+      .phone-stage {
+        min-height: 520px;
+      }
+
+      .floating.one {
+        right: -4px;
+      }
+
+      .floating.two {
+        left: -4px;
       }
     }
   </style>
 </head>
 
 <body>
-  <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
-     class="fullscreen-link"
-     title="Track Reporter in Google Play Store"
-     onclick="return gtag_report_conversion('https://trackreporter.com/index.html');"></a>
+  <main class="page">
+    <nav class="nav">
+      <div class="brand">
+        <img src="trackreporter1024x1024-transparent.png" alt="Track Reporter logo">
+        <span>Track Reporter</span>
+      </div>
 
-  <div class="branding">
-    <img src="trackreporter1024x1024-transparent.png" alt="Track Reporter Logo" class="logo">
-    <div class="slogan">Track & Report Your Trips — Instantly, Offline.</div>
-    <div class="website">www.trackreporter.com</div>
+      <a class="nav-cta"
+         href="https://play.google.com/store/apps/details?id=com.trackreporter"
+         onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
+        Get Android app
+      </a>
+    </nav>
 
-    <a href="https://play.google.com/store/apps/details?id=com.trackreporter"
-       class="google-play-btn"
-       title="Get it on Google Play"
-       onclick="return gtag_report_conversion('https://trackreporter.com/index.html');">
-      <img src="google-play-badge.png" alt="Get it on Google Play">
-    </a>
-  </div>
+    <section class="hero">
+      <div>
+        <div class="badge">GPS routes • Photo evidence • PDF reports</div>
 
-  <div class="cube-container">
-    <div class="face front"></div>
-    <div class="face back"></div>
-    <div class="face right"></div>
-    <div class="face left"></div>
-  </div>
+        <h1>
+          Turn field activity into
+          <span class="gradient">professional reports.</span>
+        </h1>
 
-  <div class="scrolling-banner">
-    <div class="scroll-text">Track Reporter Android application -> Click to install now !</div>
-  </div>
+        <p class="subtitle">
+          Track Reporter records GPS routes, captures location-based photos and helps you document site visits,
+          deliveries, inspections, patrols and field work — directly from your Android phone.
+        </p>
+
+        <div class="actions">
+          <a class="play-btn"
+             href="https://play.google.com/store/apps/details?id=com.trackreporter"
+             onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
+            <img src="google-play-badge.png" alt="Get it on Google Play">
+          </a>
+
+          <a class="secondary"
+             href="https://play.google.com/store/apps/details?id=com.trackreporter"
+             onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
+            Install now
+          </a>
+        </div>
+
+        <div class="trust">
+          <span>Works offline</span>
+          <span>Route replay</span>
+          <span>Photo categories</span>
+          <span>Report export</span>
+        </div>
+      </div>
+
+      <div class="phone-stage">
+        <div class="glow"></div>
+
+        <div class="floating one">
+          <img src="tr_photogallery.jpg" alt="Photo gallery screen">
+        </div>
+
+        <div class="phone">
+          <img src="tr_routeview.jpg" alt="Track Reporter route view">
+        </div>
+
+        <div class="floating two">
+          <img src="tr_routeplayback.jpg" alt="Route playback screen">
+        </div>
+      </div>
+    </section>
+
+    <section class="section features">
+      <div class="card">
+        <h3>Document field work</h3>
+        <p>Record site visits, routes, patrols, deliveries and field activities with GPS-based evidence.</p>
+      </div>
+
+      <div class="card">
+        <h3>Capture photo proof</h3>
+        <p>Add photos with location context, categories and comments to create stronger documentation.</p>
+      </div>
+
+      <div class="card">
+        <h3>Create reports faster</h3>
+        <p>Prepare clear route summaries with maps, photos, comments and activity details.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="screens">
+        <div class="screen"><img src="tr_routeview.jpg" alt="Route view"></div>
+        <div class="screen"><img src="tr_routeplayback.jpg" alt="Route playback"></div>
+        <div class="screen"><img src="tr_photogallery.jpg" alt="Photo gallery"></div>
+        <div class="screen"><img src="tr_routebrowse.jpg" alt="Route browser"></div>
+      </div>
+    </section>
+
+    <section class="section final-cta">
+      <h2>Start reporting with GPS evidence.</h2>
+      <p>
+        Install Track Reporter and create reliable field documentation from routes, photos and notes.
+      </p>
+
+      <a class="play-btn"
+         href="https://play.google.com/store/apps/details?id=com.trackreporter"
+         onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
+        <img src="google-play-badge.png" alt="Get it on Google Play">
+      </a>
+    </section>
+
+    <footer>
+      www.trackreporter.com
+    </footer>
+  </main>
 </body>
 </html>
+```
