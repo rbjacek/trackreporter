@@ -525,6 +525,20 @@
       font-size: 0.9rem;
     }
 
+    .sample-report-section {
+    display: flex;
+    justify-content: center;
+    margin: 90px 0;
+}
+
+.sample-report-section .secondary {
+    padding: 18px 28px;
+    font-size: 1.05rem;
+    border-radius: 20px;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.14);
+    box-shadow: 0 20px 40px rgba(0,0,0,0.25);
+}
     @media (max-width: 900px) {
       .hero {
         grid-template-columns: 1fr;
@@ -685,14 +699,13 @@
       
     </section>
 
-    
-        <div class="actions">
-          <a class="secondary"
-             href="sample-report.pdf"
-             target="_blank">
-            View Sample Report
-          </a>
-        </div>
+  <section class="sample-report-section">
+    <a class="secondary"
+     href="sample-report.pdf"
+     target="_blank">
+    View Sample Report
+    </a>
+  </section>
     
 </section>
     
