@@ -638,7 +638,7 @@ gtag('event', 'TrackReporterView2');
       }
     }
 
-/* Fleet Web dashboard */
+/* Your Fleet dashboard */
 @media(max-width:900px){.nav-cta.fleet-nav-link{display:inline-flex;font-size:.85rem;padding:9px 12px}}
 .fleet-panel{margin:36px 0 30px;padding:18px;border:1px solid var(--card-border);border-radius:28px;background:var(--card)}
 .fleet-toolbar,.fleet-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
@@ -685,7 +685,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
          onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
         Get Android app
       </a>
-      <a class="nav-cta fleet-nav-link" href="#fleet-web">Fleet Web</a>
+      <a class="nav-cta fleet-nav-link" href="#fleet-web">Your Fleet</a>
     </nav>
 
 
@@ -785,7 +785,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
-  <div class="fleet-heading"><div><h2 id="fleet-web-title">Fleet Web</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
+  <div class="fleet-heading"><div><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
   <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
@@ -910,8 +910,96 @@ function renderLive(){
 }
 setInterval(()=>{if(auth?.currentUser && !content.hidden)renderLive();},10000);
 function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);label.append(cb,text);memberList.append(label);}}
-function renderRoutes(){routeList.replaceChildren();const shown=routes.filter(r=>routeFilter.value==='all'||r.status==='ACTIVE');if(!shown.length){routeList.textContent='No shared routes';return;}for(const r of shown){const item=document.createElement('div');item.className='fleet-route';const date=new Date(Number(r.startTimeMillis||0)).toLocaleString();item.textContent=`${safeLabel(r.sessionShareUuid)} · ${date} · ${safeLabel(r.status)}`;item.addEventListener('click',()=>showRoute(r));routeList.append(item);}}
-function showRoute(r){if(!map){show('Configure Google Maps JavaScript API to view routes.');return;}if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}show(`Loading route ${r.sessionShareUuid}...`);const ref=collection(db,'fleets',fleetId,'shared_sessions',r.id,'locations');selectedRouteUnsubscribe=onSnapshot(query(ref,orderBy('positionTimeMillis')),(snap)=>{const points=snap.docs.map(d=>d.data()).filter(p=>Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))).map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));if(routeLine)routeLine.setMap(null);if(points.length){routeLine=new maps.Polyline({map,path:points,strokeColor:'#38bdf8',strokeOpacity:.95,strokeWeight:5});const bounds=new maps.LatLngBounds();points.forEach(p=>bounds.extend(p));map.fitBounds(bounds);}show(`${points.length} GPS points · ${safeLabel(r.status)}`);},e=>show(`Route error: ${e.message}`));}
+function formatRouteDate(value){
+  const millis = locationMillis(value);
+  if(!millis) return 'Date unavailable';
+  const d = new Date(millis);
+  if(Number.isNaN(d.getTime())) return 'Date unavailable';
+  const pad = n => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+}
+function formatRouteDistance(r){
+  // Show distance only when the stored field explicitly identifies its unit.
+  const meters = Number(r.distanceMeters ?? r.totalDistanceMeters);
+  const km = Number(r.distanceKm ?? r.totalDistanceKm);
+  if((r.distanceMeters != null || r.totalDistanceMeters != null) && Number.isFinite(meters) && meters >= 0)
+    return `${(meters/1000).toFixed(2)} km`;
+  if((r.distanceKm != null || r.totalDistanceKm != null) && Number.isFinite(km) && km >= 0)
+    return `${km.toFixed(2)} km`;
+  return null;
+}
+function formatRouteDuration(r){
+  let millis = null;
+  if(r.durationMillis != null && Number.isFinite(Number(r.durationMillis))) millis = Number(r.durationMillis);
+  else if(r.durationSeconds != null && Number.isFinite(Number(r.durationSeconds))) millis = Number(r.durationSeconds)*1000;
+  else if(r.endTimeMillis != null && r.startTimeMillis != null) {
+    const start = locationMillis(r.startTimeMillis);
+    const end = locationMillis(r.endTimeMillis);
+    if(start && end && end >= start) millis = end-start;
+  }
+  if(millis == null || millis < 0) return null;
+  const minutes = Math.floor(millis/60000);
+  const hours = Math.floor(minutes/60);
+  return hours ? `${hours} h ${String(minutes%60).padStart(2,'0')} min` : `${minutes} min`;
+}
+function renderRoutes() {
+  routeList.replaceChildren();
+  const shown = routes.filter(r => routeFilter.value === 'all' || r.status === 'ACTIVE');
+  if (!shown.length) {
+    routeList.textContent = 'No shared routes';
+    return;
+  }
+  for (const r of shown) {
+    const item = document.createElement('div');
+    item.className = 'fleet-route';
+    item.textContent = [formatRouteDate(r), safeLabel(r.status)].filter(Boolean).join(' · ');
+    item.addEventListener('click', () => showRoute(r));
+    routeList.append(item);
+  }
+}
+function showRoute(r) {
+  if (!map) {
+    show('Configure Google Maps JavaScript API to view routes.');
+    return;
+  }
+  if (selectedRouteUnsubscribe) {
+    selectedRouteUnsubscribe();
+    selectedRouteUnsubscribe = null;
+  }
+  if (routeLine) {
+    routeLine.setMap(null);
+    routeLine = null;
+  }
+  show('Loading selected route...');
+  const ref = collection(db, 'fleets', fleetId, 'shared_sessions', r.id, 'locations');
+  selectedRouteUnsubscribe = onSnapshot(ref, snap => {
+    const points = snap.docs
+      .map(d => d.data())
+      .filter(p => p.positionLatitude != null && p.positionLongitude != null &&
+        Number.isFinite(Number(p.positionLatitude)) &&
+        Number.isFinite(Number(p.positionLongitude)) &&
+        Math.abs(Number(p.positionLatitude)) <= 90 &&
+        Math.abs(Number(p.positionLongitude)) <= 180)
+      .sort((a, b) => Number(a.positionTimeMillis ?? 0) - Number(b.positionTimeMillis ?? 0))
+      .map(p => ({ lat: Number(p.positionLatitude), lng: Number(p.positionLongitude) }));
+    if (routeLine) {
+      routeLine.setMap(null);
+      routeLine = null;
+    }
+    if (points.length) {
+      routeLine = new maps.Polyline({ map, path: points, strokeColor: '#38bdf8', strokeOpacity: .95, strokeWeight: 5 });
+      const bounds = new maps.LatLngBounds();
+      points.forEach(p => bounds.extend(p));
+      if (points.length === 1) {
+        map.setCenter(points[0]);
+        map.setZoom(16);
+      } else {
+        map.fitBounds(bounds);
+      }
+    }
+    show(`${points.length} GPS points · ${safeLabel(r.status)}`);
+  }, e => show(`Route error: ${e.message}`));
+}
 window.__fleetModuleStarted = true;
 const firebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain && firebaseConfig.appId) &&
   !Object.values(firebaseConfig).some(v => String(v).includes('REPLACE_'));
