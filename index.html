@@ -639,14 +639,15 @@ gtag('event', 'TrackReporterView2');
     }
 
 /* Fleet Web dashboard */
-.fleet-panel{margin:24px 0 60px;padding:26px;border:1px solid var(--card-border);border-radius:28px;background:var(--card)}
+@media(max-width:900px){.nav-cta.fleet-nav-link{display:inline-flex;font-size:.85rem;padding:9px 12px}}
+.fleet-panel{margin:36px 0 30px;padding:18px;border:1px solid var(--card-border);border-radius:28px;background:var(--card)}
 .fleet-toolbar,.fleet-heading{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap}
 .fleet-btn{background:#38bdf8;color:#06101a;border:0;border-radius:12px;padding:12px 18px;font-weight:700;cursor:pointer}
 .fleet-btn:disabled{opacity:.5;cursor:not-allowed}.fleet-btn.ghost{background:rgba(255,255,255,.12);color:white}
 .fleet-status{color:var(--muted);font-size:.9rem;margin:12px 0}.fleet-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;margin-top:18px}
 .fleet-sidebar{background:rgba(0,0,0,.2);border-radius:18px;padding:16px;max-height:620px;overflow:auto}
 .fleet-member{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.fleet-member small{display:block;color:var(--muted)}.fleet-map{height:500px;border-radius:18px;overflow:hidden;background:#182433}
+.fleet-member small{display:block;color:var(--muted)}.fleet-map{height:420px;border-radius:18px;overflow:hidden;background:#182433}
 .fleet-route-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0}.fleet-route-controls select{background:#1c2938;color:white;padding:10px;border:1px solid var(--card-border);border-radius:10px;max-width:100%}
 .fleet-route-list{max-height:200px;overflow:auto}.fleet-route{padding:9px;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer}.fleet-route:hover{background:rgba(255,255,255,.07)}
 @media(max-width:800px){.fleet-layout{grid-template-columns:1fr}.fleet-map{height:420px}}
@@ -667,26 +668,11 @@ gtag('event', 'TrackReporterView2');
          onclick="return gtag_report_conversion('https://play.google.com/store/apps/details?id=com.trackreporter');">
         Get Android app
       </a>
-      <a class="nav-cta" href="#fleet-web">Fleet Web</a>
+      <a class="nav-cta fleet-nav-link" href="#fleet-web">Fleet Web</a>
     </nav>
 
 
-<section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
-  <div class="fleet-heading"><div><h2 id="fleet-web-title">Fleet Web</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
-    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
-  </div>
-  <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
-  <div id="fleet-content" hidden>
-    <h3 id="fleet-name">My Fleet</h3>
-    <div class="fleet-layout">
-      <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div>
-        <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
-        <div id="fleet-routes" class="fleet-route-list"></div>
-      </aside>
-      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live markers update automatically. Click a shared route to display its GPS track.</p></div>
-    </div>
-  </div>
-</section>
+
 
     <section class="hero">
       <div>
@@ -780,6 +766,23 @@ gtag('event', 'TrackReporterView2');
 </section>
    
 
+<section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
+  <div class="fleet-heading"><div><h2 id="fleet-web-title">Fleet Web</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
+    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
+  </div>
+  <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
+  <div id="fleet-content" hidden>
+    <h3 id="fleet-name">My Fleet</h3>
+    <div class="fleet-layout">
+      <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div>
+        <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
+        <div id="fleet-routes" class="fleet-route-list"></div>
+      </aside>
+      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live markers update automatically. Click a shared route to display its GPS track.</p></div>
+    </div>
+  </div>
+</section>
+
     <footer>
       www.trackreporter.com
     </footer>
@@ -810,20 +813,43 @@ let map, maps, fleetId, routes = [], markers = new Map(), selectedRouteUnsubscri
 let liveData = [], members = [], selectedUids = new Set();
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();}
-function clearSession(){clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){renderMembers.initialized=false;renderLive.didFit=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
-function mapsReady(){if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;map=new maps.Map(document.getElementById('fleet-map'),{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
+function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;map=new maps.Map(document.getElementById('fleet-map'),{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function renderLive(){if(!map)return;const visible=new Set();const bounds=new maps.LatLngBounds();for(const loc of liveData){const uid=loc.uid;if(!uid||!selectedUids.has(uid))continue;const lat=Number(loc.lat),lng=Number(loc.lon);const t=Number(loc.timestampMillis||0);if(!Number.isFinite(lat)||!Number.isFinite(lng)||!t||Date.now()-t>120000||loc.isSharing===false)continue;visible.add(uid);const position={lat,lng};bounds.extend(position);let marker=markers.get(uid);if(!marker){marker=new maps.Marker({map,position,title:uid});markers.set(uid,marker);}else marker.setPosition(position);}
 for(const [uid,marker] of markers){if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}}if(visible.size && !renderLive.didFit){map.fitBounds(bounds);renderLive.didFit=true;}}
 function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);label.append(cb,text);memberList.append(label);}}
 function renderRoutes(){routeList.replaceChildren();const shown=routes.filter(r=>routeFilter.value==='all'||r.status==='ACTIVE');if(!shown.length){routeList.textContent='No shared routes';return;}for(const r of shown){const item=document.createElement('div');item.className='fleet-route';const date=new Date(Number(r.startTimeMillis||0)).toLocaleString();item.textContent=`${safeLabel(r.sessionShareUuid)} · ${date} · ${safeLabel(r.status)}`;item.addEventListener('click',()=>showRoute(r));routeList.append(item);}}
-function showRoute(r){if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}show(`Loading route ${r.sessionShareUuid}...`);const ref=collection(db,'fleets',fleetId,'shared_sessions',r.id,'locations');selectedRouteUnsubscribe=onSnapshot(query(ref,orderBy('positionTimeMillis')),(snap)=>{const points=snap.docs.map(d=>d.data()).filter(p=>Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))).map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));if(routeLine)routeLine.setMap(null);if(points.length){routeLine=new maps.Polyline({map,path:points,strokeColor:'#38bdf8',strokeOpacity:.95,strokeWeight:5});const bounds=new maps.LatLngBounds();points.forEach(p=>bounds.extend(p));map.fitBounds(bounds);}show(`${points.length} GPS points · ${safeLabel(r.status)}`);},e=>show(`Route error: ${e.message}`));}
-if(firebaseConfig.apiKey.startsWith('REPLACE_')||googleMapsApiKey.startsWith('REPLACE_')){show('Configuration required: add Firebase Web configuration and Google Maps JavaScript API key.');login.disabled=true;}
-const app=initializeApp(firebaseConfig), auth=getAuth(app), db=getFirestore(app);
-login.addEventListener('click',async()=>{try{await signInWithPopup(auth,new GoogleAuthProvider());}catch(e){show(`Google sign-in failed: ${e.message}`);}});
+function showRoute(r){if(!map){show('Configure Google Maps JavaScript API to view routes.');return;}if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}show(`Loading route ${r.sessionShareUuid}...`);const ref=collection(db,'fleets',fleetId,'shared_sessions',r.id,'locations');selectedRouteUnsubscribe=onSnapshot(query(ref,orderBy('positionTimeMillis')),(snap)=>{const points=snap.docs.map(d=>d.data()).filter(p=>Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))).map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));if(routeLine)routeLine.setMap(null);if(points.length){routeLine=new maps.Polyline({map,path:points,strokeColor:'#38bdf8',strokeOpacity:.95,strokeWeight:5});const bounds=new maps.LatLngBounds();points.forEach(p=>bounds.extend(p));map.fitBounds(bounds);}show(`${points.length} GPS points · ${safeLabel(r.status)}`);},e=>show(`Route error: ${e.message}`));}
+const firebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain && firebaseConfig.appId) &&
+  !Object.values(firebaseConfig).some(v => String(v).includes('REPLACE_'));
+const mapsConfigured = Boolean(googleMapsApiKey) && !googleMapsApiKey.includes('REPLACE_');
+if (!firebaseConfigured) {
+  show('Google sign-in requires Firebase Web configuration. In Firebase Console → Project settings → Your apps → Web app, copy firebaseConfig into this HTML file.');
+  login.disabled = true;
+}
+const app = firebaseConfigured ? initializeApp(firebaseConfig) : null;
+const auth = app ? getAuth(app) : null;
+const db = app ? getFirestore(app) : null;
+login.addEventListener('click', async () => {
+  if (!auth) return;
+  try {
+    show('Opening Google sign-in...');
+    await signInWithPopup(auth, new GoogleAuthProvider());
+  } catch (e) {
+    const hints = {
+      'auth/unauthorized-domain': 'Add this website domain to Firebase Authentication → Settings → Authorized domains.',
+      'auth/operation-not-allowed': 'Enable Google in Firebase Authentication → Sign-in method.',
+      'auth/popup-blocked': 'Allow pop-ups for this website and try again.',
+      'auth/popup-closed-by-user': 'The Google sign-in window was closed.',
+      'auth/invalid-api-key': 'Check the Firebase Web API key in firebaseConfig.'
+    };
+    show(`Google sign-in failed (${e.code || 'unknown'}). ${hints[e.code] || e.message}`);
+  }
+});
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-onAuthStateChanged(auth,async user=>{clearSession();login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}await mapsReady();if(auth.currentUser?.uid!==user.uid)return;content.hidden=false;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(b.startTimeMillis||0)-Number(a.startTimeMillis||0));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
