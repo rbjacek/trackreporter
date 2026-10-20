@@ -864,33 +864,37 @@ function renderLive(){
   for(const loc of liveData){
     const uid=loc.uid;
     if(!uid || !selectedUids.has(uid)){diagnostics.unselected++;continue;}
-    
-const lat = Number(data.latitude);
-const lon = Number(data.longitude);
-
-if (
-    !Number.isFinite(lat) ||
-    !Number.isFinite(lon) ||
-    Math.abs(lat) > 90 ||
-    Math.abs(lon) > 180
-) {
-    return;
-}
-    
+    const lat=Number(loc.latitude ?? loc.lat);
+    const lng=Number(loc.longitude ?? loc.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||
+       loc.latitude===null||loc.longitude===null){
+      diagnostics.invalidCoordinates++;
+      continue;
+    }
+    const t=locationMillis(loc.timestampMillis);
     if(!t){diagnostics.missingTime++;continue;}
     if(Date.now()-t>120000){diagnostics.stale++;continue;}
     if(loc.isSharing===false){diagnostics.notSharing++;continue;}
     diagnostics.visible++;
     if(!map)continue;
     visible.add(uid);
-    const position={lat,lng};bounds.extend(position);
+    const position={lat,lng};
+    bounds.extend(position);
     let marker=markers.get(uid);
-    if(!marker){marker=new maps.Marker({map,position,title:members.find(m=>m.uid===uid)?.displayName||uid});markers.set(uid,marker);}
-    else marker.setPosition(position);
+    if(!marker){
+      marker=new maps.Marker({map,position,title:members.find(m=>m.uid===uid)?.displayName||uid});
+      markers.set(uid,marker);
+    }else marker.setPosition(position);
   }
   if(map){
-    for(const [uid,marker] of markers){if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}}
-    if(visible.size&&!renderLive.didFit){map.fitBounds(bounds);if(visible.size===1)map.setZoom(16);renderLive.didFit=true;}
+    for(const [uid,marker] of markers){
+      if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
+    }
+    if(visible.size&&!renderLive.didFit){
+      map.fitBounds(bounds);
+      if(visible.size===1)map.setZoom(16);
+      renderLive.didFit=true;
+    }
   }
   const diagnosticElement=document.getElementById('fleet-live-diagnostics');
   if(diagnosticElement){
