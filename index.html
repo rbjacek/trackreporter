@@ -663,6 +663,12 @@ body.fleet-signed-in .page { width: min(1500px, calc(100% - 24px)); padding-top:
 body.fleet-signed-in #fleet-web { margin: 0; min-height: calc(100vh - 28px); }
 body.fleet-signed-in .fleet-map { height: min(68vh, 800px); min-height: 400px; }
 body.fleet-signed-in .fleet-sidebar { max-height: 75vh; }
+
+/* Brand header visible only in the signed-in Fleet dashboard. */
+.fleet-dashboard-brand { display:none; align-items:center; gap:12px; margin:0 0 18px; padding:0 0 16px; border-bottom:1px solid var(--card-border); }
+.fleet-dashboard-brand img { width:48px; height:48px; object-fit:contain; }
+.fleet-dashboard-brand span { font-size:1.45rem; font-weight:800; letter-spacing:-.03em; }
+body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 </style>
 </head>
 
@@ -778,6 +784,7 @@ body.fleet-signed-in .fleet-sidebar { max-height: 75vh; }
    
 
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
+  <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
   <div class="fleet-heading"><div><h2 id="fleet-web-title">Fleet Web</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
