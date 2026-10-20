@@ -910,37 +910,26 @@ function renderLive(){
 }
 setInterval(()=>{if(auth?.currentUser && !content.hidden)renderLive();},10000);
 function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);label.append(cb,text);memberList.append(label);}}
-function formatRouteDate(value){
-  const millis = locationMillis(value);
+function routeStartMillis(route){
+  // The Firestore route document is an object; read its date field explicitly.
+  const candidates = [
+    route.startTimeMillis, route.sessionStartTimeMillis, route.startedAt,
+    route.startTime, route.startTimestamp, route.createdAt,
+    route.sharedAt, route.createdAtMillis
+  ];
+  for (const value of candidates) {
+    const millis = locationMillis(value);
+    if (millis > 0) return millis;
+  }
+  return 0;
+}
+function formatRouteDate(route){
+  const millis = routeStartMillis(route);
   if(!millis) return 'Date unavailable';
   const d = new Date(millis);
   if(Number.isNaN(d.getTime())) return 'Date unavailable';
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
-}
-function formatRouteDistance(r){
-  // Show distance only when the stored field explicitly identifies its unit.
-  const meters = Number(r.distanceMeters ?? r.totalDistanceMeters);
-  const km = Number(r.distanceKm ?? r.totalDistanceKm);
-  if((r.distanceMeters != null || r.totalDistanceMeters != null) && Number.isFinite(meters) && meters >= 0)
-    return `${(meters/1000).toFixed(2)} km`;
-  if((r.distanceKm != null || r.totalDistanceKm != null) && Number.isFinite(km) && km >= 0)
-    return `${km.toFixed(2)} km`;
-  return null;
-}
-function formatRouteDuration(r){
-  let millis = null;
-  if(r.durationMillis != null && Number.isFinite(Number(r.durationMillis))) millis = Number(r.durationMillis);
-  else if(r.durationSeconds != null && Number.isFinite(Number(r.durationSeconds))) millis = Number(r.durationSeconds)*1000;
-  else if(r.endTimeMillis != null && r.startTimeMillis != null) {
-    const start = locationMillis(r.startTimeMillis);
-    const end = locationMillis(r.endTimeMillis);
-    if(start && end && end >= start) millis = end-start;
-  }
-  if(millis == null || millis < 0) return null;
-  const minutes = Math.floor(millis/60000);
-  const hours = Math.floor(minutes/60);
-  return hours ? `${hours} h ${String(minutes%60).padStart(2,'0')} min` : `${minutes} min`;
 }
 function renderRoutes() {
   routeList.replaceChildren();
@@ -1032,7 +1021,7 @@ logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
 if (auth) onAuthStateChanged(auth,async user=>{clearSession();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
-cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(b.startTimeMillis||0)-Number(a.startTimeMillis||0));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
+cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
 </script>
 
