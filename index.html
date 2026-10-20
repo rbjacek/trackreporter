@@ -652,7 +652,18 @@ gtag('event', 'TrackReporterView2');
 .fleet-route-list{max-height:200px;overflow:auto}.fleet-route{padding:9px;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer}.fleet-route:hover{background:rgba(255,255,255,.07)}
 @media(max-width:800px){.fleet-layout{grid-template-columns:1fr}.fleet-map{height:420px}}
 
-  </style>
+  
+/* Signed-in users see only the Fleet workspace. */
+body.fleet-signed-in .page > .nav,
+body.fleet-signed-in .page > .hero,
+body.fleet-signed-in .page > .section,
+body.fleet-signed-in .page > .sample-report-section,
+body.fleet-signed-in .page > footer { display: none !important; }
+body.fleet-signed-in .page { width: min(1500px, calc(100% - 24px)); padding-top: 14px; }
+body.fleet-signed-in #fleet-web { margin: 0; min-height: calc(100vh - 28px); }
+body.fleet-signed-in .fleet-map { height: min(68vh, 800px); min-height: 400px; }
+body.fleet-signed-in .fleet-sidebar { max-height: 75vh; }
+</style>
 </head>
 
 <body>
@@ -778,7 +789,7 @@ gtag('event', 'TrackReporterView2');
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-routes" class="fleet-route-list"></div>
       </aside>
-      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live markers update automatically. Click a shared route to display its GPS track.</p></div>
+      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live markers update automatically. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -823,7 +834,7 @@ const firebaseConfig = {
   appId: '1:233684449282:web:7ad5e85314ecaaac370f1b',
   measurementId: 'G-C1YD5WGX1G'
 };
-const googleMapsApiKey = 'AIzaSyCRlWdJ6uESl1RSQNcZ3HWZO0LJUykbQw8';
+const googleMapsApiKey = 'REPLACE_GOOGLE_MAPS_JAVASCRIPT_API_KEY';
 const status = document.getElementById('fleet-status');
 const content = document.getElementById('fleet-content');
 const login = document.getElementById('fleet-login');
@@ -839,8 +850,44 @@ function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedR
 function clearSession(){renderMembers.initialized=false;renderLive.didFit=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;map=new maps.Map(document.getElementById('fleet-map'),{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
-function renderLive(){if(!map)return;const visible=new Set();const bounds=new maps.LatLngBounds();for(const loc of liveData){const uid=loc.uid;if(!uid||!selectedUids.has(uid))continue;const lat=Number(loc.lat),lng=Number(loc.lon);const t=Number(loc.timestampMillis||0);if(!Number.isFinite(lat)||!Number.isFinite(lng)||!t||Date.now()-t>120000||loc.isSharing===false)continue;visible.add(uid);const position={lat,lng};bounds.extend(position);let marker=markers.get(uid);if(!marker){marker=new maps.Marker({map,position,title:uid});markers.set(uid,marker);}else marker.setPosition(position);}
-for(const [uid,marker] of markers){if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}}if(visible.size && !renderLive.didFit){map.fitBounds(bounds);renderLive.didFit=true;}}
+function locationMillis(value){
+  if(typeof value==='number') return value < 1e11 ? value*1000 : value;
+  if(value && typeof value.toMillis==='function') return value.toMillis();
+  if(value && typeof value.seconds==='number') return value.seconds*1000 + Math.floor((value.nanoseconds||0)/1e6);
+  if(typeof value==='string'){const n=Number(value);if(Number.isFinite(n)&&n>0)return n<1e11?n*1000:n;const d=Date.parse(value);return Number.isFinite(d)?d:0;}
+  return 0;
+}
+function renderLive(){
+  const diagnostics={received:liveData.length,visible:0,unselected:0,invalidCoordinates:0,missingTime:0,stale:0,notSharing:0};
+  const visible=new Set();
+  const bounds=map?new maps.LatLngBounds():null;
+  for(const loc of liveData){
+    const uid=loc.uid;
+    if(!uid || !selectedUids.has(uid)){diagnostics.unselected++;continue;}
+    const lat=Number(loc.lat),lng=Number(loc.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){diagnostics.invalidCoordinates++;continue;}
+    const t=locationMillis(loc.timestampMillis ?? loc.timestamp ?? loc.lastLocationUpdateAt);
+    if(!t){diagnostics.missingTime++;continue;}
+    if(Date.now()-t>120000){diagnostics.stale++;continue;}
+    if(loc.isSharing===false){diagnostics.notSharing++;continue;}
+    diagnostics.visible++;
+    if(!map)continue;
+    visible.add(uid);
+    const position={lat,lng};bounds.extend(position);
+    let marker=markers.get(uid);
+    if(!marker){marker=new maps.Marker({map,position,title:members.find(m=>m.uid===uid)?.displayName||uid});markers.set(uid,marker);}
+    else marker.setPosition(position);
+  }
+  if(map){
+    for(const [uid,marker] of markers){if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}}
+    if(visible.size&&!renderLive.didFit){map.fitBounds(bounds);if(visible.size===1)map.setZoom(16);renderLive.didFit=true;}
+  }
+  const diagnosticElement=document.getElementById('fleet-live-diagnostics');
+  if(diagnosticElement){
+    diagnosticElement.textContent=`LIVE: ${diagnostics.visible} visible / ${diagnostics.received} received · not selected: ${diagnostics.unselected} · stale (>2 min): ${diagnostics.stale} · missing time: ${diagnostics.missingTime} · invalid coordinates: ${diagnostics.invalidCoordinates} · sharing off: ${diagnostics.notSharing}`;
+  }
+}
+setInterval(()=>{if(auth?.currentUser && !content.hidden)renderLive();},10000);
 function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);label.append(cb,text);memberList.append(label);}}
 function renderRoutes(){routeList.replaceChildren();const shown=routes.filter(r=>routeFilter.value==='all'||r.status==='ACTIVE');if(!shown.length){routeList.textContent='No shared routes';return;}for(const r of shown){const item=document.createElement('div');item.className='fleet-route';const date=new Date(Number(r.startTimeMillis||0)).toLocaleString();item.textContent=`${safeLabel(r.sessionShareUuid)} · ${date} · ${safeLabel(r.status)}`;item.addEventListener('click',()=>showRoute(r));routeList.append(item);}}
 function showRoute(r){if(!map){show('Configure Google Maps JavaScript API to view routes.');return;}if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}show(`Loading route ${r.sessionShareUuid}...`);const ref=collection(db,'fleets',fleetId,'shared_sessions',r.id,'locations');selectedRouteUnsubscribe=onSnapshot(query(ref,orderBy('positionTimeMillis')),(snap)=>{const points=snap.docs.map(d=>d.data()).filter(p=>Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))).map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));if(routeLine)routeLine.setMap(null);if(points.length){routeLine=new maps.Polyline({map,path:points,strokeColor:'#38bdf8',strokeOpacity:.95,strokeWeight:5});const bounds=new maps.LatLngBounds();points.forEach(p=>bounds.extend(p));map.fitBounds(bounds);}show(`${points.length} GPS points · ${safeLabel(r.status)}`);},e=>show(`Route error: ${e.message}`));}
@@ -874,7 +921,7 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>Number(b.startTimeMillis||0)-Number(a.startTimeMillis||0));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
