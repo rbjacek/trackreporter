@@ -864,9 +864,19 @@ function renderLive(){
   for(const loc of liveData){
     const uid=loc.uid;
     if(!uid || !selectedUids.has(uid)){diagnostics.unselected++;continue;}
-    const lat=Number(loc.lat),lng=Number(loc.lon);
-    if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180){diagnostics.invalidCoordinates++;continue;}
-    const t=locationMillis(loc.timestampMillis ?? loc.timestamp ?? loc.lastLocationUpdateAt);
+    
+const lat = Number(data.latitude);
+const lon = Number(data.longitude);
+
+if (
+    !Number.isFinite(lat) ||
+    !Number.isFinite(lon) ||
+    Math.abs(lat) > 90 ||
+    Math.abs(lon) > 180
+) {
+    return;
+}
+    
     if(!t){diagnostics.missingTime++;continue;}
     if(Date.now()-t>120000){diagnostics.stale++;continue;}
     if(loc.isSharing===false){diagnostics.notSharing++;continue;}
