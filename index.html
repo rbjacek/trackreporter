@@ -797,7 +797,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-routes" class="fleet-route-list"></div>
       </aside>
-      <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Satellite</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -859,9 +859,12 @@ let routeLine3d=null, selectedRoutePoints=[];
 let currentLivePositions=[];
 let last3dCameraKey='';
 const mapContainer=document.getElementById('fleet-map');
+const btnNormal=document.getElementById('fleet-mode-normal');
 const btnSatellite=document.getElementById('fleet-mode-satellite');
 const btn3d=document.getElementById('fleet-mode-3d');
 function setMapModeButtons(){
+  btnNormal.classList.toggle('active',mapMode==='normal');
+  btnNormal.setAttribute('aria-pressed',String(mapMode==='normal'));
   btnSatellite.classList.toggle('active',mapMode==='satellite');
   btn3d.classList.toggle('active',mapMode==='3d');
   btnSatellite.setAttribute('aria-pressed',String(mapMode==='satellite'));
@@ -947,14 +950,18 @@ async function switchMapMode(next){
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
   }else{
-    mapMode='satellite';
+    mapMode=next;
     if(map3d)map3d.style.display='none';
-    if(map)map.getDiv().style.display='block';
+    if(map){
+      map.getDiv().style.display='block';
+      map.setMapTypeId(next==='normal'?'roadmap':'hybrid');
+    }
     setMapModeButtons();
     maps.event.trigger(map,'resize');renderLive();
-    show('Satellite map enabled.');
+    show(next==='normal'?'Normal map enabled.':'Hybrid map enabled.');
   }
 }
+btnNormal.addEventListener('click',()=>switchMapMode('normal'));
 btnSatellite.addEventListener('click',()=>switchMapMode('satellite'));
 btn3d.addEventListener('click',()=>switchMapMode('3d'));
 
@@ -1063,7 +1070,7 @@ function renderLive(){
     for(const [uid,marker] of markers){
       if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
     }
-    if(mapMode==='satellite')followLiveMarkers(positions);
+    if(mapMode!=='3d')followLiveMarkers(positions);
     else update3dLive(positions,visible);
   }
   const diagnosticElement=document.getElementById('fleet-live-diagnostics');
@@ -1145,10 +1152,10 @@ function showRoute(r) {
       routeLine = new maps.Polyline({ map, path: points, strokeColor: '#38bdf8', strokeOpacity: .95, strokeWeight: 5 });
       const bounds = new maps.LatLngBounds();
       points.forEach(p => bounds.extend(p));
-      if (mapMode==='satellite' && points.length === 1) {
+      if (mapMode!=='3d' && points.length === 1) {
         map.setCenter(points[0]);
         map.setZoom(16);
-      } else if(mapMode==='satellite') {
+      } else if(mapMode!=='3d') {
         map.fitBounds(bounds);
       }
     }
