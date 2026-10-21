@@ -854,7 +854,7 @@ const cleanup = [];
 let map, maps, fleetId, routes = [], markers = new Map(), selectedRouteUnsubscribe = null, routeLine = null;
 let liveData = [], members = [], selectedUids = new Set();
 // Each fleet member keeps a stable color across live updates.
-const liveColors = ['#22d3ee','#f97316','#a78bfa','#4ade80','#fb7185','#facc15','#60a5fa','#f472b6','#2dd4bf','#e879f9'];
+const liveColors = ['#22d3ee','#f97316','#a78bfa','#4ade80','#fb7185','#2563eb','#60a5fa','#f472b6','#2dd4bf','#e879f9'];
 const memberColors = new Map();
 let pulsePhase = 0;
 function memberColor(uid){
@@ -888,11 +888,11 @@ function followLiveMarkers(positions){
   if(!needsMove)return;
   if(positions.length===1){
     map.panTo(positions[0]);
-    if(!followLiveMarkers.initialZoomSet){map.setZoom(16);followLiveMarkers.initialZoomSet=true;}
+    if(!followLiveMarkers.initialZoomSet){map.setZoom(17);followLiveMarkers.initialZoomSet=true;}
   }else{
     const bounds=new maps.LatLngBounds();
     positions.forEach(p=>bounds.extend(p));
-    map.fitBounds(bounds,{top:85,right:85,bottom:85,left:85});
+    map.fitBounds(bounds,{top:55,right:55,bottom:55,left:55});
   }
 }
 // Animation changes only icon appearance; it never triggers a camera move.
