@@ -653,6 +653,7 @@ gtag('event', 'TrackReporterView2');
 @media(max-width:800px){.fleet-layout{grid-template-columns:1fr}.fleet-map{height:420px}}
 
   
+.fleet-member-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.16)}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
 body.fleet-signed-in .page > .hero,
@@ -796,7 +797,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-routes" class="fleet-route-list"></div>
       </aside>
-      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live markers update automatically. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -852,9 +853,57 @@ const routeFilter = document.getElementById('fleet-route-filter');
 const cleanup = [];
 let map, maps, fleetId, routes = [], markers = new Map(), selectedRouteUnsubscribe = null, routeLine = null;
 let liveData = [], members = [], selectedUids = new Set();
+// Each fleet member keeps a stable color across live updates.
+const liveColors = ['#22d3ee','#f97316','#a78bfa','#4ade80','#fb7185','#facc15','#60a5fa','#f472b6','#2dd4bf','#e879f9'];
+const memberColors = new Map();
+let pulsePhase = 0;
+function memberColor(uid){
+  if(!memberColors.has(uid)){
+    let hash = 2166136261;
+    for(const ch of uid){hash ^= ch.charCodeAt(0);hash = Math.imul(hash,16777619);}
+    memberColors.set(uid,liveColors[(hash>>>0)%liveColors.length]);
+  }
+  return memberColors.get(uid);
+}
+function liveCircleIcon(uid){
+  return {path:maps.SymbolPath.CIRCLE,fillColor:memberColor(uid),fillOpacity:pulsePhase?0.65:1,
+    strokeColor:'#ffffff',strokeOpacity:pulsePhase?0.8:1,strokeWeight:2.5,
+    scale:pulsePhase?9:13};
+}
+function followLiveMarkers(positions){
+  if(!map || !positions.length)return;
+  const current=map.getBounds();
+  // Keep a safety margin inside the map; only move when needed.
+  const needsMove=!current || positions.some(p=>{
+    if(!current.contains(p))return true;
+    const ne=current.getNorthEast(),sw=current.getSouthWest();
+    const latMargin=(ne.lat()-sw.lat())*0.17;
+    // Longitude may cross the date line; normal containment is still respected.
+    const west=sw.lng(),east=ne.lng();
+    if(east<west)return false;
+    const lngMargin=(east-west)*0.17;
+    return p.lat<sw.lat()+latMargin || p.lat>ne.lat()-latMargin ||
+      p.lng<west+lngMargin || p.lng>east-lngMargin;
+  });
+  if(!needsMove)return;
+  if(positions.length===1){
+    map.panTo(positions[0]);
+    if(!followLiveMarkers.initialZoomSet){map.setZoom(16);followLiveMarkers.initialZoomSet=true;}
+  }else{
+    const bounds=new maps.LatLngBounds();
+    positions.forEach(p=>bounds.extend(p));
+    map.fitBounds(bounds,{top:85,right:85,bottom:85,left:85});
+  }
+}
+// Animation changes only icon appearance; it never triggers a camera move.
+setInterval(()=>{
+  if(!map || !markers.size || content.hidden)return;
+  pulsePhase=1-pulsePhase;
+  for(const [uid,marker] of markers)marker.setIcon(liveCircleIcon(uid));
+},650);
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();}
-function clearSession(){renderMembers.initialized=false;renderLive.didFit=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;map=new maps.Map(document.getElementById('fleet-map'),{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
@@ -867,16 +916,15 @@ function locationMillis(value){
 function renderLive(){
   const diagnostics={received:liveData.length,visible:0,unselected:0,invalidCoordinates:0,missingTime:0,stale:0,notSharing:0};
   const visible=new Set();
-  const bounds=map?new maps.LatLngBounds():null;
+  const positions=[];
   for(const loc of liveData){
     const uid=loc.uid;
     if(!uid || !selectedUids.has(uid)){diagnostics.unselected++;continue;}
     const lat=Number(loc.latitude ?? loc.lat);
     const lng=Number(loc.longitude ?? loc.lon);
     if(!Number.isFinite(lat)||!Number.isFinite(lng)||Math.abs(lat)>90||Math.abs(lng)>180||
-       loc.latitude===null||loc.longitude===null){
-      diagnostics.invalidCoordinates++;
-      continue;
+       (loc.latitude===null && loc.lat==null)||(loc.longitude===null && loc.lon==null)){
+      diagnostics.invalidCoordinates++;continue;
     }
     const t=locationMillis(loc.timestampMillis);
     if(!t){diagnostics.missingTime++;continue;}
@@ -886,22 +934,22 @@ function renderLive(){
     if(!map)continue;
     visible.add(uid);
     const position={lat,lng};
-    bounds.extend(position);
+    positions.push(position);
     let marker=markers.get(uid);
     if(!marker){
-      marker=new maps.Marker({map,position,title:members.find(m=>m.uid===uid)?.displayName||uid});
+      marker=new maps.Marker({map,position,icon:liveCircleIcon(uid),
+        title:members.find(m=>m.uid===uid)?.displayName||members.find(m=>m.uid===uid)?.email||uid,
+        zIndex:1000});
       markers.set(uid,marker);
-    }else marker.setPosition(position);
+    }else{
+      marker.setPosition(position);
+    }
   }
   if(map){
     for(const [uid,marker] of markers){
       if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
     }
-    if(visible.size&&!renderLive.didFit){
-      map.fitBounds(bounds);
-      if(visible.size===1)map.setZoom(16);
-      renderLive.didFit=true;
-    }
+    followLiveMarkers(positions);
   }
   const diagnosticElement=document.getElementById('fleet-live-diagnostics');
   if(diagnosticElement){
@@ -909,7 +957,7 @@ function renderLive(){
   }
 }
 setInterval(()=>{if(auth?.currentUser && !content.hidden)renderLive();},10000);
-function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);label.append(cb,text);memberList.append(label);}}
+function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);const dot=document.createElement('span');dot.className='fleet-member-dot';dot.style.backgroundColor=memberColor(uid);label.append(cb,dot,text);memberList.append(label);}}
 function routeStartMillis(route){
   // The Firestore route document is an object; read its date field explicitly.
   const candidates = [
