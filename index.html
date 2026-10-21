@@ -856,6 +856,8 @@ let liveData = [], members = [], selectedUids = new Set();
 let map3d=null, maps3dLib=null, pin3dLib=null, mapMode='satellite';
 const markers3d=new Map();
 let routeLine3d=null, selectedRoutePoints=[];
+let currentLivePositions=[];
+let last3dCameraKey='';
 const mapContainer=document.getElementById('fleet-map');
 const btnSatellite=document.getElementById('fleet-mode-satellite');
 const btn3d=document.getElementById('fleet-mode-3d');
@@ -891,8 +893,11 @@ function draw3dRoute(){
     map3d.append(routeLine3d);
   }
   const p=selectedRoutePoints[Math.floor(selectedRoutePoints.length/2)];
-  map3d.center={lat:p.lat,lng:p.lng,altitude:0};
-  if(selectedRoutePoints.length===1)map3d.range=700;
+  // The route is an overlay: it must not steal the camera from live tracking.
+  if(!currentLivePositions.length){
+    map3d.center={lat:p.lat,lng:p.lng,altitude:0};
+    if(selectedRoutePoints.length===1)map3d.range=700;
+  }
 }
 function update3dLive(positions,visible){
   if(!map3d)return;
@@ -911,17 +916,21 @@ function update3dLive(positions,visible){
       markers3d.set(uid,marker);
     }else marker.position=position;
   }
-  if(!positions.length)return;
-  // Keep all live members visible using a simple geographic envelope.
+  if(!positions.length){last3dCameraKey='';return;}
+  // Recalculate the camera whenever live coordinates change, not only when
+  // a marker is already far from the camera's center. A tilted 3D view has
+  // an asymmetric visible area, so distance/range thresholds are unreliable.
   const lat=(Math.min(...positions.map(p=>p.lat))+Math.max(...positions.map(p=>p.lat)))/2;
   const lng=(Math.min(...positions.map(p=>p.lng))+Math.max(...positions.map(p=>p.lng)))/2;
   const latSpread=Math.max(...positions.map(p=>p.lat))-Math.min(...positions.map(p=>p.lat));
   const lngSpread=Math.max(...positions.map(p=>p.lng))-Math.min(...positions.map(p=>p.lng));
-  const desiredRange=positions.length===1?650:Math.max(850,Math.min(120000,Math.max(latSpread*111000,lngSpread*71000)*3.8));
-  const c=map3d.center;
-  const distance=Math.hypot((lat-(c?.lat??lat))*111000,(lng-(c?.lng??lng))*71000);
-  if(distance>desiredRange*.22 || Math.abs((map3d.range||desiredRange)-desiredRange)>desiredRange*.35){
-    map3d.center={lat,lng,altitude:0};map3d.range=desiredRange;
+  const meters=Math.max(latSpread*111000,lngSpread*111000*Math.cos(lat*Math.PI/180));
+  const desiredRange=positions.length===1?550:Math.max(900,Math.min(120000,meters*4.5));
+  const key=positions.map(p=>p.lat.toFixed(6)+','+p.lng.toFixed(6)).sort().join('|');
+  if(key!==last3dCameraKey){
+    map3d.center={lat,lng,altitude:0};
+    if(Math.abs(Number(map3d.range||0)-desiredRange)>Math.max(80,desiredRange*.1))map3d.range=desiredRange;
+    last3dCameraKey=key;
   }
 }
 async function switchMapMode(next){
@@ -933,7 +942,7 @@ async function switchMapMode(next){
       mapMode='3d';map3d.style.display='block';
       // 2D map remains loaded underneath for instant fallback.
       map.getDiv().style.display='none';
-      setMapModeButtons();renderLive();draw3dRoute();
+      last3dCameraKey='';setMapModeButtons();draw3dRoute();renderLive();
       show('Photorealistic 3D enabled.');
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
@@ -968,6 +977,10 @@ function liveCircleIcon(uid){
 }
 function followLiveMarkers(positions){
   if(!map || !positions.length)return;
+  if(positions.length===1 && !followLiveMarkers.initialZoomSet){
+    map.setZoom(17);
+    followLiveMarkers.initialZoomSet=true;
+  }
   const current=map.getBounds();
   // Keep a safety margin inside the map; only move when needed.
   const needsMove=!current || positions.some(p=>{
@@ -984,7 +997,7 @@ function followLiveMarkers(positions){
   if(!needsMove)return;
   if(positions.length===1){
     map.panTo(positions[0]);
-    if(!followLiveMarkers.initialZoomSet){map.setZoom(17);followLiveMarkers.initialZoomSet=true;}
+
   }else{
     const bounds=new maps.LatLngBounds();
     positions.forEach(p=>bounds.extend(p));
@@ -1003,7 +1016,7 @@ setInterval(()=>{
 },650);
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();selectedRoutePoints=[];}
-function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
@@ -1045,6 +1058,7 @@ function renderLive(){
       marker.setPosition(position);
     }
   }
+  currentLivePositions=positions;
   if(map){
     for(const [uid,marker] of markers){
       if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
