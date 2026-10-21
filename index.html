@@ -647,7 +647,7 @@ gtag('event', 'TrackReporterView2');
 .fleet-status{color:var(--muted);font-size:.9rem;margin:12px 0}.fleet-layout{display:grid;grid-template-columns:280px minmax(0,1fr);gap:16px;margin-top:18px}
 .fleet-sidebar{background:rgba(0,0,0,.2);border-radius:18px;padding:16px;max-height:620px;overflow:auto}
 .fleet-member{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid rgba(255,255,255,.08)}
-.fleet-member small{display:block;color:var(--muted)}.fleet-map{height:420px;border-radius:18px;overflow:hidden;background:#182433}
+.fleet-map-switch{display:flex;justify-content:flex-end;gap:8px;margin:0 0 10px}.fleet-map-switch button{border:1px solid rgba(255,255,255,.22);background:#1c2938;color:#fff;border-radius:10px;padding:9px 15px;cursor:pointer}.fleet-map-switch button.active{background:#38bdf8;color:#07121e;font-weight:800}.fleet-map-3d{width:100%;height:100%;display:block}.fleet-member small{display:block;color:var(--muted)}.fleet-map{height:420px;border-radius:18px;overflow:hidden;background:#182433}
 .fleet-route-controls{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin:14px 0}.fleet-route-controls select{background:#1c2938;color:white;padding:10px;border:1px solid var(--card-border);border-radius:10px;max-width:100%}
 .fleet-route-list{max-height:200px;overflow:auto}.fleet-route{padding:9px;border-bottom:1px solid rgba(255,255,255,.1);cursor:pointer}.fleet-route:hover{background:rgba(255,255,255,.07)}
 @media(max-width:800px){.fleet-layout{grid-template-columns:1fr}.fleet-map{height:420px}}
@@ -797,7 +797,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-routes" class="fleet-route-list"></div>
       </aside>
-      <div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Satellite</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -853,6 +853,102 @@ const routeFilter = document.getElementById('fleet-route-filter');
 const cleanup = [];
 let map, maps, fleetId, routes = [], markers = new Map(), selectedRouteUnsubscribe = null, routeLine = null;
 let liveData = [], members = [], selectedUids = new Set();
+let map3d=null, maps3dLib=null, pin3dLib=null, mapMode='satellite';
+const markers3d=new Map();
+let routeLine3d=null, selectedRoutePoints=[];
+const mapContainer=document.getElementById('fleet-map');
+const btnSatellite=document.getElementById('fleet-mode-satellite');
+const btn3d=document.getElementById('fleet-mode-3d');
+function setMapModeButtons(){
+  btnSatellite.classList.toggle('active',mapMode==='satellite');
+  btn3d.classList.toggle('active',mapMode==='3d');
+  btnSatellite.setAttribute('aria-pressed',String(mapMode==='satellite'));
+  btn3d.setAttribute('aria-pressed',String(mapMode==='3d'));
+}
+async function ensure3d(){
+  if(map3d)return;
+  if(!maps || !map)throw new Error('Satellite map has not loaded');
+  // Photorealistic 3D is a separate Google Maps API product.
+  maps3dLib=await maps.importLibrary('maps3d');
+  pin3dLib=await maps.importLibrary('marker');
+  const center=map.getCenter();
+  map3d=new maps3dLib.Map3DElement({
+    center:{lat:center?.lat()??52.2297,lng:center?.lng()??21.0122,altitude:0},
+    range:900,tilt:65,heading:0,mode:'SATELLITE'
+  });
+  map3d.classList.add('fleet-map-3d');
+  mapContainer.append(map3d);
+}
+function clear3dMarkers(){for(const marker of markers3d.values())marker.remove();markers3d.clear();}
+function clear3dRoute(){if(routeLine3d){routeLine3d.remove();routeLine3d=null;}}
+function draw3dRoute(){
+  clear3dRoute();
+  if(!map3d || !selectedRoutePoints.length)return;
+  if(selectedRoutePoints.length>=2){
+    routeLine3d=new maps3dLib.Polyline3DElement({path:selectedRoutePoints,
+      strokeColor:'#38bdf8',strokeWidth:6,outerColor:'#ffffff',outerWidth:1,
+      altitudeMode:'CLAMP_TO_GROUND'});
+    map3d.append(routeLine3d);
+  }
+  const p=selectedRoutePoints[Math.floor(selectedRoutePoints.length/2)];
+  map3d.center={lat:p.lat,lng:p.lng,altitude:0};
+  if(selectedRoutePoints.length===1)map3d.range=700;
+}
+function update3dLive(positions,visible){
+  if(!map3d)return;
+  for(const [uid,marker] of markers3d){if(!visible.has(uid)){marker.remove();markers3d.delete(uid);}}
+  for(const loc of liveData){
+    const uid=loc.uid;
+    if(!visible.has(uid))continue;
+    const position={lat:Number(loc.latitude??loc.lat),lng:Number(loc.longitude??loc.lon)};
+    let marker=markers3d.get(uid);
+    if(!marker){
+      marker=new maps3dLib.Marker3DElement({position,sizePreserved:true,
+        label:members.find(m=>m.uid===uid)?.displayName||members.find(m=>m.uid===uid)?.email||''});
+      const pin=new pin3dLib.PinElement({background:memberColor(uid),borderColor:'#ffffff',glyphColor:'#ffffff',scale:1.35});
+      marker.append(pin);
+      map3d.append(marker);
+      markers3d.set(uid,marker);
+    }else marker.position=position;
+  }
+  if(!positions.length)return;
+  // Keep all live members visible using a simple geographic envelope.
+  const lat=(Math.min(...positions.map(p=>p.lat))+Math.max(...positions.map(p=>p.lat)))/2;
+  const lng=(Math.min(...positions.map(p=>p.lng))+Math.max(...positions.map(p=>p.lng)))/2;
+  const latSpread=Math.max(...positions.map(p=>p.lat))-Math.min(...positions.map(p=>p.lat));
+  const lngSpread=Math.max(...positions.map(p=>p.lng))-Math.min(...positions.map(p=>p.lng));
+  const desiredRange=positions.length===1?650:Math.max(850,Math.min(120000,Math.max(latSpread*111000,lngSpread*71000)*3.8));
+  const c=map3d.center;
+  const distance=Math.hypot((lat-(c?.lat??lat))*111000,(lng-(c?.lng??lng))*71000);
+  if(distance>desiredRange*.22 || Math.abs((map3d.range||desiredRange)-desiredRange)>desiredRange*.35){
+    map3d.center={lat,lng,altitude:0};map3d.range=desiredRange;
+  }
+}
+async function switchMapMode(next){
+  if(next===mapMode)return;
+  if(next==='3d'){
+    btn3d.disabled=true;
+    try{
+      await ensure3d();
+      mapMode='3d';map3d.style.display='block';
+      // 2D map remains loaded underneath for instant fallback.
+      map.getDiv().style.display='none';
+      setMapModeButtons();renderLive();draw3dRoute();
+      show('Photorealistic 3D enabled.');
+    }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
+    finally{btn3d.disabled=false;}
+  }else{
+    mapMode='satellite';
+    if(map3d)map3d.style.display='none';
+    if(map)map.getDiv().style.display='block';
+    setMapModeButtons();
+    maps.event.trigger(map,'resize');renderLive();
+    show('Satellite map enabled.');
+  }
+}
+btnSatellite.addEventListener('click',()=>switchMapMode('satellite'));
+btn3d.addEventListener('click',()=>switchMapMode('3d'));
+
 // Each fleet member keeps a stable color across live updates.
 const liveColors = ['#22d3ee','#f97316','#a78bfa','#4ade80','#fb7185','#2563eb','#60a5fa','#f472b6','#2dd4bf','#e879f9'];
 const memberColors = new Map();
@@ -900,12 +996,16 @@ setInterval(()=>{
   if(!map || !markers.size || content.hidden)return;
   pulsePhase=1-pulsePhase;
   for(const [uid,marker] of markers)marker.setIcon(liveCircleIcon(uid));
+  for(const marker of markers3d.values()){
+    const pin=marker.querySelector('gmp-pin');
+    if(pin)pin.scale=pulsePhase?1.1:1.45;
+  }
 },650);
 const show = message => status.textContent = message;
-function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();}
+function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();selectedRoutePoints=[];}
 function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
-function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;map=new maps.Map(document.getElementById('fleet-map'),{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
+function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
   if(typeof value==='number') return value < 1e11 ? value*1000 : value;
   if(value && typeof value.toMillis==='function') return value.toMillis();
@@ -949,7 +1049,8 @@ function renderLive(){
     for(const [uid,marker] of markers){
       if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
     }
-    followLiveMarkers(positions);
+    if(mapMode==='satellite')followLiveMarkers(positions);
+    else update3dLive(positions,visible);
   }
   const diagnosticElement=document.getElementById('fleet-live-diagnostics');
   if(diagnosticElement){
@@ -1007,6 +1108,7 @@ function showRoute(r) {
     routeLine.setMap(null);
     routeLine = null;
   }
+  clear3dRoute();selectedRoutePoints=[];
   show('Loading selected route...');
   const ref = collection(db, 'fleets', fleetId, 'shared_sessions', r.id, 'locations');
   selectedRouteUnsubscribe = onSnapshot(ref, snap => {
@@ -1019,6 +1121,8 @@ function showRoute(r) {
         Math.abs(Number(p.positionLongitude)) <= 180)
       .sort((a, b) => Number(a.positionTimeMillis ?? 0) - Number(b.positionTimeMillis ?? 0))
       .map(p => ({ lat: Number(p.positionLatitude), lng: Number(p.positionLongitude) }));
+    selectedRoutePoints=points;
+    if(mapMode==='3d')draw3dRoute();
     if (routeLine) {
       routeLine.setMap(null);
       routeLine = null;
@@ -1027,10 +1131,10 @@ function showRoute(r) {
       routeLine = new maps.Polyline({ map, path: points, strokeColor: '#38bdf8', strokeOpacity: .95, strokeWeight: 5 });
       const bounds = new maps.LatLngBounds();
       points.forEach(p => bounds.extend(p));
-      if (points.length === 1) {
+      if (mapMode==='satellite' && points.length === 1) {
         map.setCenter(points[0]);
         map.setZoom(16);
-      } else {
+      } else if(mapMode==='satellite') {
         map.fitBounds(bounds);
       }
     }
