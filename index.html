@@ -908,33 +908,35 @@ function update3dLive(positions,visible){
   for(const loc of liveData){
     const uid=loc.uid;
     if(!visible.has(uid))continue;
-    const position={lat:Number(loc.latitude??loc.lat),lng:Number(loc.longitude??loc.lon)};
+    const target={lat:Number(loc.latitude??loc.lat),lng:Number(loc.longitude??loc.lon)};
     let marker=markers3d.get(uid);
     if(!marker){
-      marker=new maps3dLib.Marker3DElement({position,sizePreserved:true,
+      marker=new maps3dLib.Marker3DElement({position:target,sizePreserved:true,
         label:members.find(m=>m.uid===uid)?.displayName||members.find(m=>m.uid===uid)?.email||''});
       const pin=new pin3dLib.PinElement({background:memberColor(uid),borderColor:'#ffffff',glyphColor:'#ffffff',scale:1.35});
-      marker.append(pin);
-      map3d.append(marker);
-      markers3d.set(uid,marker);
-    }else marker.position=position;
+      marker.append(pin);map3d.append(marker);markers3d.set(uid,marker);
+    }
+    // Position updates are driven by the shared animation loop below.
   }
   if(!positions.length){last3dCameraKey='';return;}
-  // Recalculate the camera whenever live coordinates change, not only when
-  // a marker is already far from the camera's center. A tilted 3D view has
-  // an asymmetric visible area, so distance/range thresholds are unreliable.
-  const lat=(Math.min(...positions.map(p=>p.lat))+Math.max(...positions.map(p=>p.lat)))/2;
-  const lng=(Math.min(...positions.map(p=>p.lng))+Math.max(...positions.map(p=>p.lng)))/2;
-  const latSpread=Math.max(...positions.map(p=>p.lat))-Math.min(...positions.map(p=>p.lat));
-  const lngSpread=Math.max(...positions.map(p=>p.lng))-Math.min(...positions.map(p=>p.lng));
-  const meters=Math.max(latSpread*111000,lngSpread*111000*Math.cos(lat*Math.PI/180));
-  const desiredRange=positions.length===1?550:Math.max(900,Math.min(120000,meters*4.5));
-  const key=positions.map(p=>p.lat.toFixed(6)+','+p.lng.toFixed(6)).sort().join('|');
-  if(key!==last3dCameraKey){
-    map3d.center={lat,lng,altitude:0};
-    if(Math.abs(Number(map3d.range||0)-desiredRange)>Math.max(80,desiredRange*.1))map3d.range=desiredRange;
-    last3dCameraKey=key;
+  if(!last3dCameraKey){
+    const center=liveCenter(positions);
+    map3d.center={...center,altitude:0};
+    map3d.range=live3dRange(positions);
+    last3dCameraKey='initialized';
   }
+}
+function liveCenter(points){
+  return {lat:(Math.min(...points.map(p=>p.lat))+Math.max(...points.map(p=>p.lat)))/2,
+    lng:(Math.min(...points.map(p=>p.lng))+Math.max(...points.map(p=>p.lng)))/2};
+}
+function live3dRange(points){
+  if(points.length===1)return 550;
+  const c=liveCenter(points);
+  const latSpread=Math.max(...points.map(p=>p.lat))-Math.min(...points.map(p=>p.lat));
+  const lngSpread=Math.max(...points.map(p=>p.lng))-Math.min(...points.map(p=>p.lng));
+  const meters=Math.max(latSpread*111000,lngSpread*111000*Math.cos(c.lat*Math.PI/180));
+  return Math.max(900,Math.min(120000,meters*4.5));
 }
 async function switchMapMode(next){
   if(next===mapMode)return;
@@ -982,6 +984,84 @@ function liveCircleIcon(uid){
     strokeColor:'#ffffff',strokeOpacity:pulsePhase?0.8:1,strokeWeight:2.5,
     scale:pulsePhase?9:13};
 }
+// Smoothly interpolate between incoming Firestore positions. No artificial GPS updates.
+const animatedPositions=new Map();
+let camera2dTarget=null, camera3dTarget=null, camera3dRangeTarget=null;
+let lastAnimationTime=0;
+const SMOOTH_SECONDS=1.35;
+function longitudeDelta(a,b){return ((b-a+540)%360)-180;}
+function easeFactor(dt){return 1-Math.exp(-dt/SMOOTH_SECONDS);}
+function updateAnimationTargets(){
+  const active=new Set();
+  for(const loc of liveData){
+    const uid=loc.uid;
+    if(!selectedUids.has(uid))continue;
+    const target={lat:Number(loc.latitude??loc.lat),lng:Number(loc.longitude??loc.lon)};
+    if(!Number.isFinite(target.lat)||!Number.isFinite(target.lng)||Math.abs(target.lat)>90||Math.abs(target.lng)>180)continue;
+    const t=locationMillis(loc.timestampMillis);
+    if(!t||Date.now()-t>120000||loc.isSharing===false)continue;
+    active.add(uid);
+    if(!animatedPositions.has(uid))animatedPositions.set(uid,{...target});
+    animatedPositions.get(uid).target=target;
+  }
+  for(const uid of animatedPositions.keys())if(!active.has(uid))animatedPositions.delete(uid);
+}
+function animationFrame(now){
+  const dt=lastAnimationTime?Math.min((now-lastAnimationTime)/1000,.1):0;
+  lastAnimationTime=now;
+  if(map && !content.hidden && animatedPositions.size){
+    const alpha=easeFactor(dt);
+    const points=[];
+    for(const [uid,p] of animatedPositions){
+      const target=p.target;
+      if(!target)continue;
+      p.lat+=(target.lat-p.lat)*alpha;
+      p.lng+=longitudeDelta(p.lng,target.lng)*alpha;
+      points.push({lat:p.lat,lng:p.lng});
+      const marker=markers.get(uid);
+      if(marker)marker.setPosition({lat:p.lat,lng:p.lng});
+      const marker3d=markers3d.get(uid);
+      if(marker3d)marker3d.position={lat:p.lat,lng:p.lng};
+    }
+    if(points.length){
+      if(mapMode==='3d' && map3d){
+        const desired=liveCenter(points);
+        const c=map3d.center;
+        const old={lat:Number(c?.lat??desired.lat),lng:Number(c?.lng??desired.lng)};
+        map3d.center={lat:old.lat+(desired.lat-old.lat)*alpha,
+          lng:old.lng+longitudeDelta(old.lng,desired.lng)*alpha,altitude:0};
+        const targetRange=live3dRange(points);
+        const oldRange=Number(map3d.range)||targetRange;
+        if(Math.abs(oldRange-targetRange)>1)map3d.range=oldRange+(targetRange-oldRange)*alpha;
+      }else if(map){
+        // Only start following when the group approaches the visible map edge.
+        const bounds=map.getBounds();
+        const center=liveCenter(points);
+        let needsFollow=false;
+        if(bounds){
+          const ne=bounds.getNorthEast(),sw=bounds.getSouthWest();
+          const latMargin=(ne.lat()-sw.lat())*.22;
+          const lngMargin=(ne.lng()-sw.lng())*.22;
+          needsFollow=points.some(p=>!bounds.contains(p)||
+            p.lat<sw.lat()+latMargin||p.lat>ne.lat()-latMargin||
+            (ne.lng()>=sw.lng()&&(p.lng<sw.lng()+lngMargin||p.lng>ne.lng()-lngMargin)));
+        }
+        if(needsFollow)camera2dTarget=center;
+        if(camera2dTarget){
+          const c=map.getCenter();
+          if(c){
+            const lat=c.lat()+(camera2dTarget.lat-c.lat())*alpha;
+            const lng=c.lng()+longitudeDelta(c.lng(),camera2dTarget.lng)*alpha;
+            map.setCenter({lat,lng});
+            if(Math.abs(lat-camera2dTarget.lat)<.000001&&Math.abs(longitudeDelta(lng,camera2dTarget.lng))<.000001)camera2dTarget=null;
+          }
+        }
+      }
+    }
+  }
+  requestAnimationFrame(animationFrame);
+}
+requestAnimationFrame(animationFrame);
 function followLiveMarkers(positions){
   if(!map || !positions.length)return;
   if(positions.length===1 && !followLiveMarkers.initialZoomSet){
@@ -1023,7 +1103,7 @@ setInterval(()=>{
 },650);
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();selectedRoutePoints=[];}
-function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
@@ -1061,17 +1141,18 @@ function renderLive(){
         title:members.find(m=>m.uid===uid)?.displayName||members.find(m=>m.uid===uid)?.email||uid,
         zIndex:1000});
       markers.set(uid,marker);
-    }else{
-      marker.setPosition(position);
     }
   }
   currentLivePositions=positions;
+  updateAnimationTargets();
   if(map){
     for(const [uid,marker] of markers){
       if(!visible.has(uid)){marker.setMap(null);markers.delete(uid);}
     }
-    if(mapMode!=='3d')followLiveMarkers(positions);
-    else update3dLive(positions,visible);
+    if(mapMode==='3d')update3dLive(positions,visible);
+    else if(!followLiveMarkers.initialized && positions.length){
+      followLiveMarkers(positions);followLiveMarkers.initialized=true;
+    }
   }
   const diagnosticElement=document.getElementById('fleet-live-diagnostics');
   if(diagnosticElement){
