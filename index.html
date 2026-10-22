@@ -654,7 +654,12 @@ gtag('event', 'TrackReporterView2');
 
   
 .fleet-route-owner-dot{display:inline-block;width:11px;height:11px;flex:0 0 11px;border-radius:50%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 2px rgba(255,255,255,.12)}
-.fleet-route{display:flex;align-items:center;gap:10px}
+.fleet-route{display:flex;align-items:center;gap:10px;border:1px solid transparent;border-radius:10px;margin:3px 0;transition:background .15s,border-color .15s}
+.fleet-route.is-selected{background:rgba(56,189,248,.20);border-color:#38bdf8;box-shadow:inset 3px 0 0 #38bdf8}
+.fleet-route input[type="checkbox"]{accent-color:#38bdf8;width:17px;height:17px;cursor:pointer;flex-shrink:0}
+.fleet-route .fleet-route-date{flex:1}.fleet-route .fleet-route-selected-label{font-size:11px;font-weight:700;color:#7dd3fc}
+.fleet-route-controls .fleet-btn{padding:8px 11px;font-size:12px}
+.fleet-route-selection-info{color:#b7c8da;font-size:12px;margin:5px 0 9px}
 .fleet-member-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.16)}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
@@ -797,7 +802,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
     <div class="fleet-layout">
       <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div>
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
-        <div id="fleet-routes" class="fleet-route-list"></div>
+        <div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div>
       </aside>
       <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
@@ -853,11 +858,15 @@ const routeList = document.getElementById('fleet-routes');
 const memberList = document.getElementById('fleet-members');
 const routeFilter = document.getElementById('fleet-route-filter');
 const cleanup = [];
-let map, maps, fleetId, routes = [], markers = new Map(), selectedRouteUnsubscribe = null, routeLine = null;
+let map, maps, fleetId, routes = [], markers = new Map();
+const selectedRouteIds=new Set();
+const routeSubscriptions=new Map();
+const routeOverlays=new Map();
+const routePointsById=new Map();
 let liveData = [], members = [], selectedUids = new Set();
 let map3d=null, maps3dLib=null, pin3dLib=null, mapMode='satellite';
 const markers3d=new Map();
-let routeLine3d=null, selectedRoutePoints=[];
+const routeOverlays3d=new Map();
 let currentLivePositions=[];
 let last3dCameraKey='';
 const mapContainer=document.getElementById('fleet-map');
@@ -887,22 +896,80 @@ async function ensure3d(){
   mapContainer.append(map3d);
 }
 function clear3dMarkers(){for(const marker of markers3d.values())marker.remove();markers3d.clear();}
-function clear3dRoute(){if(routeLine3d){routeLine3d.remove();routeLine3d=null;}}
+function clear3dRoute(){
+  for(const line of routeOverlays3d.values())line.remove();
+  routeOverlays3d.clear();
+}
 function draw3dRoute(){
   clear3dRoute();
-  if(!map3d || !selectedRoutePoints.length)return;
-  if(selectedRoutePoints.length>=2){
-    routeLine3d=new maps3dLib.Polyline3DElement({path:selectedRoutePoints,
-      strokeColor:'#38bdf8',strokeWidth:6,outerColor:'#ffffff',outerWidth:1,
+  if(!map3d || !maps3dLib)return;
+  for(const [id,points] of routePointsById){
+    if(!selectedRouteIds.has(id)||points.length<2)continue;
+    const route=routes.find(r=>r.id===id);
+    const color=memberColor(String(routeOwnerUid(route)||id));
+    const line=new maps3dLib.Polyline3DElement({path:points,
+      strokeColor:color,strokeWidth:6,outerColor:'#ffffff',outerWidth:1,
       altitudeMode:'CLAMP_TO_GROUND'});
-    map3d.append(routeLine3d);
+    map3d.append(line);
+    routeOverlays3d.set(id,line);
   }
-  const p=selectedRoutePoints[Math.floor(selectedRoutePoints.length/2)];
-  // The route is an overlay: it must not steal the camera from live tracking.
-  if(!currentLivePositions.length){
-    map3d.center={lat:p.lat,lng:p.lng,altitude:0};
-    if(selectedRoutePoints.length===1)map3d.range=700;
+}
+function focusSelectedRoutes(){
+  if(currentLivePositions.length)return; // Live tracking owns the camera while active.
+  const points=[...routePointsById.entries()].filter(([id])=>selectedRouteIds.has(id)).flatMap(([,pts])=>pts);
+  if(!points.length)return;
+  if(mapMode==='3d'&&map3d){
+    const center=liveCenter(points);
+    map3d.center={lat:center.lat,lng:center.lng,altitude:0};
+    map3d.range=live3dRange(points);
+  }else if(map){
+    const bounds=new maps.LatLngBounds();
+    points.forEach(p=>bounds.extend(p));
+    if(points.length===1){map.setCenter(points[0]);map.setZoom(17);}
+    else map.fitBounds(bounds,55);
   }
+}
+function removeRouteSelection(id){
+  const unsubscribe=routeSubscriptions.get(id);
+  if(unsubscribe){unsubscribe();routeSubscriptions.delete(id);}
+  const overlay=routeOverlays.get(id);
+  if(overlay){overlay.setMap(null);routeOverlays.delete(id);}
+  const overlay3d=routeOverlays3d.get(id);
+  if(overlay3d){overlay3d.remove();routeOverlays3d.delete(id);}
+  routePointsById.delete(id);
+  selectedRouteIds.delete(id);
+}
+function selectRoute(id){
+  if(selectedRouteIds.has(id)||!db||!fleetId)return;
+  const route=routes.find(r=>r.id===id);
+  if(!route)return;
+  selectedRouteIds.add(id);
+  const ref=collection(db,'fleets',fleetId,'shared_sessions',id,'locations');
+  const unsubscribe=onSnapshot(ref,snap=>{
+    if(!selectedRouteIds.has(id))return;
+    const points=snap.docs.map(d=>d.data())
+      .filter(p=>p.positionLatitude!=null&&p.positionLongitude!=null&&
+        Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))&&
+        Math.abs(Number(p.positionLatitude))<=90&&Math.abs(Number(p.positionLongitude))<=180)
+      .sort((a,b)=>Number(a.positionTimeMillis??0)-Number(b.positionTimeMillis??0))
+      .map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));
+    routePointsById.set(id,points);
+    const previous=routeOverlays.get(id);
+    if(previous)previous.setMap(null);
+    if(map&&points.length){
+      const line=new maps.Polyline({map,path:points,
+        strokeColor:memberColor(String(routeOwnerUid(route)||id)),strokeOpacity:.95,strokeWeight:5});
+      routeOverlays.set(id,line);
+    }else routeOverlays.delete(id);
+    draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();
+  },error=>show('Route error: '+error.message));
+  routeSubscriptions.set(id,unsubscribe);
+}
+function routeOwnerUid(r){return r?.firebaseUserId||r?.uid||r?.userId||null;}
+function updateRouteSelectionInfo(){
+  const count=selectedRouteIds.size;
+  const info=document.getElementById('fleet-route-selection-info');
+  info.textContent=count?`${count} selected route${count===1?'':'s'} · ${[...routePointsById.entries()].filter(([id])=>selectedRouteIds.has(id)).reduce((sum,[,p])=>sum+p.length,0)} GPS points`:'Select routes to display them together.';
 }
 function update3dLive(positions,visible){
   if(!map3d)return;
@@ -1104,7 +1171,7 @@ setInterval(()=>{
   }
 },650);
 const show = message => status.textContent = message;
-function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());if(selectedRouteUnsubscribe){selectedRouteUnsubscribe();selectedRouteUnsubscribe=null;}if(routeLine){routeLine.setMap(null);routeLine=null;}markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();selectedRoutePoints=[];}
+function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());for(const id of [...selectedRouteIds])removeRouteSelection(id);markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();updateRouteSelectionInfo();}
 function clearSession(){renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
@@ -1162,7 +1229,7 @@ function renderLive(){
   }
 }
 setInterval(()=>{if(auth?.currentUser && !content.hidden)renderLive();},10000);
-function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);const dot=document.createElement('span');dot.className='fleet-member-dot';dot.style.backgroundColor=memberColor(uid);label.append(cb,dot,text);memberList.append(label);}}
+function renderMembers(){memberList.replaceChildren();for(const m of members){const uid=m.uid;if(!uid)continue;const label=document.createElement('label');label.className='fleet-member';const cb=document.createElement('input');cb.type='checkbox';cb.checked=selectedUids.has(uid);cb.addEventListener('change',()=>{if(cb.checked)selectedUids.add(uid);else selectedUids.delete(uid);renderLive();renderRoutes();});const text=document.createElement('span');text.textContent=safeLabel(m.displayName||m.email||uid);const detail=document.createElement('small');detail.textContent=m.isLocationSharing?'Sharing enabled':'Not sharing';text.append(detail);const dot=document.createElement('span');dot.className='fleet-member-dot';dot.style.backgroundColor=memberColor(uid);label.append(cb,dot,text);memberList.append(label);}}
 function routeStartMillis(route){
   // The Firestore route document is an object; read its date field explicitly.
   const candidates = [
@@ -1184,81 +1251,52 @@ function formatRouteDate(route){
   const pad = n => String(n).padStart(2, '0');
   return `${d.getFullYear()}-${pad(d.getMonth()+1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
-function renderRoutes() {
+function visibleRoutes(){
+  return routes.filter(r=>{
+    const uid=routeOwnerUid(r);
+    return uid&&selectedUids.has(String(uid))&&
+      (routeFilter.value==='all'||r.status==='ACTIVE');
+  });
+}
+function renderRoutes(){
+  const shown=visibleRoutes();
+  const allowed=new Set(shown.map(r=>r.id));
+  for(const id of [...selectedRouteIds])if(!allowed.has(id))removeRouteSelection(id);
   routeList.replaceChildren();
-  const shown = routes.filter(r => routeFilter.value === 'all' || r.status === 'ACTIVE');
-  if (!shown.length) {
-    routeList.textContent = 'No shared routes';
-    return;
-  }
-  for (const r of shown) {
-    const item = document.createElement('div');
-    item.className = 'fleet-route';
-    // The shared session stores the Firebase UID of its owner.
-    // Use exactly the same color function as the live map markers.
-    const ownerUid = r.firebaseUserId || r.uid || r.userId;
-    if (ownerUid) {
-      const dot = document.createElement('span');
-      dot.className = 'fleet-route-owner-dot';
-      dot.style.backgroundColor = memberColor(String(ownerUid));
-      const owner = members.find(m => m.uid === ownerUid);
-      dot.title = safeLabel(owner?.displayName || owner?.email || 'Route owner');
-      dot.setAttribute('aria-label', dot.title);
-      item.append(dot);
-    }
-    const date = document.createElement('span');
-    date.textContent = formatRouteDate(r);
-    item.append(date);
-    item.addEventListener('click', () => showRoute(r));
+  if(!shown.length){routeList.textContent='No shared routes for selected members';updateRouteSelectionInfo();draw3dRoute();return;}
+  for(const r of shown){
+    const id=r.id;
+    const item=document.createElement('label');
+    item.className='fleet-route'+(selectedRouteIds.has(id)?' is-selected':'');
+    const cb=document.createElement('input');
+    cb.type='checkbox';cb.checked=selectedRouteIds.has(id);
+    cb.setAttribute('aria-label','Select route '+formatRouteDate(r));
+    cb.addEventListener('change',()=>{
+      if(cb.checked)selectRoute(id);else removeRouteSelection(id);
+      renderRoutes();focusSelectedRoutes();
+    });
+    item.append(cb);
+    const uid=routeOwnerUid(r);
+    const dot=document.createElement('span');dot.className='fleet-route-owner-dot';
+    dot.style.backgroundColor=memberColor(String(uid));
+    const owner=members.find(m=>m.uid===uid);
+    dot.title=safeLabel(owner?.displayName||owner?.email||'Route owner');
+    item.append(dot);
+    const date=document.createElement('span');date.className='fleet-route-date';
+    date.textContent=formatRouteDate(r);item.append(date);
+    if(cb.checked){const flag=document.createElement('span');flag.className='fleet-route-selected-label';flag.textContent='SELECTED';item.append(flag);}
     routeList.append(item);
   }
+  updateRouteSelectionInfo();draw3dRoute();
 }
-function showRoute(r) {
-  if (!map) {
-    show('Configure Google Maps JavaScript API to view routes.');
-    return;
-  }
-  if (selectedRouteUnsubscribe) {
-    selectedRouteUnsubscribe();
-    selectedRouteUnsubscribe = null;
-  }
-  if (routeLine) {
-    routeLine.setMap(null);
-    routeLine = null;
-  }
-  clear3dRoute();selectedRoutePoints=[];
-  show('Loading selected route...');
-  const ref = collection(db, 'fleets', fleetId, 'shared_sessions', r.id, 'locations');
-  selectedRouteUnsubscribe = onSnapshot(ref, snap => {
-    const points = snap.docs
-      .map(d => d.data())
-      .filter(p => p.positionLatitude != null && p.positionLongitude != null &&
-        Number.isFinite(Number(p.positionLatitude)) &&
-        Number.isFinite(Number(p.positionLongitude)) &&
-        Math.abs(Number(p.positionLatitude)) <= 90 &&
-        Math.abs(Number(p.positionLongitude)) <= 180)
-      .sort((a, b) => Number(a.positionTimeMillis ?? 0) - Number(b.positionTimeMillis ?? 0))
-      .map(p => ({ lat: Number(p.positionLatitude), lng: Number(p.positionLongitude) }));
-    selectedRoutePoints=points;
-    if(mapMode==='3d')draw3dRoute();
-    if (routeLine) {
-      routeLine.setMap(null);
-      routeLine = null;
-    }
-    if (points.length) {
-      routeLine = new maps.Polyline({ map, path: points, strokeColor: '#38bdf8', strokeOpacity: .95, strokeWeight: 5 });
-      const bounds = new maps.LatLngBounds();
-      points.forEach(p => bounds.extend(p));
-      if (mapMode!=='3d' && points.length === 1) {
-        map.setCenter(points[0]);
-        map.setZoom(16);
-      } else if(mapMode!=='3d') {
-        map.fitBounds(bounds);
-      }
-    }
-    show(`${points.length} GPS points · ${safeLabel(r.status)}`);
-  }, e => show(`Route error: ${e.message}`));
-}
+document.getElementById('fleet-routes-select-all').addEventListener('click',()=>{
+  for(const r of visibleRoutes())selectRoute(r.id);
+  renderRoutes();focusSelectedRoutes();
+});
+document.getElementById('fleet-routes-clear').addEventListener('click',()=>{
+  for(const id of [...selectedRouteIds])removeRouteSelection(id);
+  renderRoutes();
+});
 window.__fleetModuleStarted = true;
 const firebaseConfigured = Boolean(firebaseConfig.apiKey && firebaseConfig.projectId && firebaseConfig.authDomain && firebaseConfig.appId) &&
   !Object.values(firebaseConfig).some(v => String(v).includes('REPLACE_'));
