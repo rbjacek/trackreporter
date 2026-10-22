@@ -653,6 +653,8 @@ gtag('event', 'TrackReporterView2');
 @media(max-width:800px){.fleet-layout{grid-template-columns:1fr}.fleet-map{height:420px}}
 
   
+.fleet-route-owner-dot{display:inline-block;width:11px;height:11px;flex:0 0 11px;border-radius:50%;border:1px solid rgba(255,255,255,.85);box-shadow:0 0 0 2px rgba(255,255,255,.12)}
+.fleet-route{display:flex;align-items:center;gap:10px}
 .fleet-member-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.16)}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
@@ -1192,7 +1194,21 @@ function renderRoutes() {
   for (const r of shown) {
     const item = document.createElement('div');
     item.className = 'fleet-route';
-    item.textContent = [formatRouteDate(r), safeLabel(r.status)].filter(Boolean).join(' · ');
+    // The shared session stores the Firebase UID of its owner.
+    // Use exactly the same color function as the live map markers.
+    const ownerUid = r.firebaseUserId || r.uid || r.userId;
+    if (ownerUid) {
+      const dot = document.createElement('span');
+      dot.className = 'fleet-route-owner-dot';
+      dot.style.backgroundColor = memberColor(String(ownerUid));
+      const owner = members.find(m => m.uid === ownerUid);
+      dot.title = safeLabel(owner?.displayName || owner?.email || 'Route owner');
+      dot.setAttribute('aria-label', dot.title);
+      item.append(dot);
+    }
+    const date = document.createElement('span');
+    date.textContent = formatRouteDate(r);
+    item.append(date);
     item.addEventListener('click', () => showRoute(r));
     routeList.append(item);
   }
@@ -1273,7 +1289,7 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderLive();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
