@@ -677,6 +677,17 @@ body.fleet-signed-in .fleet-sidebar { max-height: 75vh; }
 .fleet-dashboard-brand img { width:48px; height:48px; object-fit:contain; }
 .fleet-dashboard-brand span { font-size:1.45rem; font-weight:800; letter-spacing:-.03em; }
 body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
+
+/* Shared route loading and live-wait indicators */
+.fleet-route-progress{display:flex;align-items:center;gap:9px;padding:11px 12px;margin:8px 0;border:1px solid rgba(56,189,248,.35);border-radius:12px;background:rgba(56,189,248,.10);color:#e0f2fe;font-size:.88rem;font-weight:600}
+.fleet-route-progress[hidden]{display:none!important}
+.fleet-route-spinner{display:inline-block;width:16px;height:16px;flex:none;border:2px solid rgba(125,211,252,.25);border-top-color:#38bdf8;border-radius:50%;animation:fleet-route-spin .8s linear infinite}
+@keyframes fleet-route-spin{to{transform:rotate(360deg)}}
+.fleet-route-inline-state{margin-left:auto;font-size:.72rem;font-weight:700;color:#7dd3fc;white-space:nowrap;display:inline-flex;align-items:center;gap:5px}
+.fleet-route-inline-state .fleet-route-spinner{width:12px;height:12px;border-width:2px}
+.fleet-route-inline-state.waiting{color:#fbbf24}
+.fleet-route-inline-state.error{color:#fca5a5}
+.fleet-route-inline-state.loaded{color:#86efac}
 </style>
 </head>
 
@@ -802,7 +813,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
     <div class="fleet-layout">
       <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div>
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
-        <div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div>
+        <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div>
       </aside>
       <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
@@ -863,6 +874,8 @@ const selectedRouteIds=new Set();
 const routeSubscriptions=new Map();
 const routeOverlays=new Map();
 const routePointsById=new Map();
+const routeLoadStates=new Map();
+let routeListLoaded=false;
 let liveData = [], members = [], selectedUids = new Set();
 let map3d=null, maps3dLib=null, pin3dLib=null, mapMode='satellite';
 const markers3d=new Map();
@@ -937,13 +950,17 @@ function removeRouteSelection(id){
   const overlay3d=routeOverlays3d.get(id);
   if(overlay3d){overlay3d.remove();routeOverlays3d.delete(id);}
   routePointsById.delete(id);
+  routeLoadStates.delete(id);
   selectedRouteIds.delete(id);
+  updateRouteProgress();
 }
 function selectRoute(id){
   if(selectedRouteIds.has(id)||!db||!fleetId)return;
   const route=routes.find(r=>r.id===id);
   if(!route)return;
   selectedRouteIds.add(id);
+  routeLoadStates.set(id,{state:'loading',message:'Loading GPS points…'});
+  updateRouteProgress();
   const ref=collection(db,'fleets',fleetId,'shared_sessions',id,'locations');
   const unsubscribe=onSnapshot(ref,snap=>{
     if(!selectedRouteIds.has(id))return;
@@ -954,6 +971,8 @@ function selectRoute(id){
       .sort((a,b)=>Number(a.positionTimeMillis??0)-Number(b.positionTimeMillis??0))
       .map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));
     routePointsById.set(id,points);
+    const currentState=points.length?'loaded':(route.status==='ACTIVE'?'waiting':'empty');
+    routeLoadStates.set(id,{state:currentState,message:points.length?`${points.length} GPS points loaded`:(currentState==='waiting'?'Waiting for live GPS data…':'No GPS points available')});
     const previous=routeOverlays.get(id);
     if(previous)previous.setMap(null);
     if(map&&points.length){
@@ -961,11 +980,25 @@ function selectRoute(id){
         strokeColor:memberColor(String(routeOwnerUid(route)||id)),strokeOpacity:.95,strokeWeight:5});
       routeOverlays.set(id,line);
     }else routeOverlays.delete(id);
-    draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();
-  },error=>show('Route error: '+error.message));
+    draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();updateRouteProgress();renderRoutes();
+  },error=>{routeLoadStates.set(id,{state:'error',message:'Loading failed: '+error.message});updateRouteProgress();renderRoutes();show('Route error: '+error.message);});
   routeSubscriptions.set(id,unsubscribe);
 }
 function routeOwnerUid(r){return r?.firebaseUserId||r?.uid||r?.userId||null;}
+function updateRouteProgress(){
+  const panel=document.getElementById('fleet-route-progress');
+  const label=document.getElementById('fleet-route-progress-text');
+  if(!panel||!label)return;
+  if(!routeListLoaded){panel.hidden=false;label.textContent='Loading shared routes from Firebase…';return;}
+  const states=[...selectedRouteIds].map(id=>routeLoadStates.get(id)?.state||'loading');
+  const loading=states.filter(v=>v==='loading').length;
+  const waiting=states.filter(v=>v==='waiting').length;
+  const errors=states.filter(v=>v==='error').length;
+  if(loading){panel.hidden=false;label.textContent=`Loading GPS data for ${loading} selected route${loading===1?'':'s'}…`;}
+  else if(waiting){panel.hidden=false;label.textContent=`Waiting for live GPS data from ${waiting} active route${waiting===1?'':'s'}…`;}
+  else if(errors){panel.hidden=false;label.textContent=`${errors} route${errors===1?'':'s'} could not be loaded. See route details below.`;}
+  else panel.hidden=true;
+}
 function updateRouteSelectionInfo(){
   const count=selectedRouteIds.size;
   const info=document.getElementById('fleet-route-selection-info');
@@ -1263,7 +1296,7 @@ function renderRoutes(){
   const allowed=new Set(shown.map(r=>r.id));
   for(const id of [...selectedRouteIds])if(!allowed.has(id))removeRouteSelection(id);
   routeList.replaceChildren();
-  if(!shown.length){routeList.textContent='No shared routes for selected members';updateRouteSelectionInfo();draw3dRoute();return;}
+  if(!shown.length){routeList.textContent=routeListLoaded?'No shared routes for selected members':'Loading shared routes…';updateRouteSelectionInfo();draw3dRoute();updateRouteProgress();return;}
   for(const r of shown){
     const id=r.id;
     const item=document.createElement('label');
@@ -1284,10 +1317,19 @@ function renderRoutes(){
     item.append(dot);
     const date=document.createElement('span');date.className='fleet-route-date';
     date.textContent=formatRouteDate(r);item.append(date);
-    if(cb.checked){const flag=document.createElement('span');flag.className='fleet-route-selected-label';flag.textContent='SELECTED';item.append(flag);}
+    if(cb.checked){
+      const state=routeLoadStates.get(id);
+      const flag=document.createElement('span');flag.className='fleet-route-selected-label';flag.textContent='SELECTED';item.append(flag);
+      if(state){
+        const info=document.createElement('span');info.className='fleet-route-inline-state '+state.state;
+        if(state.state==='loading'||state.state==='waiting'){const spinner=document.createElement('span');spinner.className='fleet-route-spinner';info.append(spinner);}
+        const stateText=document.createElement('span');stateText.textContent=state.state==='loading'?'Loading…':state.state==='waiting'?'Waiting for GPS…':state.state==='loaded'?'Loaded':state.state==='empty'?'No GPS points':'Error';info.append(stateText);
+        info.title=state.message;item.append(info);
+      }
+    }
     routeList.append(item);
   }
-  updateRouteSelectionInfo();draw3dRoute();
+  updateRouteSelectionInfo();draw3dRoute();updateRouteProgress();
 }
 document.getElementById('fleet-routes-select-all').addEventListener('click',()=>{
   for(const r of visibleRoutes())selectRoute(r.id);
@@ -1327,9 +1369,9 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
-cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();},e=>show(`Routes error: ${e.message}`)));
+cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routeListLoaded=true;routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();},e=>{routeListLoaded=true;updateRouteProgress();show(`Routes error: ${e.message}`);}));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
 </script>
 
