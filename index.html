@@ -763,6 +763,24 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
       </div>
     </section>
 
+<section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
+  <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
+  <div class="fleet-heading"><div><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
+    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
+  </div>
+  <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
+  <div id="fleet-content" hidden>
+    <h3 id="fleet-name">My Fleet</h3>
+    <div class="fleet-layout">
+      <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div><div id="fleet-empty-invite" class="fleet-empty-invite" hidden role="status"><h4>Invite your first fleet member</h4><p>Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.</p><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Get Track Reporter on Google Play ↗</a></div>
+        <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
+        <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
+      </aside>
+      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+    </div>
+  </div>
+</section>
+
 <section class="section features">
   <div class="card">
     <h3>GPS Documentation</h3>
@@ -820,23 +838,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 </section>
    
 
-<section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
-  <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
-  <div class="fleet-heading"><div><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet and browse shared GPS routes.</p></div>
-    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
-  </div>
-  <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
-  <div id="fleet-content" hidden>
-    <h3 id="fleet-name">My Fleet</h3>
-    <div class="fleet-layout">
-      <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div><div id="fleet-empty-invite" class="fleet-empty-invite" hidden role="status"><h4>Invite your first fleet member</h4><p>Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.</p><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Get Track Reporter on Google Play ↗</a></div>
-        <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
-        <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
-      </aside>
-      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
-    </div>
-  </div>
-</section>
+
 
     <footer>
       www.trackreporter.com
