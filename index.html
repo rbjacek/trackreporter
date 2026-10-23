@@ -956,9 +956,14 @@ routePlayButton.addEventListener('click',()=>{
   routePlaybackActive=!routePlaybackActive;
   routePlaybackStart.clear();
   routeCameraInitialized=false;
+  routeCameraLastFrame=0;
+  routeCameraLastTime=0;
   updateRoutePlayButton();
 });
-const ROUTE_PLAYBACK_MS=16000;
+const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid
+const ROUTE_PLAYBACK_3D_MS=65000; // Slower, more readable driver view
+let routeCameraLastFrame=0;
+let routeCameraLastTime=0;
 let routeCameraInitialized=false;
 function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
 function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
@@ -966,8 +971,20 @@ function singlePlaybackRoute(){const ids=[...selectedRouteIds].filter(id=>(route
 function routePositionAt(points,progress){
   if(!points.length)return null;
   if(points.length===1)return points[0];
-  const index=Math.min(points.length-2,Math.floor(progress*(points.length-1)));
-  const fraction=progress*(points.length-1)-index;
+  // Equal time per travelled meter rather than per GPS sample:
+  // avoids abrupt jumps on irregularly spaced GPS recordings.
+  const lengths=[];let total=0;
+  for(let i=0;i<points.length-1;i++){
+    const a=points[i],b=points[i+1];
+    const dy=(b.lat-a.lat)*111320;
+    const dx=longitudeDelta(a.lng,b.lng)*111320*Math.cos((a.lat+b.lat)*Math.PI/360);
+    const d=Math.hypot(dx,dy);lengths.push(d);total+=d;
+  }
+  if(total<0.01)return {...points[0],bearing:Number.isFinite(points[0].bearing)?points[0].bearing:0};
+  let distance=Math.min(1,Math.max(0,progress))*total;
+  let index=0;
+  while(index<lengths.length-1 && distance>lengths[index]){distance-=lengths[index];index++;}
+  const fraction=lengths[index]>0?Math.min(1,distance/lengths[index]):0;
   const a=points[index],b=points[index+1];
   const headingA=Number.isFinite(a.bearing)?a.bearing:routeBearing(a,b);
   const headingB=Number.isFinite(b.bearing)?b.bearing:headingA;
@@ -1024,7 +1041,8 @@ function routePlaybackFrame(now){
   for(const [id,points] of routePointsById){
     if(!selectedRouteIds.has(id)||points.length<2)continue;
     if(!routePlaybackStart.has(id))routePlaybackStart.set(id,now);
-    const progress=((now-routePlaybackStart.get(id))%ROUTE_PLAYBACK_MS)/ROUTE_PLAYBACK_MS;
+    const duration=mapMode==='3d'?ROUTE_PLAYBACK_3D_MS:ROUTE_PLAYBACK_MS;
+    const progress=((now-routePlaybackStart.get(id))%duration)/duration;
     const pos=routePositionAt(points,progress);
     const marker2d=routePlaybackMarkers2d.get(id);
     if(marker2d&&mapMode!=='3d')marker2d.setPosition(pos);
@@ -1033,7 +1051,11 @@ function routePlaybackFrame(now){
       if(!marker3d.isConnected && map3d)map3d.append(marker3d);
       marker3d.position={lat:pos.lat,lng:pos.lng,altitude:2};
     }
-    if(mapMode==='3d' && map3d && singlePlaybackRoute()===id){
+    if(mapMode==='3d' && map3d && singlePlaybackRoute()===id && (now-routeCameraLastFrame>=45 || !routeCameraInitialized)){
+      // Limit expensive photorealistic 3D camera updates to ~20 FPS.
+      // Time-based easing keeps movement stable despite frame-rate fluctuations.
+      const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
+      routeCameraLastFrame=now;routeCameraLastTime=now;
       // Driver perspective: the moving marker stays ahead of a low, tilted camera.
       const heading=Number.isFinite(pos.bearing)?pos.bearing:0;
       const r=heading*Math.PI/180;
@@ -1044,7 +1066,7 @@ function routePlaybackFrame(now){
         map3d.center={lat:cameraLat,lng:cameraLng,altitude:3};
         map3d.heading=heading;map3d.tilt=78;map3d.range=170;routeCameraInitialized=true;
       }else{
-        const c=map3d.center||{};const k=.13;
+        const c=map3d.center||{};const k=1-Math.exp(-elapsed/850);
         map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
         map3d.heading=interpolateHeading(Number(map3d.heading)||0,heading,k);
         map3d.tilt=78;map3d.range=170;
