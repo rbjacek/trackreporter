@@ -886,7 +886,7 @@ function stopSelfGeo(){
   if(selfGeoMarker2d){selfGeoMarker2d.setMap(null);selfGeoMarker2d=null;}
   setSelfGeoStatus('');
 }
-function shouldShowSelfGeo(){return !!signedInUid && !!fleetId && routeListLoaded && routes.length===0 &&
+function shouldShowSelfGeo(){return !!signedInUid && (!fleetId || (routeListLoaded && routes.length===0)) &&
   members.every(m=>!m.uid || m.uid===signedInUid || m.uid===fleetOwnerUid);}
 async function updateSelfGeoMode(){
   const should=shouldShowSelfGeo();
@@ -1271,7 +1271,7 @@ setInterval(()=>{
 },650);
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());for(const id of [...selectedRouteIds])removeRouteSelection(id);markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();updateRouteSelectionInfo();}
-function clearSession(){stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
@@ -1435,7 +1435,25 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}fleetOwnerUid=fleet.data()?.ownerUid||user.uid;content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();updateSelfGeoMode();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){
+  // New Google account: no fleet document exists yet. Show onboarding and self-location map.
+  fleetOwnerUid=user.uid;
+  members=[];routes=[];routeListLoaded=true;
+  content.hidden=false;
+  document.getElementById('fleet-name').textContent='Get started with MyFleet';
+  memberList.replaceChildren();routeList.replaceChildren();
+  emptyInvite.hidden=false;
+  emptyInvite.querySelector('h4').textContent='Create your fleet in Track Reporter';
+  emptyInvite.querySelector('p').textContent='You are signed in, but no fleet is linked to this account yet. Install Track Reporter on Android, sign in with the same Google account, create your fleet and invite your first team member. Then return here to monitor locations and shared routes.';
+  document.getElementById('fleet-route-selection-info').textContent='Shared routes will appear after your fleet is set up.';
+  if(mapsConfigured){
+    await mapsReady();
+    if(auth.currentUser?.uid!==user.uid)return;
+    show('No fleet assigned yet. Create your fleet in the Android app.');
+    await updateSelfGeoMode();
+  }else show('Create your fleet in the Android app. Map unavailable until Google Maps is configured.');
+  return;
+}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}fleetOwnerUid=fleet.data()?.ownerUid||user.uid;content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();updateSelfGeoMode();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routeListLoaded=true;routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();updateSelfGeoMode();},e=>{routeListLoaded=true;updateRouteProgress();show(`Routes error: ${e.message}`);}));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
