@@ -936,6 +936,75 @@ let liveData = [], members = [], selectedUids = new Set();
 let map3d=null, maps3dLib=null, pin3dLib=null, mapMode='satellite';
 const markers3d=new Map();
 const routeOverlays3d=new Map();
+// Per-route start (green), finish (red), and moving playback marker.
+const routeEndpointMarkers2d=new Map();
+const routeEndpointMarkers3d=new Map();
+const routePlaybackMarkers2d=new Map();
+const routePlaybackMarkers3d=new Map();
+const routePlaybackStart=new Map();
+const ROUTE_PLAYBACK_MS=16000;
+function routePositionAt(points,progress){
+  if(!points.length)return null;
+  if(points.length===1)return points[0];
+  const index=Math.min(points.length-2,Math.floor(progress*(points.length-1)));
+  const fraction=progress*(points.length-1)-index;
+  const a=points[index],b=points[index+1];
+  return {lat:a.lat+(b.lat-a.lat)*fraction,lng:a.lng+(b.lng-a.lng)*fraction};
+}
+function routeDotIcon(color,scale=8){return {path:maps.SymbolPath.CIRCLE,scale,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3};}
+function clearRouteMarkers(id){
+  for(const marker of routeEndpointMarkers2d.get(id)||[])marker.setMap(null);
+  routeEndpointMarkers2d.delete(id);
+  for(const marker of routeEndpointMarkers3d.get(id)||[])marker.remove();
+  routeEndpointMarkers3d.delete(id);
+  const moving2d=routePlaybackMarkers2d.get(id);if(moving2d)moving2d.setMap(null);
+  routePlaybackMarkers2d.delete(id);
+  const moving3d=routePlaybackMarkers3d.get(id);if(moving3d)moving3d.remove();
+  routePlaybackMarkers3d.delete(id);
+  routePlaybackStart.delete(id);
+}
+function create2dRouteMarkers(id,points,color){
+  const old=routeEndpointMarkers2d.get(id)||[];old.forEach(m=>m.setMap(null));
+  const moving=routePlaybackMarkers2d.get(id);if(moving)moving.setMap(null);
+  routeEndpointMarkers2d.delete(id);routePlaybackMarkers2d.delete(id);
+  if(!map||!points.length)return;
+  const start=new maps.Marker({map,position:points[0],title:'Route start',icon:routeDotIcon('#16a34a',10),zIndex:110});
+  const end=new maps.Marker({map,position:points[points.length-1],title:'Route finish',icon:routeDotIcon('#dc2626',10),zIndex:111});
+  routeEndpointMarkers2d.set(id,[start,end]);
+  if(points.length>1){
+    const dot=new maps.Marker({map,position:points[0],title:'Route playback',icon:routeDotIcon(color,7),zIndex:120});
+    routePlaybackMarkers2d.set(id,dot);
+  }
+}
+function create3dRouteMarkers(id,points,color){
+  for(const m of routeEndpointMarkers3d.get(id)||[])m.remove();
+  routeEndpointMarkers3d.delete(id);
+  const moving=routePlaybackMarkers3d.get(id);if(moving)moving.remove();
+  routePlaybackMarkers3d.delete(id);
+  if(!map3d||!pin3dLib||!points.length)return;
+  function add(position,fill,scale){
+    const marker=new maps3dLib.Marker3DElement({position:{...position,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});
+    marker.append(new pin3dLib.PinElement({background:fill,borderColor:'#ffffff',glyphColor:'#ffffff',scale}));
+    map3d.append(marker);return marker;
+  }
+  routeEndpointMarkers3d.set(id,[add(points[0],'#16a34a',1.45),add(points[points.length-1],'#dc2626',1.45)]);
+  if(points.length>1)routePlaybackMarkers3d.set(id,add(points[0],color,1.1));
+}
+function routePlaybackFrame(now){
+  for(const [id,points] of routePointsById){
+    if(!selectedRouteIds.has(id)||points.length<2)continue;
+    if(!routePlaybackStart.has(id))routePlaybackStart.set(id,now);
+    const progress=((now-routePlaybackStart.get(id))%ROUTE_PLAYBACK_MS)/ROUTE_PLAYBACK_MS;
+    const pos=routePositionAt(points,progress);
+    const marker2d=routePlaybackMarkers2d.get(id);
+    if(marker2d&&mapMode!=='3d')marker2d.setPosition(pos);
+    const marker3d=routePlaybackMarkers3d.get(id);
+    if(marker3d&&mapMode==='3d')marker3d.position={...pos,altitude:0};
+  }
+  requestAnimationFrame(routePlaybackFrame);
+}
+requestAnimationFrame(routePlaybackFrame);
+
 let currentLivePositions=[];
 let last3dCameraKey='';
 const mapContainer=document.getElementById('fleet-map');
@@ -968,6 +1037,12 @@ function clear3dMarkers(){for(const marker of markers3d.values())marker.remove()
 function clear3dRoute(){
   for(const line of routeOverlays3d.values())line.remove();
   routeOverlays3d.clear();
+  for(const id of [...routeEndpointMarkers3d.keys(),...routePlaybackMarkers3d.keys()]){
+    for(const marker of routeEndpointMarkers3d.get(id)||[])marker.remove();
+    routeEndpointMarkers3d.delete(id);
+    const moving=routePlaybackMarkers3d.get(id);if(moving)moving.remove();
+    routePlaybackMarkers3d.delete(id);
+  }
 }
 function draw3dRoute(){
   clear3dRoute();
@@ -981,6 +1056,7 @@ function draw3dRoute(){
       altitudeMode:'CLAMP_TO_GROUND'});
     map3d.append(line);
     routeOverlays3d.set(id,line);
+    create3dRouteMarkers(id,points,color);
   }
 }
 function focusSelectedRoutes(){
@@ -999,6 +1075,7 @@ function focusSelectedRoutes(){
   }
 }
 function removeRouteSelection(id){
+  clearRouteMarkers(id);
   const unsubscribe=routeSubscriptions.get(id);
   if(unsubscribe){unsubscribe();routeSubscriptions.delete(id);}
   const overlay=routeOverlays.get(id);
@@ -1029,6 +1106,7 @@ function selectRoute(id){
     routePointsById.set(id,points);
     const currentState=points.length?'loaded':(route.status==='ACTIVE'?'waiting':'empty');
     routeLoadStates.set(id,{state:currentState,message:points.length?`${points.length} GPS points loaded`:(currentState==='waiting'?'Waiting for live GPS data…':'No GPS points available')});
+    routePlaybackStart.delete(id);
     const previous=routeOverlays.get(id);
     if(previous)previous.setMap(null);
     if(map&&points.length){
@@ -1036,6 +1114,7 @@ function selectRoute(id){
         strokeColor:memberColor(String(routeOwnerUid(route)||id)),strokeOpacity:1,strokeWeight:9});
       routeOverlays.set(id,line);
     }else routeOverlays.delete(id);
+    create2dRouteMarkers(id,points,memberColor(String(routeOwnerUid(route)||id)));
     draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();updateRouteProgress();renderRoutes();
   },error=>{routeLoadStates.set(id,{state:'error',message:'Loading failed: '+error.message});updateRouteProgress();renderRoutes();show('Route error: '+error.message);});
   routeSubscriptions.set(id,unsubscribe);
@@ -1338,7 +1417,7 @@ function setSharedRoutesEnabled(enabled){
     updateRouteProgress();
   });
 }
-function clearSession(){++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){for(const id of new Set([...routeEndpointMarkers2d.keys(),...routeEndpointMarkers3d.keys(),...routePlaybackMarkers2d.keys(),...routePlaybackMarkers3d.keys()]))clearRouteMarkers(id);++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
