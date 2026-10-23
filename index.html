@@ -956,7 +956,7 @@ routePlayButton.addEventListener('click',()=>{
   routePlaybackActive=!routePlaybackActive;
   routePlaybackStart.clear();
   routeCameraInitialized=false;
-  routeDiagnosticHeading=null;
+  routeSmoothedHeading=null;
   routeCameraLastFrame=0;
   routeCameraLastTime=0;
   updateRoutePlayButton();
@@ -966,10 +966,25 @@ const ROUTE_PLAYBACK_3D_MS=65000; // Slower, more readable driver view
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
 let routeCameraInitialized=false;
-// Diagnostic: fixed 3D camera heading to isolate GPS/heading jitter.
-let routeDiagnosticHeading=null;
+// Smoothed look-ahead heading, based on the route geometry.
+let routeSmoothedHeading=null;
 function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
 function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
+function lookAheadBearing(points,progress){
+  // Estimate travel direction over a meaningful stretch of route, rather than
+  // trusting potentially noisy instantaneous GPS bearing at each point.
+  const before=routePositionAt(points,Math.max(0,progress-0.003));
+  const ahead=routePositionAt(points,Math.min(1,progress+0.012));
+  if(!before||!ahead)return 0;
+  const dy=(ahead.lat-before.lat)*111320;
+  const dx=longitudeDelta(before.lng,ahead.lng)*111320*Math.cos(before.lat*Math.PI/180);
+  if(Math.hypot(dx,dy)<4)return Number.isFinite(ahead.bearing)?ahead.bearing:0;
+  return routeBearing(before,ahead);
+}
+function limitHeadingStep(current,target,maxStep){
+  const diff=((target-current+540)%360)-180;
+  return (current+Math.max(-maxStep,Math.min(maxStep,diff))+360)%360;
+}
 function singlePlaybackRoute(){const ids=[...selectedRouteIds].filter(id=>(routePointsById.get(id)||[]).length>1);return ids.length===1?ids[0]:null;}
 function routePositionAt(points,progress){
   if(!points.length)return null;
@@ -1059,9 +1074,15 @@ function routePlaybackFrame(now){
       // Time-based easing keeps movement stable despite frame-rate fluctuations.
       const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
       routeCameraLastFrame=now;routeCameraLastTime=now;
-      // Driver perspective: the moving marker stays ahead of a low, tilted camera.
-      if(routeDiagnosticHeading===null)routeDiagnosticHeading=Number.isFinite(pos.bearing)?pos.bearing:0;
-      const heading=routeDiagnosticHeading; // Fixed for the whole playback (diagnostic).
+      // Look ahead along the recorded geometry to keep the camera facing the road.
+      const targetHeading=lookAheadBearing(points,progress);
+      if(routeSmoothedHeading===null)routeSmoothedHeading=targetHeading;
+      else{
+        const headingEasing=1-Math.exp(-elapsed/1250);
+        const eased=interpolateHeading(routeSmoothedHeading,targetHeading,headingEasing);
+        routeSmoothedHeading=limitHeadingStep(routeSmoothedHeading,eased,Math.max(1.2,elapsed*0.055));
+      }
+      const heading=routeSmoothedHeading;
       const r=heading*Math.PI/180;
       const behindMeters=55;
       const cameraLat=pos.lat-Math.cos(r)*behindMeters/111320;
@@ -1072,8 +1093,8 @@ function routePlaybackFrame(now){
       }else{
         const c=map3d.center||{};const k=1-Math.exp(-elapsed/850);
         map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
-        // Intentionally no heading update during playback: diagnose camera rotation jitter.
-        map3d.tilt=78;map3d.range=170;
+        map3d.heading=heading;
+        // Tilt and range are constant during playback to avoid extra rendering work.
       }
     }
   }
