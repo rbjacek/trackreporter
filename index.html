@@ -666,6 +666,7 @@ gtag('event', 'TrackReporterView2');
 .fleet-empty-invite p{margin:0 0 12px;line-height:1.5;font-size:.9rem}
 .fleet-empty-invite a{display:inline-flex;align-items:center;justify-content:center;background:#38bdf8;color:#061521!important;padding:10px 13px;border-radius:9px;font-weight:750;text-decoration:none;line-height:1.3}
 .fleet-empty-invite a:hover{background:#7dd3fc}
+.fleet-self-location{padding:10px 14px;margin:0 0 10px;border:1px solid rgba(56,189,248,.45);border-radius:12px;background:rgba(56,189,248,.09);color:#e5f6ff;font-size:.9rem}.fleet-self-location[hidden]{display:none}
 .fleet-member-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.16)}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
@@ -821,7 +822,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div>
       </aside>
-      <div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -874,6 +875,53 @@ const logout = document.getElementById('fleet-logout');
 const routeList = document.getElementById('fleet-routes');
 const memberList = document.getElementById('fleet-members');
 const emptyInvite = document.getElementById('fleet-empty-invite');
+const selfLocationStatus=document.getElementById('fleet-self-location');
+let selfGeoWatch=null,selfGeoEnabled=false,selfGeoPosition=null,selfGeoMarker3d=null,selfGeoMarker2d=null,selfGeoRun=0;
+function setSelfGeoStatus(message){selfLocationStatus.hidden=!message;selfLocationStatus.textContent=message||'';}
+function stopSelfGeo(){
+  ++selfGeoRun;
+  if(selfGeoWatch!==null && navigator.geolocation)navigator.geolocation.clearWatch(selfGeoWatch);
+  selfGeoWatch=null;selfGeoEnabled=false;selfGeoPosition=null;
+  if(selfGeoMarker3d){selfGeoMarker3d.remove();selfGeoMarker3d=null;}
+  if(selfGeoMarker2d){selfGeoMarker2d.setMap(null);selfGeoMarker2d=null;}
+  setSelfGeoStatus('');
+}
+function shouldShowSelfGeo(){return !!signedInUid && !!fleetId && routeListLoaded && routes.length===0 &&
+  members.every(m=>!m.uid || m.uid===signedInUid || m.uid===fleetOwnerUid);}
+async function updateSelfGeoMode(){
+  const should=shouldShowSelfGeo();
+  if(!should){if(selfGeoEnabled)stopSelfGeo();return;}
+  if(selfGeoEnabled)return;
+  selfGeoEnabled=true;
+  const run=++selfGeoRun;
+  setSelfGeoStatus('Finding your location… Allow location access in your browser to follow your position in 3D.');
+  if(!navigator.geolocation){setSelfGeoStatus('This browser does not support location tracking.');return;}
+  if(!window.isSecureContext){setSelfGeoStatus('Location requires HTTPS (or localhost).');return;}
+  try{await switchMapMode('3d');}catch(e){setSelfGeoStatus('3D map unavailable: '+e.message);}
+  if(run!==selfGeoRun)return;
+  if(mapMode!=='3d')setSelfGeoStatus('3D unavailable. Showing your position on the map when location is available.');
+  selfGeoWatch=navigator.geolocation.watchPosition(pos=>{
+    if(run!==selfGeoRun)return;
+    const lat=pos.coords.latitude,lng=pos.coords.longitude;
+    if(!Number.isFinite(lat)||!Number.isFinite(lng))return;
+    selfGeoPosition={lat,lng};
+    setSelfGeoStatus('Your current location · live tracking enabled');
+    if(map && !selfGeoMarker2d){selfGeoMarker2d=new maps.Marker({map,position:{lat,lng},title:'Your current location',icon:{path:maps.SymbolPath.CIRCLE,scale:10,fillColor:'#38bdf8',fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3}});}
+    if(selfGeoMarker2d)selfGeoMarker2d.setPosition({lat,lng});
+    if(map3d && !selfGeoMarker3d){
+      selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});
+      const pin=new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',glyphColor:'#ffffff',scale:1.4});
+      selfGeoMarker3d.append(pin);map3d.append(selfGeoMarker3d);
+    }
+    if(selfGeoMarker3d)selfGeoMarker3d.position={lat,lng,altitude:0};
+    if(mapMode!=='3d' && map)map.panTo({lat,lng});
+  },err=>{
+    if(run!==selfGeoRun)return;
+    const reason=err.code===1?'Location access denied. Allow location in your browser settings.':err.code===2?'Location temporarily unavailable.':'Waiting for a GPS fix…';
+    setSelfGeoStatus(reason);
+  },{enableHighAccuracy:true,maximumAge:1000,timeout:20000});
+}
+
 let fleetOwnerUid = null;
 let signedInUid = null;
 const routeFilter = document.getElementById('fleet-route-filter');
@@ -1058,7 +1106,7 @@ async function switchMapMode(next){
       mapMode='3d';map3d.style.display='block';
       // 2D map remains loaded underneath for instant fallback.
       map.getDiv().style.display='none';
-      last3dCameraKey='';setMapModeButtons();draw3dRoute();renderLive();
+      last3dCameraKey='';setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
       show('Photorealistic 3D enabled.');
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
@@ -1118,6 +1166,15 @@ function updateAnimationTargets(){
   for(const uid of animatedPositions.keys())if(!active.has(uid))animatedPositions.delete(uid);
 }
 function animationFrame(now){
+  if(selfGeoEnabled && selfGeoPosition && !content.hidden){
+    const alpha=easeFactor(lastAnimationTime?Math.min((now-lastAnimationTime)/1000,.1):0);
+    const p=selfGeoPosition;
+    if(mapMode==='3d' && map3d){
+      const c=map3d.center;const lat=Number(c?.lat??p.lat),lng=Number(c?.lng??p.lng);
+      map3d.center={lat:lat+(p.lat-lat)*alpha,lng:lng+longitudeDelta(lng,p.lng)*alpha,altitude:0};
+      const range=Number(map3d.range)||450;map3d.range=range+(450-range)*alpha;
+    }
+  }
   const dt=lastAnimationTime?Math.min((now-lastAnimationTime)/1000,.1):0;
   lastAnimationTime=now;
   if(map && !content.hidden && animatedPositions.size){
@@ -1214,7 +1271,7 @@ setInterval(()=>{
 },650);
 const show = message => status.textContent = message;
 function clearListeners(){cleanup.splice(0).forEach(unsub=>unsub());for(const id of [...selectedRouteIds])removeRouteSelection(id);markers.forEach(m=>m.setMap(null));markers.clear();clear3dMarkers();clear3dRoute();updateRouteSelectionInfo();}
-function clearSession(){fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
@@ -1378,9 +1435,9 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}fleetOwnerUid=fleet.data()?.ownerUid||user.uid;content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();},e=>show(`Members error: ${e.message}`)));
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){show('No fleet assigned to this account.');return;}const fleet=await getDoc(doc(db,'fleets',fleetId));if(!fleet.exists()){show('Fleet not found.');return;}const member=await getDoc(doc(db,'fleets',fleetId,'members',user.uid));if(fleet.data()?.ownerUid!==user.uid && !member.exists()){show('You do not have access to this fleet.');return;}fleetOwnerUid=fleet.data()?.ownerUid||user.uid;content.hidden=false;if(!mapsConfigured){show('Signed in. Add the Google Maps JavaScript API key to display the map.');}else{await mapsReady();}if(auth.currentUser?.uid!==user.uid)return;document.getElementById('fleet-name').textContent=safeLabel(fleet.data()?.name||'My Fleet');if(mapsConfigured)show('Connected to fleet.');const membersRef=collection(db,'fleets',fleetId,'members');cleanup.push(onSnapshot(membersRef,snap=>{members=snap.docs.map(d=>({uid:d.id,...d.data()}));const allowed=new Set(members.map(m=>m.uid));selectedUids=new Set([...selectedUids].filter(uid=>allowed.has(uid)));if(!renderMembers.initialized){members.forEach(m=>selectedUids.add(m.uid));renderMembers.initialized=true;}renderMembers();renderRoutes();renderLive();updateSelfGeoMode();},e=>show(`Members error: ${e.message}`)));
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
-cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routeListLoaded=true;routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();},e=>{routeListLoaded=true;updateRouteProgress();show(`Routes error: ${e.message}`);}));
+cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'shared_sessions'),snap=>{routeListLoaded=true;routes=snap.docs.map(d=>({id:d.id,...d.data()})).sort((a,b)=>routeStartMillis(b)-routeStartMillis(a));renderRoutes();updateSelfGeoMode();},e=>{routeListLoaded=true;updateRouteProgress();show(`Routes error: ${e.message}`);}));
 }catch(e){show(`Fleet access error: ${e.message}`);}});
 </script>
 
