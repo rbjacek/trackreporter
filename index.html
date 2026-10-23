@@ -966,7 +966,7 @@ const ROUTE_PLAYBACK_3D_MS=600000; // Diagnostic: 10-minute 3D playback (~83 km/
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
 let routeCameraInitialized=false;
-// Smoothed look-ahead heading, based on the route geometry.
+// Smoothed Android-style bearing from 4-metre route geometry.
 let routeSmoothedHeading=null;
 function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
 function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
@@ -1086,26 +1086,36 @@ function routePlaybackFrame(now){
     if(mapMode==='3d' && map3d && driverRouteId===id && (now-routeCameraLastFrame>=50 || !routeCameraInitialized)){
       const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
       routeCameraLastFrame=now;routeCameraLastTime=now;
-      const targetHeading=lookAheadBearing(points,distance,routeSmoothedHeading);
-      if(routeSmoothedHeading===null)routeSmoothedHeading=targetHeading;
-      else{
-        const eased=interpolateHeading(routeSmoothedHeading,targetHeading,1-Math.exp(-elapsed/700));
-        routeSmoothedHeading=limitHeadingStep(routeSmoothedHeading,eased,elapsed*0.075);
+      // Android-inspired replay camera: target exactly on replay position.
+      // Calculate bearing from points separated by at least 4 metres,
+      // ignore changes below 3 degrees and ease the shortest angular path.
+      const previousPos=routePositionAtDistance(points,Math.max(0,distance-4));
+      const movedMeters=Math.hypot(
+        (pos.lat-previousPos.lat)*111320,
+        longitudeDelta(previousPos.lng,pos.lng)*111320*Math.cos(pos.lat*Math.PI/180)
+      );
+      if(movedMeters>=3.9){
+        const desiredHeading=routeBearing(previousPos,pos);
+        if(routeSmoothedHeading===null)routeSmoothedHeading=desiredHeading;
+        else {
+          const diff=Math.abs(((desiredHeading-routeSmoothedHeading+540)%360)-180);
+          if(diff>=3){
+            // 0.18 is the smoothing factor used in the Android replay.
+            // Adjust for irregular 3D frame timing (nominal 50 ms).
+            const factor=1-Math.pow(1-0.18,Math.max(0.1,elapsed/50));
+            routeSmoothedHeading=interpolateHeading(routeSmoothedHeading,desiredHeading,factor);
+          }
+        }
       }
-      const heading=routeSmoothedHeading;
-      const r=heading*Math.PI/180;
-      const behindMeters=18;
-      const cameraLat=pos.lat-Math.cos(r)*behindMeters/111320;
-      const cameraLng=pos.lng-Math.sin(r)*behindMeters/(111320*Math.max(.15,Math.cos(pos.lat*Math.PI/180)));
+      const heading=routeSmoothedHeading??0;
       if(!routeCameraInitialized){
-        map3d.center={lat:cameraLat,lng:cameraLng,altitude:3};
-        map3d.heading=heading;map3d.tilt=75;map3d.range=160;
+        map3d.center={lat:pos.lat,lng:pos.lng,altitude:3};
+        map3d.heading=heading;map3d.tilt=67;map3d.range=160;
         routeCameraInitialized=true;
       }else{
-        const c=map3d.center||{};
-        const k=1-Math.exp(-elapsed/400);
-        map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,
-          lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
+        // No rearward camera offset or lagging center: both introduce
+        // side-to-side swings at turns. Marker and camera share one position.
+        map3d.center={lat:pos.lat,lng:pos.lng,altitude:3};
         map3d.heading=heading;
       }
     }
