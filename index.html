@@ -822,7 +822,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
       </aside>
-      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -942,6 +942,21 @@ const routeEndpointMarkers3d=new Map();
 const routePlaybackMarkers2d=new Map();
 const routePlaybackMarkers3d=new Map();
 const routePlaybackStart=new Map();
+let routePlaybackActive=false;
+const routePlayButton=document.getElementById('fleet-route-play');
+function updateRoutePlayButton(){
+  const available=[...selectedRouteIds].some(id=>(routePointsById.get(id)||[]).length>1);
+  routePlayButton.disabled=!available;
+  routePlayButton.textContent=routePlaybackActive?'■ Stop animation':'▶ Play routes';
+  routePlayButton.setAttribute('aria-label',routePlaybackActive?'Stop route animation':'Start route animation');
+  for(const marker of routePlaybackMarkers2d.values())marker.setVisible(routePlaybackActive);
+  for(const marker of routePlaybackMarkers3d.values())marker.style.display=routePlaybackActive?'':'none';
+}
+routePlayButton.addEventListener('click',()=>{
+  routePlaybackActive=!routePlaybackActive;
+  routePlaybackStart.clear();
+  updateRoutePlayButton();
+});
 const ROUTE_PLAYBACK_MS=16000;
 function routePositionAt(points,progress){
   if(!points.length)return null;
@@ -962,6 +977,7 @@ function clearRouteMarkers(id){
   const moving3d=routePlaybackMarkers3d.get(id);if(moving3d)moving3d.remove();
   routePlaybackMarkers3d.delete(id);
   routePlaybackStart.delete(id);
+  updateRoutePlayButton();
 }
 function create2dRouteMarkers(id,points,color){
   const old=routeEndpointMarkers2d.get(id)||[];old.forEach(m=>m.setMap(null));
@@ -974,6 +990,7 @@ function create2dRouteMarkers(id,points,color){
   if(points.length>1){
     const dot=new maps.Marker({map,position:points[0],title:'Route playback',icon:routeDotIcon(color,7),zIndex:120});
     routePlaybackMarkers2d.set(id,dot);
+    dot.setVisible(routePlaybackActive);
   }
 }
 function create3dRouteMarkers(id,points,color){
@@ -988,9 +1005,14 @@ function create3dRouteMarkers(id,points,color){
     map3d.append(marker);return marker;
   }
   routeEndpointMarkers3d.set(id,[add(points[0],'#16a34a',1.45),add(points[points.length-1],'#dc2626',1.45)]);
-  if(points.length>1)routePlaybackMarkers3d.set(id,add(points[0],color,1.1));
+  if(points.length>1){
+    const dot=add(points[0],color,1.1);
+    dot.style.display=routePlaybackActive?'':'none';
+    routePlaybackMarkers3d.set(id,dot);
+  }
 }
 function routePlaybackFrame(now){
+  if(!routePlaybackActive){requestAnimationFrame(routePlaybackFrame);return;}
   for(const [id,points] of routePointsById){
     if(!selectedRouteIds.has(id)||points.length<2)continue;
     if(!routePlaybackStart.has(id))routePlaybackStart.set(id,now);
@@ -1115,7 +1137,7 @@ function selectRoute(id){
       routeOverlays.set(id,line);
     }else routeOverlays.delete(id);
     create2dRouteMarkers(id,points,memberColor(String(routeOwnerUid(route)||id)));
-    draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();updateRouteProgress();renderRoutes();
+    draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();updateRouteProgress();renderRoutes();updateRoutePlayButton();
   },error=>{routeLoadStates.set(id,{state:'error',message:'Loading failed: '+error.message});updateRouteProgress();renderRoutes();show('Route error: '+error.message);});
   routeSubscriptions.set(id,unsubscribe);
 }
@@ -1417,7 +1439,7 @@ function setSharedRoutesEnabled(enabled){
     updateRouteProgress();
   });
 }
-function clearSession(){for(const id of new Set([...routeEndpointMarkers2d.keys(),...routeEndpointMarkers3d.keys(),...routePlaybackMarkers2d.keys(),...routePlaybackMarkers3d.keys()]))clearRouteMarkers(id);++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){routePlaybackActive=false;routePlaybackStart.clear();updateRoutePlayButton();for(const id of new Set([...routeEndpointMarkers2d.keys(),...routeEndpointMarkers3d.keys(),...routePlaybackMarkers2d.keys(),...routePlaybackMarkers3d.keys()]))clearRouteMarkers(id);++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
