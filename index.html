@@ -1128,7 +1128,7 @@ function draw3dRoute(){
     const route=routes.find(r=>r.id===id);
     const color=memberColor(String(routeOwnerUid(route)||id));
     const line=new maps3dLib.Polyline3DElement({path:points,
-      strokeColor:color,strokeWidth:10,outerColor:'#ffffff',outerWidth:3,
+      strokeColor:color,strokeWidth:10,outerColor:'#ffffff',outerWidth:1,
       altitudeMode:'CLAMP_TO_GROUND'});
     map3d.append(line);
     routeOverlays3d.set(id,line);
