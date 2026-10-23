@@ -668,6 +668,12 @@ gtag('event', 'TrackReporterView2');
 .fleet-empty-invite a:hover{background:#7dd3fc}
 .fleet-self-location{padding:10px 14px;margin:0 0 10px;border:1px solid rgba(56,189,248,.45);border-radius:12px;background:rgba(56,189,248,.09);color:#e5f6ff;font-size:.9rem}.fleet-self-location[hidden]{display:none}
 .fleet-member-dot{width:11px;height:11px;flex:0 0 11px;border-radius:50%;box-shadow:0 0 0 2px rgba(255,255,255,.16)}
+/* Public 3D location viewer: available without a Google account. */
+body.fleet-guest #fleet-web .fleet-sidebar{display:none!important}
+body.fleet-guest #fleet-web .fleet-layout{grid-template-columns:minmax(0,1fr)!important}
+body.fleet-guest #fleet-route-play,body.fleet-guest #fleet-playback-timeline{display:none!important}
+body.fleet-guest #fleet-live-diagnostics{display:none!important}
+body.fleet-guest #fleet-web .fleet-map{min-height:440px;height:min(68vh,800px)}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
 body.fleet-signed-in .page > .hero,
@@ -891,7 +897,7 @@ function stopSelfGeo(){
   if(selfGeoMarker2d){selfGeoMarker2d.setMap(null);selfGeoMarker2d=null;}
   setSelfGeoStatus('');
 }
-function shouldShowSelfGeo(){return !!signedInUid && (!fleetId || (routeListLoaded && routes.length===0));}
+function shouldShowSelfGeo(){return (!auth?.currentUser) || (!!signedInUid && (!fleetId || (routeListLoaded && routes.length===0)));}
 async function updateSelfGeoMode(){
   const should=shouldShowSelfGeo();
   if(!should){if(selfGeoEnabled)stopSelfGeo();return;}
@@ -1691,7 +1697,25 @@ login.addEventListener('click', async () => {
 });
 logout.addEventListener('click',()=>signOut(auth));
 routeFilter.addEventListener('change',renderRoutes);
-if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){show('Sign in to access your fleet.');return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){
+async function activateGuestMap(){
+  // Public map only: no Firestore fleet reads, no shared routes and no member data.
+  content.hidden=false;
+  fleetId=null;
+  signedInUid=null;
+  routes=[];
+  members=[];
+  document.getElementById('fleet-name').textContent='Explore 3D map · Your location';
+  document.getElementById('fleet-shared-routes-section').hidden=true;
+  document.body.classList.add('fleet-guest');
+  if(!mapsConfigured){show('Map unavailable: configure the Google Maps API key.');return;}
+  try{
+    await mapsReady();
+    if(auth?.currentUser)return;
+    show('Public 3D map · Allow browser location access to follow your position. Sign in only to access your fleet.');
+    await updateSelfGeoMode();
+  }catch(e){show('Map unavailable: '+(e.message||String(e)));}
+}
+if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=false;routeLoadStates.clear();updateRouteProgress();document.body.classList.toggle('fleet-signed-in', !!user);document.body.classList.toggle('fleet-guest', !user);window.scrollTo(0,0);login.hidden=!!user;logout.hidden=!user;document.getElementById('fleet-user').textContent=user?.email||'';if(!user){await activateGuestMap();return;}signedInUid=user.uid;try{show('Loading fleet...');const profile=await getDoc(doc(db,'users',user.uid));if(auth.currentUser?.uid!==user.uid)return;fleetId=profile.data()?.fleetId;if(!fleetId){
   // New Google account: no fleet document exists yet. Show onboarding and self-location map.
   fleetOwnerUid=user.uid;
   members=[];routes=[];routeListLoaded=true;
@@ -1714,6 +1738,7 @@ if (auth) onAuthStateChanged(auth,async user=>{clearSession();routeListLoaded=fa
 cleanup.push(onSnapshot(collection(db,'fleets',fleetId,'live_locations'),snap=>{liveData=snap.docs.map(d=>({uid:d.id,...d.data()}));renderLive();},e=>show(`Live locations error: ${e.message}`)));
 
 }catch(e){show(`Fleet access error: ${e.message}`);}});
+if(!auth){activateGuestMap();}
 </script>
 
 </body>
