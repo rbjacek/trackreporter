@@ -956,6 +956,7 @@ routePlayButton.addEventListener('click',()=>{
   routePlaybackActive=!routePlaybackActive;
   routePlaybackStart.clear();
   routeCameraInitialized=false;
+  routeDiagnosticHeading=null;
   routeCameraLastFrame=0;
   routeCameraLastTime=0;
   updateRoutePlayButton();
@@ -965,6 +966,8 @@ const ROUTE_PLAYBACK_3D_MS=65000; // Slower, more readable driver view
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
 let routeCameraInitialized=false;
+// Diagnostic: fixed 3D camera heading to isolate GPS/heading jitter.
+let routeDiagnosticHeading=null;
 function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
 function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
 function singlePlaybackRoute(){const ids=[...selectedRouteIds].filter(id=>(routePointsById.get(id)||[]).length>1);return ids.length===1?ids[0]:null;}
@@ -1057,7 +1060,8 @@ function routePlaybackFrame(now){
       const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
       routeCameraLastFrame=now;routeCameraLastTime=now;
       // Driver perspective: the moving marker stays ahead of a low, tilted camera.
-      const heading=Number.isFinite(pos.bearing)?pos.bearing:0;
+      if(routeDiagnosticHeading===null)routeDiagnosticHeading=Number.isFinite(pos.bearing)?pos.bearing:0;
+      const heading=routeDiagnosticHeading; // Fixed for the whole playback (diagnostic).
       const r=heading*Math.PI/180;
       const behindMeters=55;
       const cameraLat=pos.lat-Math.cos(r)*behindMeters/111320;
@@ -1068,7 +1072,7 @@ function routePlaybackFrame(now){
       }else{
         const c=map3d.center||{};const k=1-Math.exp(-elapsed/850);
         map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
-        map3d.heading=interpolateHeading(Number(map3d.heading)||0,heading,k);
+        // Intentionally no heading update during playback: diagnose camera rotation jitter.
         map3d.tilt=78;map3d.range=170;
       }
     }
