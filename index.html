@@ -962,7 +962,7 @@ routePlayButton.addEventListener('click',()=>{
   updateRoutePlayButton();
 });
 const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid
-const ROUTE_PLAYBACK_3D_MS=65000; // Slower, more readable driver view
+const ROUTE_PLAYBACK_3D_MS=600000; // Diagnostic: 10-minute 3D playback (~83 km/h on a 13.8 km route)
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
 let routeCameraInitialized=false;
@@ -970,44 +970,56 @@ let routeCameraInitialized=false;
 let routeSmoothedHeading=null;
 function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
 function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
-function lookAheadBearing(points,progress){
-  // Estimate travel direction over a meaningful stretch of route, rather than
-  // trusting potentially noisy instantaneous GPS bearing at each point.
-  const before=routePositionAt(points,Math.max(0,progress-0.003));
-  const ahead=routePositionAt(points,Math.min(1,progress+0.012));
-  if(!before||!ahead)return 0;
-  const dy=(ahead.lat-before.lat)*111320;
-  const dx=longitudeDelta(before.lng,ahead.lng)*111320*Math.cos(before.lat*Math.PI/180);
-  if(Math.hypot(dx,dy)<4)return Number.isFinite(ahead.bearing)?ahead.bearing:0;
-  return routeBearing(before,ahead);
+// Cache cumulative distance once per route. The animation and the camera use
+// the same interpolated location; no repeated O(n) path scans per frame.
+const routeDistanceCache=new WeakMap();
+function routeMetrics(points){
+  let cache=routeDistanceCache.get(points);
+  if(cache)return cache;
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++){
+    const a=points[i-1],b=points[i];
+    const dy=(b.lat-a.lat)*111320;
+    const dx=longitudeDelta(a.lng,b.lng)*111320*Math.cos((a.lat+b.lat)*Math.PI/360);
+    cumulative.push(cumulative[i-1]+Math.hypot(dx,dy));
+  }
+  cache={cumulative,total:cumulative[cumulative.length-1]};
+  routeDistanceCache.set(points,cache);
+  return cache;
+}
+function routePositionAtDistance(points,distance){
+  if(!points.length)return null;
+  if(points.length===1)return points[0];
+  const {cumulative,total}=routeMetrics(points);
+  const d=Math.max(0,Math.min(total,distance));
+  let low=0,high=cumulative.length-1;
+  while(low<high){const mid=(low+high)>>1;if(cumulative[mid]<d)low=mid+1;else high=mid;}
+  const index=Math.max(0,Math.min(points.length-2,low-1));
+  const seg=cumulative[index+1]-cumulative[index];
+  const t=seg>0?(d-cumulative[index])/seg:0;
+  const a=points[index],b=points[index+1];
+  return {lat:a.lat+(b.lat-a.lat)*t,lng:a.lng+longitudeDelta(a.lng,b.lng)*t};
+}
+function routePositionAt(points,progress){
+  return routePositionAtDistance(points,Math.max(0,Math.min(1,progress))*routeMetrics(points).total);
+}
+function lookAheadBearing(points,distance,previousHeading){
+  const total=routeMetrics(points).total;
+  // Use a 25 m look-ahead in physical distance, not a percentage of the route.
+  // Ignore point-to-point bearing noise at low speed and during GPS drift.
+  const behind=routePositionAtDistance(points,Math.max(0,distance-8));
+  const ahead=routePositionAtDistance(points,Math.min(total,distance+25));
+  if(!behind||!ahead)return previousHeading??0;
+  const dy=(ahead.lat-behind.lat)*111320;
+  const dx=longitudeDelta(behind.lng,ahead.lng)*111320*Math.cos(behind.lat*Math.PI/180);
+  if(Math.hypot(dx,dy)<6)return previousHeading??0;
+  return routeBearing(behind,ahead);
 }
 function limitHeadingStep(current,target,maxStep){
   const diff=((target-current+540)%360)-180;
   return (current+Math.max(-maxStep,Math.min(maxStep,diff))+360)%360;
 }
 function singlePlaybackRoute(){const ids=[...selectedRouteIds].filter(id=>(routePointsById.get(id)||[]).length>1);return ids.length===1?ids[0]:null;}
-function routePositionAt(points,progress){
-  if(!points.length)return null;
-  if(points.length===1)return points[0];
-  // Equal time per travelled meter rather than per GPS sample:
-  // avoids abrupt jumps on irregularly spaced GPS recordings.
-  const lengths=[];let total=0;
-  for(let i=0;i<points.length-1;i++){
-    const a=points[i],b=points[i+1];
-    const dy=(b.lat-a.lat)*111320;
-    const dx=longitudeDelta(a.lng,b.lng)*111320*Math.cos((a.lat+b.lat)*Math.PI/360);
-    const d=Math.hypot(dx,dy);lengths.push(d);total+=d;
-  }
-  if(total<0.01)return {...points[0],bearing:Number.isFinite(points[0].bearing)?points[0].bearing:0};
-  let distance=Math.min(1,Math.max(0,progress))*total;
-  let index=0;
-  while(index<lengths.length-1 && distance>lengths[index]){distance-=lengths[index];index++;}
-  const fraction=lengths[index]>0?Math.min(1,distance/lengths[index]):0;
-  const a=points[index],b=points[index+1];
-  const headingA=Number.isFinite(a.bearing)?a.bearing:routeBearing(a,b);
-  const headingB=Number.isFinite(b.bearing)?b.bearing:headingA;
-  return {lat:a.lat+(b.lat-a.lat)*fraction,lng:a.lng+longitudeDelta(a.lng,b.lng)*fraction,bearing:interpolateHeading(headingA,headingB,fraction)};
-}
 function routeDotIcon(color,scale=8){return {path:maps.SymbolPath.CIRCLE,scale,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3};}
 function clearRouteMarkers(id){
   for(const marker of routeEndpointMarkers2d.get(id)||[])marker.setMap(null);
@@ -1056,12 +1068,14 @@ function create3dRouteMarkers(id,points,color){
 }
 function routePlaybackFrame(now){
   if(!routePlaybackActive){requestAnimationFrame(routePlaybackFrame);return;}
+  const driverRouteId=mapMode==='3d'?singlePlaybackRoute():null;
   for(const [id,points] of routePointsById){
     if(!selectedRouteIds.has(id)||points.length<2)continue;
     if(!routePlaybackStart.has(id))routePlaybackStart.set(id,now);
     const duration=mapMode==='3d'?ROUTE_PLAYBACK_3D_MS:ROUTE_PLAYBACK_MS;
     const progress=((now-routePlaybackStart.get(id))%duration)/duration;
-    const pos=routePositionAt(points,progress);
+    const distance=progress*routeMetrics(points).total;
+    const pos=routePositionAtDistance(points,distance);
     const marker2d=routePlaybackMarkers2d.get(id);
     if(marker2d&&mapMode!=='3d')marker2d.setPosition(pos);
     const marker3d=routePlaybackMarkers3d.get(id);
@@ -1069,32 +1083,30 @@ function routePlaybackFrame(now){
       if(!marker3d.isConnected && map3d)map3d.append(marker3d);
       marker3d.position={lat:pos.lat,lng:pos.lng,altitude:2};
     }
-    if(mapMode==='3d' && map3d && singlePlaybackRoute()===id && (now-routeCameraLastFrame>=45 || !routeCameraInitialized)){
-      // Limit expensive photorealistic 3D camera updates to ~20 FPS.
-      // Time-based easing keeps movement stable despite frame-rate fluctuations.
+    if(mapMode==='3d' && map3d && driverRouteId===id && (now-routeCameraLastFrame>=50 || !routeCameraInitialized)){
       const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
       routeCameraLastFrame=now;routeCameraLastTime=now;
-      // Look ahead along the recorded geometry to keep the camera facing the road.
-      const targetHeading=lookAheadBearing(points,progress);
+      const targetHeading=lookAheadBearing(points,distance,routeSmoothedHeading);
       if(routeSmoothedHeading===null)routeSmoothedHeading=targetHeading;
       else{
-        const headingEasing=1-Math.exp(-elapsed/1250);
-        const eased=interpolateHeading(routeSmoothedHeading,targetHeading,headingEasing);
-        routeSmoothedHeading=limitHeadingStep(routeSmoothedHeading,eased,Math.max(1.2,elapsed*0.055));
+        const eased=interpolateHeading(routeSmoothedHeading,targetHeading,1-Math.exp(-elapsed/700));
+        routeSmoothedHeading=limitHeadingStep(routeSmoothedHeading,eased,elapsed*0.075);
       }
       const heading=routeSmoothedHeading;
       const r=heading*Math.PI/180;
-      const behindMeters=55;
+      const behindMeters=18;
       const cameraLat=pos.lat-Math.cos(r)*behindMeters/111320;
       const cameraLng=pos.lng-Math.sin(r)*behindMeters/(111320*Math.max(.15,Math.cos(pos.lat*Math.PI/180)));
       if(!routeCameraInitialized){
         map3d.center={lat:cameraLat,lng:cameraLng,altitude:3};
-        map3d.heading=heading;map3d.tilt=78;map3d.range=170;routeCameraInitialized=true;
+        map3d.heading=heading;map3d.tilt=75;map3d.range=160;
+        routeCameraInitialized=true;
       }else{
-        const c=map3d.center||{};const k=1-Math.exp(-elapsed/850);
-        map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
+        const c=map3d.center||{};
+        const k=1-Math.exp(-elapsed/400);
+        map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,
+          lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
         map3d.heading=heading;
-        // Tilt and range are constant during playback to avoid extra rendering work.
       }
     }
   }
