@@ -977,7 +977,7 @@ function draw3dRoute(){
     const route=routes.find(r=>r.id===id);
     const color=memberColor(String(routeOwnerUid(route)||id));
     const line=new maps3dLib.Polyline3DElement({path:points,
-      strokeColor:color,strokeWidth:6,outerColor:'#ffffff',outerWidth:1,
+      strokeColor:color,strokeWidth:10,outerColor:'#ffffff',outerWidth:3,
       altitudeMode:'CLAMP_TO_GROUND'});
     map3d.append(line);
     routeOverlays3d.set(id,line);
@@ -1033,7 +1033,7 @@ function selectRoute(id){
     if(previous)previous.setMap(null);
     if(map&&points.length){
       const line=new maps.Polyline({map,path:points,
-        strokeColor:memberColor(String(routeOwnerUid(route)||id)),strokeOpacity:.95,strokeWeight:5});
+        strokeColor:memberColor(String(routeOwnerUid(route)||id)),strokeOpacity:1,strokeWeight:9});
       routeOverlays.set(id,line);
     }else routeOverlays.delete(id);
     draw3dRoute();focusSelectedRoutes();updateRouteSelectionInfo();updateRouteProgress();renderRoutes();
