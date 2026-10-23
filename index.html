@@ -950,21 +950,28 @@ function updateRoutePlayButton(){
   routePlayButton.textContent=routePlaybackActive?'■ Stop animation':'▶ Play routes';
   routePlayButton.setAttribute('aria-label',routePlaybackActive?'Stop route animation':'Start route animation');
   for(const marker of routePlaybackMarkers2d.values())marker.setVisible(routePlaybackActive);
-  for(const marker of routePlaybackMarkers3d.values())marker.style.display=routePlaybackActive?'':'none';
+  for(const marker of routePlaybackMarkers3d.values()){if(routePlaybackActive){if(!marker.isConnected && map3d)map3d.append(marker);}else marker.remove();}
 }
 routePlayButton.addEventListener('click',()=>{
   routePlaybackActive=!routePlaybackActive;
   routePlaybackStart.clear();
+  routeCameraInitialized=false;
   updateRoutePlayButton();
 });
 const ROUTE_PLAYBACK_MS=16000;
+let routeCameraInitialized=false;
+function routeBearing(a,b){const r=Math.PI/180,phi1=a.lat*r,phi2=b.lat*r,dl=(b.lng-a.lng)*r;return (Math.atan2(Math.sin(dl)*Math.cos(phi2),Math.cos(phi1)*Math.sin(phi2)-Math.sin(phi1)*Math.cos(phi2)*Math.cos(dl))*180/Math.PI+360)%360;}
+function interpolateHeading(a,b,t){return (a+(((b-a+540)%360)-180)*t+360)%360;}
+function singlePlaybackRoute(){const ids=[...selectedRouteIds].filter(id=>(routePointsById.get(id)||[]).length>1);return ids.length===1?ids[0]:null;}
 function routePositionAt(points,progress){
   if(!points.length)return null;
   if(points.length===1)return points[0];
   const index=Math.min(points.length-2,Math.floor(progress*(points.length-1)));
   const fraction=progress*(points.length-1)-index;
   const a=points[index],b=points[index+1];
-  return {lat:a.lat+(b.lat-a.lat)*fraction,lng:a.lng+(b.lng-a.lng)*fraction};
+  const headingA=Number.isFinite(a.bearing)?a.bearing:routeBearing(a,b);
+  const headingB=Number.isFinite(b.bearing)?b.bearing:headingA;
+  return {lat:a.lat+(b.lat-a.lat)*fraction,lng:a.lng+longitudeDelta(a.lng,b.lng)*fraction,bearing:interpolateHeading(headingA,headingB,fraction)};
 }
 function routeDotIcon(color,scale=8){return {path:maps.SymbolPath.CIRCLE,scale,fillColor:color,fillOpacity:1,strokeColor:'#ffffff',strokeWeight:3};}
 function clearRouteMarkers(id){
@@ -1006,8 +1013,9 @@ function create3dRouteMarkers(id,points,color){
   }
   routeEndpointMarkers3d.set(id,[add(points[0],'#16a34a',1.45),add(points[points.length-1],'#dc2626',1.45)]);
   if(points.length>1){
-    const dot=add(points[0],color,1.1);
-    dot.style.display=routePlaybackActive?'':'none';
+    const dot=add(points[0],color,1.65);
+    dot.remove(); // Visible only after Play is pressed.
+    if(routePlaybackActive)map3d.append(dot);
     routePlaybackMarkers3d.set(id,dot);
   }
 }
@@ -1021,7 +1029,27 @@ function routePlaybackFrame(now){
     const marker2d=routePlaybackMarkers2d.get(id);
     if(marker2d&&mapMode!=='3d')marker2d.setPosition(pos);
     const marker3d=routePlaybackMarkers3d.get(id);
-    if(marker3d&&mapMode==='3d')marker3d.position={...pos,altitude:0};
+    if(marker3d&&mapMode==='3d'){
+      if(!marker3d.isConnected && map3d)map3d.append(marker3d);
+      marker3d.position={lat:pos.lat,lng:pos.lng,altitude:2};
+    }
+    if(mapMode==='3d' && map3d && singlePlaybackRoute()===id){
+      // Driver perspective: the moving marker stays ahead of a low, tilted camera.
+      const heading=Number.isFinite(pos.bearing)?pos.bearing:0;
+      const r=heading*Math.PI/180;
+      const behindMeters=55;
+      const cameraLat=pos.lat-Math.cos(r)*behindMeters/111320;
+      const cameraLng=pos.lng-Math.sin(r)*behindMeters/(111320*Math.max(.15,Math.cos(pos.lat*Math.PI/180)));
+      if(!routeCameraInitialized){
+        map3d.center={lat:cameraLat,lng:cameraLng,altitude:3};
+        map3d.heading=heading;map3d.tilt=78;map3d.range=170;routeCameraInitialized=true;
+      }else{
+        const c=map3d.center||{};const k=.13;
+        map3d.center={lat:Number(c.lat??cameraLat)+(cameraLat-Number(c.lat??cameraLat))*k,lng:Number(c.lng??cameraLng)+longitudeDelta(Number(c.lng??cameraLng),cameraLng)*k,altitude:3};
+        map3d.heading=interpolateHeading(Number(map3d.heading)||0,heading,k);
+        map3d.tilt=78;map3d.range=170;
+      }
+    }
   }
   requestAnimationFrame(routePlaybackFrame);
 }
@@ -1082,6 +1110,7 @@ function draw3dRoute(){
   }
 }
 function focusSelectedRoutes(){
+  if(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute())return;
   if(currentLivePositions.length)return; // Live tracking owns the camera while active.
   const points=[...routePointsById.entries()].filter(([id])=>selectedRouteIds.has(id)).flatMap(([,pts])=>pts);
   if(!points.length)return;
@@ -1124,7 +1153,7 @@ function selectRoute(id){
         Number.isFinite(Number(p.positionLatitude))&&Number.isFinite(Number(p.positionLongitude))&&
         Math.abs(Number(p.positionLatitude))<=90&&Math.abs(Number(p.positionLongitude))<=180)
       .sort((a,b)=>Number(a.positionTimeMillis??0)-Number(b.positionTimeMillis??0))
-      .map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude)}));
+      .map(p=>({lat:Number(p.positionLatitude),lng:Number(p.positionLongitude),bearing:(p.positionBearing!=null&&Number.isFinite(Number(p.positionBearing)))?Number(p.positionBearing):((p.bearing!=null&&Number.isFinite(Number(p.bearing)))?Number(p.bearing):null)}));
     routePointsById.set(id,points);
     const currentState=points.length?'loaded':(route.status==='ACTIVE'?'waiting':'empty');
     routeLoadStates.set(id,{state:currentState,message:points.length?`${points.length} GPS points loaded`:(currentState==='waiting'?'Waiting for live GPS data…':'No GPS points available')});
@@ -1207,7 +1236,7 @@ async function switchMapMode(next){
       mapMode='3d';map3d.style.display='block';
       // 2D map remains loaded underneath for instant fallback.
       map.getDiv().style.display='none';
-      last3dCameraKey='';setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
+      last3dCameraKey='';routeCameraInitialized=false;setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
       show('Photorealistic 3D enabled.');
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
@@ -1267,7 +1296,7 @@ function updateAnimationTargets(){
   for(const uid of animatedPositions.keys())if(!active.has(uid))animatedPositions.delete(uid);
 }
 function animationFrame(now){
-  if(selfGeoEnabled && selfGeoPosition && !content.hidden){
+  if(!(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute()) && selfGeoEnabled && selfGeoPosition && !content.hidden){
     const alpha=easeFactor(lastAnimationTime?Math.min((now-lastAnimationTime)/1000,.1):0);
     const p=selfGeoPosition;
     if(mapMode==='3d' && map3d){
@@ -1293,7 +1322,7 @@ function animationFrame(now){
       if(marker3d)marker3d.position={lat:p.lat,lng:p.lng};
     }
     if(points.length){
-      if(mapMode==='3d' && map3d){
+      if(mapMode==='3d' && map3d && !(routePlaybackActive && singlePlaybackRoute())){
         const desired=liveCenter(points);
         const c=map3d.center;
         const old={lat:Number(c?.lat??desired.lat),lng:Number(c?.lng??desired.lng)};
