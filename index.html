@@ -695,6 +695,11 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 .fleet-route-inline-state.waiting{color:#fbbf24}
 .fleet-route-inline-state.error{color:#fca5a5}
 .fleet-route-inline-state.loaded{color:#86efac}
+/* Route playback timeline (Normal / Hybrid only) */
+.fleet-playback-timeline{display:flex;align-items:center;gap:12px;margin:10px 0 8px;padding:12px 14px;background:rgba(15,23,42,.88);border:1px solid rgba(148,163,184,.3);border-radius:12px;color:#e2e8f0}
+.fleet-playback-timeline[hidden]{display:none!important}
+.fleet-playback-timeline input[type=range]{flex:1;min-width:65px;accent-color:#38bdf8;cursor:pointer}
+.fleet-playback-timeline span{font-variant-numeric:tabular-nums;font-size:.82rem;white-space:nowrap}
 </style>
 </head>
 
@@ -822,7 +827,7 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
         <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
       </aside>
-      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div id="fleet-self-location" class="fleet-self-location" role="status" aria-live="polite" hidden></div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" class="active" aria-pressed="true">Hybrid</button><button type="button" id="fleet-mode-3d" aria-pressed="false">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"></div><p class="fleet-status">Live locations follow the map automatically. Pulsing colored circles identify fleet members. Click a shared route to display its GPS track.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -943,26 +948,52 @@ const routePlaybackMarkers2d=new Map();
 const routePlaybackMarkers3d=new Map();
 const routePlaybackStart=new Map();
 let routePlaybackActive=false;
+let routePlaybackOffset=0; // elapsed milliseconds of the 2D playback
+let routePlaybackEpoch=0;
+const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid only
 const routePlayButton=document.getElementById('fleet-route-play');
+const playbackTimeline=document.getElementById('fleet-playback-timeline');
+const playbackSeek=document.getElementById('fleet-playback-seek');
+const playbackElapsed=document.getElementById('fleet-playback-elapsed');
+const playbackTotal=document.getElementById('fleet-playback-total');
+function playbackClock(ms){const seconds=Math.floor(ms/1000);return Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');}
+function showPlaybackAt(progress){
+  const p=Math.max(0,Math.min(1,progress));
+  for(const [id,points] of routePointsById){
+    if(!selectedRouteIds.has(id)||points.length<2)continue;
+    const marker=routePlaybackMarkers2d.get(id);
+    if(marker)marker.setPosition(routePositionAtDistance(points,p*routeMetrics(points).total));
+  }
+  playbackSeek.value=String(Math.round(p*1000));
+  playbackElapsed.textContent=playbackClock(p*ROUTE_PLAYBACK_MS);
+}
 function updateRoutePlayButton(){
   const available=[...selectedRouteIds].some(id=>(routePointsById.get(id)||[]).length>1);
-  routePlayButton.disabled=!available;
+  if(mapMode==='3d' && routePlaybackActive){
+    routePlaybackOffset=0;routePlaybackActive=false;routePlaybackEpoch=0;
+  }
+  routePlayButton.disabled=!available||mapMode==='3d';
+  routePlayButton.title=mapMode==='3d'?'Replay is temporarily disabled in 3D':'Play or stop selected routes';
   routePlayButton.textContent=routePlaybackActive?'■ Stop animation':'▶ Play routes';
   routePlayButton.setAttribute('aria-label',routePlaybackActive?'Stop route animation':'Start route animation');
-  for(const marker of routePlaybackMarkers2d.values())marker.setVisible(routePlaybackActive);
-  for(const marker of routePlaybackMarkers3d.values()){if(routePlaybackActive){if(!marker.isConnected && map3d)map3d.append(marker);}else marker.remove();}
+  for(const marker of routePlaybackMarkers2d.values())marker.setVisible(routePlaybackActive||routePlaybackOffset>0);
+  for(const marker of routePlaybackMarkers3d.values())marker.remove();
+  playbackTimeline.hidden=!available||mapMode==='3d';
+  playbackTotal.textContent=playbackClock(ROUTE_PLAYBACK_MS);
+  if(!routePlaybackActive)showPlaybackAt(routePlaybackOffset/ROUTE_PLAYBACK_MS);
 }
 routePlayButton.addEventListener('click',()=>{
+  if(mapMode==='3d'||routePlayButton.disabled)return;
   routePlaybackActive=!routePlaybackActive;
-  routePlaybackStart.clear();
-  routeCameraInitialized=false;
-  routeSmoothedHeading=null;
-  routeCameraLastFrame=0;
-  routeCameraLastTime=0;
+  routePlaybackEpoch=0;
+  if(routePlaybackActive && routePlaybackOffset>=ROUTE_PLAYBACK_MS)routePlaybackOffset=0;
   updateRoutePlayButton();
 });
-const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid
-const ROUTE_PLAYBACK_3D_MS=600000; // Diagnostic: 10-minute 3D playback (~83 km/h on a 13.8 km route)
+playbackSeek.addEventListener('input',()=>{
+  routePlaybackOffset=(Number(playbackSeek.value)/1000)*ROUTE_PLAYBACK_MS;
+  routePlaybackEpoch=0;
+  showPlaybackAt(routePlaybackOffset/ROUTE_PLAYBACK_MS);
+});
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
 let routeCameraInitialized=false;
@@ -1067,57 +1098,16 @@ function create3dRouteMarkers(id,points,color){
   }
 }
 function routePlaybackFrame(now){
-  if(!routePlaybackActive){requestAnimationFrame(routePlaybackFrame);return;}
-  const driverRouteId=mapMode==='3d'?singlePlaybackRoute():null;
-  for(const [id,points] of routePointsById){
-    if(!selectedRouteIds.has(id)||points.length<2)continue;
-    if(!routePlaybackStart.has(id))routePlaybackStart.set(id,now);
-    const duration=mapMode==='3d'?ROUTE_PLAYBACK_3D_MS:ROUTE_PLAYBACK_MS;
-    const progress=((now-routePlaybackStart.get(id))%duration)/duration;
-    const distance=progress*routeMetrics(points).total;
-    const pos=routePositionAtDistance(points,distance);
-    const marker2d=routePlaybackMarkers2d.get(id);
-    if(marker2d&&mapMode!=='3d')marker2d.setPosition(pos);
-    const marker3d=routePlaybackMarkers3d.get(id);
-    if(marker3d&&mapMode==='3d'){
-      if(!marker3d.isConnected && map3d)map3d.append(marker3d);
-      marker3d.position={lat:pos.lat,lng:pos.lng,altitude:2};
-    }
-    if(mapMode==='3d' && map3d && driverRouteId===id && (now-routeCameraLastFrame>=50 || !routeCameraInitialized)){
-      const elapsed=routeCameraLastTime?Math.min(150,now-routeCameraLastTime):50;
-      routeCameraLastFrame=now;routeCameraLastTime=now;
-      // Android-inspired replay camera: target exactly on replay position.
-      // Calculate bearing from points separated by at least 4 metres,
-      // ignore changes below 3 degrees and ease the shortest angular path.
-      const previousPos=routePositionAtDistance(points,Math.max(0,distance-4));
-      const movedMeters=Math.hypot(
-        (pos.lat-previousPos.lat)*111320,
-        longitudeDelta(previousPos.lng,pos.lng)*111320*Math.cos(pos.lat*Math.PI/180)
-      );
-      if(movedMeters>=3.9){
-        const desiredHeading=routeBearing(previousPos,pos);
-        if(routeSmoothedHeading===null)routeSmoothedHeading=desiredHeading;
-        else {
-          const diff=Math.abs(((desiredHeading-routeSmoothedHeading+540)%360)-180);
-          if(diff>=3){
-            // 0.18 is the smoothing factor used in the Android replay.
-            // Adjust for irregular 3D frame timing (nominal 50 ms).
-            const factor=1-Math.pow(1-0.18,Math.max(0.1,elapsed/50));
-            routeSmoothedHeading=interpolateHeading(routeSmoothedHeading,desiredHeading,factor);
-          }
-        }
-      }
-      const heading=routeSmoothedHeading??0;
-      if(!routeCameraInitialized){
-        map3d.center={lat:pos.lat,lng:pos.lng,altitude:3};
-        map3d.heading=heading;map3d.tilt=67;map3d.range=160;
-        routeCameraInitialized=true;
-      }else{
-        // No rearward camera offset or lagging center: both introduce
-        // side-to-side swings at turns. Marker and camera share one position.
-        map3d.center={lat:pos.lat,lng:pos.lng,altitude:3};
-        map3d.heading=heading;
-      }
+  if(routePlaybackActive && mapMode!=='3d'){
+    if(!routePlaybackEpoch)routePlaybackEpoch=now;
+    const elapsed=routePlaybackOffset+(now-routePlaybackEpoch);
+    const progress=Math.min(1,elapsed/ROUTE_PLAYBACK_MS);
+    showPlaybackAt(progress);
+    if(progress>=1){
+      routePlaybackActive=false;
+      routePlaybackOffset=ROUTE_PLAYBACK_MS;
+      routePlaybackEpoch=0;
+      updateRoutePlayButton();
     }
   }
   requestAnimationFrame(routePlaybackFrame);
@@ -1305,7 +1295,7 @@ async function switchMapMode(next){
       mapMode='3d';map3d.style.display='block';
       // 2D map remains loaded underneath for instant fallback.
       map.getDiv().style.display='none';
-      last3dCameraKey='';routeCameraInitialized=false;setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
+      last3dCameraKey='';routeCameraInitialized=false;updateRoutePlayButton();setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
       show('Photorealistic 3D enabled.');
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
@@ -1316,7 +1306,7 @@ async function switchMapMode(next){
       map.getDiv().style.display='block';
       map.setMapTypeId(next==='normal'?'roadmap':'hybrid');
     }
-    setMapModeButtons();
+    setMapModeButtons();updateRoutePlayButton();
     maps.event.trigger(map,'resize');renderLive();
     show(next==='normal'?'Normal map enabled.':'Hybrid map enabled.');
   }
@@ -1537,7 +1527,7 @@ function setSharedRoutesEnabled(enabled){
     updateRouteProgress();
   });
 }
-function clearSession(){routePlaybackActive=false;routePlaybackStart.clear();updateRoutePlayButton();for(const id of new Set([...routeEndpointMarkers2d.keys(),...routeEndpointMarkers3d.keys(),...routePlaybackMarkers2d.keys(),...routePlaybackMarkers3d.keys()]))clearRouteMarkers(id);++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
+function clearSession(){routePlaybackActive=false;routePlaybackOffset=0;routePlaybackEpoch=0;routePlaybackStart.clear();updateRoutePlayButton();for(const id of new Set([...routeEndpointMarkers2d.keys(),...routeEndpointMarkers3d.keys(),...routePlaybackMarkers2d.keys(),...routePlaybackMarkers3d.keys()]))clearRouteMarkers(id);++fleetRouteGeneration;routeSnapshotReceived=false;automaticRouteChosen=false;if(sharedRoutesUnsubscribe){sharedRoutesUnsubscribe();sharedRoutesUnsubscribe=null;}document.getElementById('fleet-shared-routes-section').hidden=false;stopSelfGeo();fleetOwnerUid=null;signedInUid=null;emptyInvite.hidden=true;emptyInvite.querySelector('h4').textContent='Invite your first fleet member';emptyInvite.querySelector('p').textContent='Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.';document.getElementById('fleet-route-selection-info').textContent='Select routes to display them together.';renderMembers.initialized=false;followLiveMarkers.initialZoomSet=false;followLiveMarkers.initialized=false;animatedPositions.clear();camera2dTarget=null;last3dCameraKey='';currentLivePositions=[];clearListeners();content.hidden=true;fleetId=null;routes=[];members=[];selectedUids.clear();memberList.replaceChildren();routeList.replaceChildren();document.getElementById('fleet-name').textContent='My Fleet';}
 function safeLabel(v){return String(v??'').slice(0,150);}
 function mapsReady(){if(!mapsConfigured)return Promise.reject(new Error('Google Maps JavaScript API key is not configured'));if(map)return Promise.resolve();if(!mapsReady.promise){mapsReady.promise=new Promise((resolve,reject)=>{window.__fleetMapReady=resolve;const s=document.createElement('script');s.src=`https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(googleMapsApiKey)}&v=beta&callback=__fleetMapReady`;s.async=true;s.onerror=()=>reject(new Error('Could not load Google Maps'));document.head.append(s);}).then(()=>{maps=window.google.maps;const baseMapDiv=document.createElement('div');baseMapDiv.id='fleet-map-2d';baseMapDiv.style.cssText='width:100%;height:100%';mapContainer.append(baseMapDiv);map=new maps.Map(baseMapDiv,{center:{lat:52.2297,lng:21.0122},zoom:11,mapTypeId:'hybrid'});});}return mapsReady.promise;}
 function locationMillis(value){
