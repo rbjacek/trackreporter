@@ -978,7 +978,11 @@ const routePlaybackStart=new Map();
 let routePlaybackActive=false;
 let routePlaybackOffset=0; // elapsed milliseconds of the 2D playback
 let routePlaybackEpoch=0;
-const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid only
+const ROUTE_PLAYBACK_MS=16000; // Normal / Hybrid
+const ROUTE_PLAYBACK_3D_MS=600000; // Smooth 3D tour (10 minutes)
+function playbackDuration(){return mapMode==='3d'?ROUTE_PLAYBACK_3D_MS:ROUTE_PLAYBACK_MS;}
+let playback3dCameraPosition=null;
+function reset3dPlaybackCamera(){playback3dCameraPosition=null;}
 const routePlayButton=document.getElementById('fleet-route-play');
 const playbackTimeline=document.getElementById('fleet-playback-timeline');
 const playbackSeek=document.getElementById('fleet-playback-seek');
@@ -993,34 +997,42 @@ function showPlaybackAt(progress){
     if(marker)marker.setPosition(routePositionAtDistance(points,p*routeMetrics(points).total));
   }
   playbackSeek.value=String(Math.round(p*1000));
-  playbackElapsed.textContent=playbackClock(p*ROUTE_PLAYBACK_MS);
+  playbackElapsed.textContent=playbackClock(p*playbackDuration());
+  if(mapMode==='3d')update3dPlaybackPosition(p,true);
 }
 function updateRoutePlayButton(){
   const available=[...selectedRouteIds].some(id=>(routePointsById.get(id)||[]).length>1);
-  if(mapMode==='3d' && routePlaybackActive){
+  const single3d=mapMode==='3d' && !!singlePlaybackRoute();
+  if(mapMode==='3d' && !single3d && routePlaybackActive){
     routePlaybackOffset=0;routePlaybackActive=false;routePlaybackEpoch=0;
   }
-  routePlayButton.disabled=!available||mapMode==='3d';
-  routePlayButton.title=mapMode==='3d'?'Replay is temporarily disabled in 3D':'Play or stop selected routes';
+  routePlayButton.disabled=!available||(mapMode==='3d'&&!single3d);
+  routePlayButton.title=mapMode==='3d'&&!single3d?'Select exactly one route for 3D playback':'Play or stop selected routes';
   routePlayButton.textContent=routePlaybackActive?'■ Stop animation':'▶ Play routes';
   routePlayButton.setAttribute('aria-label',routePlaybackActive?'Stop route animation':'Start route animation');
   for(const marker of routePlaybackMarkers2d.values())marker.setVisible(routePlaybackActive||routePlaybackOffset>0);
-  for(const marker of routePlaybackMarkers3d.values())marker.remove();
-  playbackTimeline.hidden=!available||mapMode==='3d';
-  playbackTotal.textContent=playbackClock(ROUTE_PLAYBACK_MS);
-  if(!routePlaybackActive)showPlaybackAt(routePlaybackOffset/ROUTE_PLAYBACK_MS);
+  for(const [id,marker] of routePlaybackMarkers3d){
+    if(mapMode==='3d'&&single3d===true&&id===singlePlaybackRoute()&&(routePlaybackActive||routePlaybackOffset>0)){
+      if(!marker.isConnected&&map3d)map3d.append(marker);
+    }else marker.remove();
+  }
+  playbackTimeline.hidden=!available||(mapMode==='3d'&&!single3d);
+  playbackTotal.textContent=playbackClock(playbackDuration());
+  if(!routePlaybackActive)showPlaybackAt(routePlaybackOffset/playbackDuration());
 }
 routePlayButton.addEventListener('click',()=>{
-  if(mapMode==='3d'||routePlayButton.disabled)return;
+  if(routePlayButton.disabled)return;
   routePlaybackActive=!routePlaybackActive;
   routePlaybackEpoch=0;
-  if(routePlaybackActive && routePlaybackOffset>=ROUTE_PLAYBACK_MS)routePlaybackOffset=0;
+  if(routePlaybackActive && routePlaybackOffset>=playbackDuration())routePlaybackOffset=0;
+  if(routePlaybackActive && mapMode==='3d')reset3dPlaybackCamera();
   updateRoutePlayButton();
 });
 playbackSeek.addEventListener('input',()=>{
-  routePlaybackOffset=(Number(playbackSeek.value)/1000)*ROUTE_PLAYBACK_MS;
+  routePlaybackOffset=(Number(playbackSeek.value)/1000)*playbackDuration();
   routePlaybackEpoch=0;
-  showPlaybackAt(routePlaybackOffset/ROUTE_PLAYBACK_MS);
+  if(mapMode==='3d')reset3dPlaybackCamera();
+  showPlaybackAt(routePlaybackOffset/playbackDuration());
 });
 let routeCameraLastFrame=0;
 let routeCameraLastTime=0;
@@ -1121,24 +1133,60 @@ function create3dRouteMarkers(id,points,color){
   if(points.length>1){
     const dot=add(points[0],color,1.65);
     dot.remove(); // Visible only after Play is pressed.
-    if(routePlaybackActive)map3d.append(dot);
+    if(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute()===id)map3d.append(dot);
     routePlaybackMarkers3d.set(id,dot);
   }
 }
+// Use the same fixed-angle, fixed-range, smoothly following camera as public
+// current-location tracking. Do not rotate with noisy GPS bearings.
+function update3dPlaybackPosition(progress,instant=false){
+  if(mapMode!=='3d'||!map3d)return;
+  const id=singlePlaybackRoute();
+  if(!id)return;
+  const points=routePointsById.get(id)||[];
+  if(points.length<2)return;
+  const target=routePositionAt(points,progress);
+  if(!target)return;
+  const marker=routePlaybackMarkers3d.get(id);
+  if(marker){
+    if(!marker.isConnected)map3d.append(marker);
+    marker.position={lat:target.lat,lng:target.lng,altitude:0};
+  }
+  if(instant||!playback3dCameraPosition){
+    playback3dCameraPosition={lat:target.lat,lng:target.lng};
+  }else{
+    const alpha=0.075; // Smooth GPS follow, matching public location tracking.
+    playback3dCameraPosition.lat+=(target.lat-playback3dCameraPosition.lat)*alpha;
+    playback3dCameraPosition.lng+=longitudeDelta(playback3dCameraPosition.lng,target.lng)*alpha;
+  }
+  map3d.center={...playback3dCameraPosition,altitude:0};
+  // Public-location view uses 450m and the map's default 65° tilt.
+  // No low-altitude driver camera, look-ahead, or heading rotation.
+  if(Math.abs((Number(map3d.range)||450)-450)>0.5)map3d.range=450;
+  if(Math.abs((Number(map3d.tilt)||65)-65)>0.5)map3d.tilt=65;
+}
 function routePlaybackFrame(now){
-  if(routePlaybackActive && mapMode!=='3d'){
+  if(routePlaybackActive){
     if(!routePlaybackEpoch)routePlaybackEpoch=now;
+    const duration=playbackDuration();
     const elapsed=routePlaybackOffset+(now-routePlaybackEpoch);
-    const progress=Math.min(1,elapsed/ROUTE_PLAYBACK_MS);
-    showPlaybackAt(progress);
+    const progress=Math.min(1,elapsed/duration);
+    if(mapMode==='3d'){
+      // Progress and marker advance on the same clock as the 2D playback.
+      playbackSeek.value=String(Math.round(progress*1000));
+      playbackElapsed.textContent=playbackClock(progress*duration);
+      update3dPlaybackPosition(progress,false);
+    }else showPlaybackAt(progress);
     if(progress>=1){
       routePlaybackActive=false;
-      routePlaybackOffset=ROUTE_PLAYBACK_MS;
+      routePlaybackOffset=duration;
       routePlaybackEpoch=0;
       updateRoutePlayButton();
     }
   }
   requestAnimationFrame(routePlaybackFrame);
+}
+requestAnimationFrame(routePlaybackFrame);
 }
 requestAnimationFrame(routePlaybackFrame);
 
@@ -1198,7 +1246,7 @@ function draw3dRoute(){
   renderPhotoMarkers();
 }
 function focusSelectedRoutes(){
-  if(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute())return;
+  if(mapMode==='3d' && singlePlaybackRoute() && (routePlaybackActive||routePlaybackOffset>0))return;
   if(currentLivePositions.length)return; // Live tracking owns the camera while active.
   const points=[...routePointsById.entries()].filter(([id])=>selectedRouteIds.has(id)).flatMap(([,pts])=>pts);
   if(!points.length)return;
@@ -1414,11 +1462,12 @@ async function switchMapMode(next){
       mapMode='3d';map3d.style.display='block';
       // 2D map remains loaded underneath for instant fallback.
       map.getDiv().style.display='none';
-      last3dCameraKey='';routeCameraInitialized=false;updateRoutePlayButton();setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
+      last3dCameraKey='';routeCameraInitialized=false;routePlaybackOffset=0;routePlaybackEpoch=0;routePlaybackActive=false;reset3dPlaybackCamera();updateRoutePlayButton();setMapModeButtons();draw3dRoute();renderLive();if(selfGeoPosition){if(selfGeoMarker3d)selfGeoMarker3d.remove();selfGeoMarker3d=null;const {lat,lng}=selfGeoPosition;selfGeoMarker3d=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});selfGeoMarker3d.append(new pin3dLib.PinElement({background:'#38bdf8',borderColor:'#ffffff',scale:1.4}));map3d.append(selfGeoMarker3d);map3d.center={lat,lng,altitude:0};map3d.range=450;}
       show('Photorealistic 3D enabled.');
     }catch(e){show('3D unavailable: '+(e.message||String(e))+' — Satellite remains available.');}
     finally{btn3d.disabled=false;}
   }else{
+    if(mapMode==='3d'){routePlaybackActive=false;routePlaybackOffset=0;routePlaybackEpoch=0;reset3dPlaybackCamera();}
     mapMode=next;
     if(map3d)map3d.style.display='none';
     if(map){
@@ -1474,7 +1523,7 @@ function updateAnimationTargets(){
   for(const uid of animatedPositions.keys())if(!active.has(uid))animatedPositions.delete(uid);
 }
 function animationFrame(now){
-  if(!(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute()) && selfGeoEnabled && selfGeoPosition && !content.hidden){
+  if(!(mapMode==='3d' && singlePlaybackRoute() && (routePlaybackActive||routePlaybackOffset>0)) && selfGeoEnabled && selfGeoPosition && !content.hidden){
     const alpha=easeFactor(lastAnimationTime?Math.min((now-lastAnimationTime)/1000,.1):0);
     const p=selfGeoPosition;
     if(mapMode==='3d' && map3d){
@@ -1500,7 +1549,7 @@ function animationFrame(now){
       if(marker3d)marker3d.position={lat:p.lat,lng:p.lng};
     }
     if(points.length){
-      if(mapMode==='3d' && map3d && !(routePlaybackActive && singlePlaybackRoute())){
+      if(mapMode==='3d' && map3d && !(singlePlaybackRoute() && (routePlaybackActive||routePlaybackOffset>0))){
         const desired=liveCenter(points);
         const c=map3d.center;
         const old={lat:Number(c?.lat??desired.lat),lng:Number(c?.lng??desired.lng)};
