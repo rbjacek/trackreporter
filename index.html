@@ -1136,7 +1136,14 @@ function create3dRouteMarkers(id,points,color){
   }
   routeEndpointMarkers3d.set(id,[add(points[0],'#16a34a',1.45),add(points[points.length-1],'#dc2626',1.45)]);
   if(points.length>1){
-    const dot=add(points[0],color,1.65);
+    // Keep the animated pin above 3D terrain/buildings rather than clamped to the ground.
+    const dot=new maps3dLib.Marker3DElement({
+      position:{lat:points[0].lat,lng:points[0].lng,altitude:35},
+      altitudeMode:'RELATIVE_TO_GROUND',
+      drawsWhenOccluded:true,
+      sizePreserved:true
+    });
+    dot.append(new pin3dLib.PinElement({background:color,borderColor:'#ffffff',glyphColor:'#ffffff',scale:1.8}));
     dot.remove(); // Visible only after Play is pressed.
     if(routePlaybackActive && mapMode==='3d' && singlePlaybackRoute()===id)map3d.append(dot);
     routePlaybackMarkers3d.set(id,dot);
@@ -1155,7 +1162,7 @@ function update3dPlaybackPosition(progress,instant=false){
   const marker=routePlaybackMarkers3d.get(id);
   if(marker){
     if(!marker.isConnected)map3d.append(marker);
-    marker.position={lat:target.lat,lng:target.lng,altitude:0};
+    marker.position={lat:target.lat,lng:target.lng,altitude:35};
   }
   if(instant||!playback3dCameraPosition){
     playback3dCameraPosition={lat:target.lat,lng:target.lng};
