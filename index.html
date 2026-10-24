@@ -1138,7 +1138,7 @@ function create3dRouteMarkers(id,points,color){
   if(points.length>1){
     // Keep the animated pin above 3D terrain/buildings rather than clamped to the ground.
     const dot=new maps3dLib.Marker3DElement({
-      position:{lat:points[0].lat,lng:points[0].lng,altitude:35},
+      position:{lat:points[0].lat,lng:points[0].lng,altitude:8},
       altitudeMode:'RELATIVE_TO_GROUND',
       drawsWhenOccluded:true,
       sizePreserved:true
@@ -1162,7 +1162,7 @@ function update3dPlaybackPosition(progress,instant=false){
   const marker=routePlaybackMarkers3d.get(id);
   if(marker){
     if(!marker.isConnected)map3d.append(marker);
-    marker.position={lat:target.lat,lng:target.lng,altitude:35};
+    marker.position={lat:target.lat,lng:target.lng,altitude:8};
   }
   if(instant||!playback3dCameraPosition){
     playback3dCameraPosition={lat:target.lat,lng:target.lng};
@@ -1367,9 +1367,11 @@ function renderPhotoMarkers(){
         marker.addListener('click',()=>openPhotoPreview(p));two.push(marker);
       }
       if(map3d&&maps3dLib&&pin3dLib){
-        const marker=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND',gmpClickable:true});
+        const marker=new maps3dLib.Marker3DElement({position:{lat,lng,altitude:0},altitudeMode:'CLAMP_TO_GROUND'});
         marker.append(new pin3dLib.PinElement({background:'#f59e0b',borderColor:'#ffffff',glyph:'📷',scale:1.2}));
-        marker.addEventListener('gmp-click',()=>openPhotoPreview(p));map3d.append(marker);three.push(marker);
+        marker.addEventListener('gmp-click',()=>openPhotoPreview(p));
+        marker.addEventListener('click',()=>openPhotoPreview(p));
+        map3d.append(marker);three.push(marker);
       }
     }
     routePhotoMarkers2d.set(id,two);routePhotoMarkers3d.set(id,three);
