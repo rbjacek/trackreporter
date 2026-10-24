@@ -670,3 +670,8 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 .fleet-playback-timeline[hidden]{display:none!important}
 .fleet-playback-timeline input[type=range]{flex:1;min-width:65px;accent-color:#38bdf8;cursor:pointer}
 .fleet-playback-timeline span{font-variant-numeric:tabular-nums;font-size:.82rem;white-space:nowrap}
+
+/* Demo photos: rounded white frames for map/gallery thumbnails */
+.fleet-guest .route-photo-card img, .fleet-guest .photo-card img {
+  border:3px solid #fff; border-radius:10px; box-sizing:border-box;
+}
