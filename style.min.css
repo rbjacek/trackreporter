@@ -675,3 +675,13 @@ body.fleet-signed-in .fleet-dashboard-brand { display:flex; }
 .fleet-guest .route-photo-card img, .fleet-guest .photo-card img {
   border:3px solid #fff; border-radius:10px; box-sizing:border-box;
 }
+
+body.fleet-guest #fleet-route-play{display:none}
+/* Guest demo starts only after the large Play button is clicked. */
+#fleet-map{position:relative}
+#fleet-demo-play-overlay{position:absolute;z-index:1000;left:50%;top:50%;transform:translate(-50%,-50%);display:flex;flex-direction:column;align-items:center;gap:13px;background:transparent;border:0;color:#fff;cursor:pointer;padding:22px;filter:drop-shadow(0 5px 15px rgba(0,0,0,.6))}
+#fleet-demo-play-overlay[hidden]{display:none!important}
+.fleet-demo-play-circle{display:grid;place-items:center;width:110px;height:110px;border-radius:50%;background:rgba(10,25,42,.8);border:3px solid #fff;font-size:46px;line-height:1;padding-left:7px;box-shadow:0 0 0 9px rgba(255,255,255,.15)}
+.fleet-demo-play-label{background:rgba(10,25,42,.85);border-radius:12px;padding:8px 17px;font-size:16px;font-weight:800;white-space:nowrap}
+#fleet-demo-play-overlay:hover .fleet-demo-play-circle{background:#0284c7;transform:scale(1.05)}
+#fleet-demo-play-overlay:focus-visible{outline:3px solid #38bdf8;outline-offset:5px;border-radius:15px}
