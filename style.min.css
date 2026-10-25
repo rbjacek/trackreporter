@@ -685,3 +685,7 @@ body.fleet-guest #fleet-route-play{display:none}
 .fleet-demo-play-label{background:rgba(10,25,42,.85);border-radius:12px;padding:8px 17px;font-size:16px;font-weight:800;white-space:nowrap}
 #fleet-demo-play-overlay:hover .fleet-demo-play-circle{background:#0284c7;transform:scale(1.05)}
 #fleet-demo-play-overlay:focus-visible{outline:3px solid #38bdf8;outline-offset:5px;border-radius:15px}
+
+.fleet-demo-pause{flex:none;white-space:nowrap;border:1px solid rgba(125,211,252,.65);border-radius:8px;background:#143b56;color:white;padding:7px 12px;font-size:.82rem;font-weight:700;cursor:pointer}
+.fleet-demo-pause:hover{background:#17618a}
+.fleet-demo-pause[hidden]{display:none!important}
