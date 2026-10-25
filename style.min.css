@@ -624,6 +624,10 @@ body.fleet-guest #fleet-web .fleet-layout{grid-template-columns:minmax(0,1fr)!im
 body.fleet-guest #fleet-route-play,body.fleet-guest #fleet-playback-timeline{display:flex!important}
 body.fleet-guest #fleet-live-diagnostics{display:none!important}
 body.fleet-guest #fleet-web .fleet-map{min-height:440px;height:min(68vh,800px)}
+body.fleet-guest.fleet-demo-loading #fleet-map-2d{visibility:hidden!important}
+body.fleet-guest.fleet-demo-loading #fleet-map{background:#101b2a}
+body.fleet-guest.fleet-demo-loading #fleet-mode-3d{background:#38bdf8;color:#07121e;font-weight:800}
+body.fleet-guest.fleet-demo-loading #fleet-mode-satellite{background:#1c2938;color:#fff;font-weight:400}
 /* Signed-in users see only the Fleet workspace. */
 body.fleet-signed-in .page > .nav,
 body.fleet-signed-in .page > .hero,
