@@ -1,1 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#081628">
+  <meta name="author" content="Track Reporter">
+  <title>Site Inspection Report App with GPS Photos &amp; PDF | Track Reporter</title>
+  <meta name="description" content="Create site inspection reports with GPS routes, timestamped photos and PDF documentation. See a real Track Reporter example for Android field inspections.">
+  <link rel="canonical" href="https://www.trackreporter.com/blog/site-inspection-report/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Track Reporter">
+  <meta property="og:title" content="Site Inspection Report with GPS Photos and PDF | Track Reporter">
+  <meta property="og:description" content="A practical guide to documenting site inspections with GPS routes, photo evidence and PDF reports. See the app in action.">
+  <meta property="og:url" content="https://www.trackreporter.com/blog/site-inspection-report/">
+  <meta property="og:image" content="https://www.trackreporter.com/blog/site-inspection-report/images/route-gps.jpg">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Site Inspection Report with GPS Photos and PDF">
+  <meta name="twitter:description" content="Record inspection routes, capture GPS-linked photos and create PDF reports with Track Reporter for Android.">
+  <meta name="twitter:image" content="https://www.trackreporter.com/blog/site-inspection-report/images/route-gps.jpg">
+  <link rel="stylesheet" href="../../style.min.css?v=20261026-active-live">
+  <link rel="stylesheet" href="../blog.css?v=20261026">
+  <link rel="stylesheet" href="./inspection.css?v=20261026">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"BlogPosting",
+    "headline":"How to Create a Site Inspection Report with GPS Photos and PDF",
+    "description":"How to document field inspections with GPS routes, location-tagged photographs and PDF reports using Track Reporter for Android.",
+    "datePublished":"2026-10-26",
+    "dateModified":"2026-10-26",
+    "inLanguage":"en",
+    "author":{"@type":"Organization","name":"Track Reporter"},
+    "publisher":{"@type":"Organization","name":"Track Reporter","url":"https://www.trackreporter.com/"},
+    "image":"https://www.trackreporter.com/blog/site-inspection-report/images/route-gps.jpg",
+    "mainEntityOfPage":{"@type":"WebPage","@id":"https://www.trackreporter.com/blog/site-inspection-report/"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://www.trackreporter.com/"},{"@type":"ListItem","position":2,"name":"Blog","item":"https://www.trackreporter.com/blog/"},{"@type":"ListItem","position":3,"name":"Site Inspection Report","item":"https://www.trackreporter.com/blog/site-inspection-report/"}]}
+  </script>
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js',new Date());
+    gtag('config','AW-17236374089');
+    function gtag_report_conversion(url) {
+      var didNavigate = false;
+      function navigate() { if (!didNavigate && url) { didNavigate = true; window.location.href = url; } }
+      gtag('event','conversion',{
+        send_to:'AW-17236374089/leRNCLrjh8McEMnk-JpA',
+        value:1.0,
+        currency:'PLN',
+        event_callback:navigate,
+        event_timeout:1500
+      });
+      window.setTimeout(navigate,1700);
+      return false;
+    }
+  </script>
+</head>
+<body class="blog-page blog-article-page inspection-article-page">
+  <main class="page blog-site">
+    <nav class="nav blog-site-nav" aria-label="Main navigation">
+      <a class="brand blog-brand" href="../../" aria-label="Track Reporter home">
+        <img src="../../trackreporter1024x1024-transparent.png?v=20260605" alt="" width="42" height="42">
+        <span>Track Reporter</span>
+      </a>
+      <div class="blog-site-nav__links">
+        <a class="blog-site-nav__link" href="../../">Home</a>
+        <a class="blog-site-nav__link is-active" href="../" aria-current="page">Blog</a>
+        <a class="nav-cta blog-site-nav__app" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Android app</a>
+      </div>
+    </nav>
 
+    <div class="blog-breadcrumbs" aria-label="Breadcrumb">
+      <a href="../../">Home</a><span aria-hidden="true">/</span>
+      <a href="../">Blog</a><span aria-hidden="true">/</span>
+      <span aria-current="page">Site Inspection Reports</span>
+    </div>
+
+    <header class="inspection-hero" aria-labelledby="inspection-title">
+      <div class="inspection-hero__copy">
+        <span class="blog-eyebrow">SITE INSPECTIONS · GPS PHOTO EVIDENCE</span>
+        <h1 id="inspection-title">How to Create a <span>Site Inspection Report</span> with GPS Photos and PDF</h1>
+        <p class="blog-lead">Document where an inspection happened, when it took place and what you observed—with GPS routes, location-tagged photos and a professional report.</p>
+        <div class="inspection-hero__actions">
+          <a class="blog-button blog-button--primary" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Track Reporter for Android <span aria-hidden="true">↗</span></a>
+          <a class="inspection-secondary-link" href="../../sample-report.pdf" target="_blank" rel="noopener">View sample PDF report <span aria-hidden="true">↗</span></a>
+        </div>
+        <p class="inspection-byline">By Track Reporter · October 26, 2026 · 4 min read</p>
+      </div>
+      <figure class="inspection-hero__media">
+        <a href="./images/route-gps.jpg" target="_blank" rel="noopener" aria-label="View full-size GPS route screenshot">
+          <img src="./images/route-gps.jpg" alt="Track Reporter Android app displaying a GPS route on a hybrid map with photo evidence markers" width="230" height="512" fetchpriority="high">
+        </a>
+        <figcaption>Real Track Reporter route with GPS points and photo markers.</figcaption>
+      </figure>
+    </header>
+
+    <div class="blog-reading-layout inspection-reading-layout">
+      <article class="blog-article-content">
+        <p class="blog-intro"><strong>Need a site inspection report that shows more than a written checklist?</strong> Track Reporter brings GPS route recording, timestamped photo evidence and PDF documentation into one Android workflow.</p>
+        <p>For construction site visits, maintenance checks and field service assignments, a useful report should connect <strong>location, time and visual evidence</strong>. Here is how to create one.</p>
+
+        <h2 id="what-to-include">What should a site inspection report include?</h2>
+        <div class="inspection-check-grid">
+          <div><span class="inspection-check-mark" aria-hidden="true">✓</span><strong>Visit details</strong><span>Site location, date and duration</span></div>
+          <div><span class="inspection-check-mark" aria-hidden="true">✓</span><strong>GPS route</strong><span>Recorded movement and visited areas</span></div>
+          <div><span class="inspection-check-mark" aria-hidden="true">✓</span><strong>Photo evidence</strong><span>Images linked to place and time</span></div>
+          <div><span class="inspection-check-mark" aria-hidden="true">✓</span><strong>Shareable report</strong><span>Map, session details and PDF output</span></div>
+        </div>
+
+        <h2 id="how-it-works">Create your report in three steps</h2>
+        <section class="inspection-step" aria-labelledby="inspection-step-1">
+          <div class="inspection-step__copy">
+            <span class="inspection-step__number">01 / RECORD</span>
+            <h3 id="inspection-step-1">Start the GPS route</h3>
+            <p>Start a Track Reporter session as your site visit begins. The app records locations and timestamps and lets you review the route on a map. Basic GPS recording works offline, making it useful at sites with limited connectivity.</p>
+          </div>
+        </section>
+
+        <section class="inspection-step inspection-step--illustrated" aria-labelledby="inspection-step-2">
+          <div class="inspection-step__copy">
+            <span class="inspection-step__number">02 / CAPTURE</span>
+            <h3 id="inspection-step-2">Add location-tagged inspection photos</h3>
+            <p>Take photos of equipment, site conditions or completed tasks. Track Reporter keeps images with their associated GPS location and time, so you can review them alongside your recorded visit.</p>
+          </div>
+          <figure class="inspection-visual">
+            <a href="./images/inspection-photos.jpg" target="_blank" rel="noopener" aria-label="View full-size inspection photo gallery screenshot">
+              <img src="./images/inspection-photos.jpg" alt="Track Reporter photo gallery with site inspection photos, recorded times and addresses" width="230" height="512" loading="lazy" decoding="async">
+            </a>
+            <figcaption>Inspection photo gallery with time and location information.</figcaption>
+          </figure>
+        </section>
+
+        <section class="inspection-step inspection-step--illustrated" aria-labelledby="inspection-step-3">
+          <div class="inspection-step__copy">
+            <span class="inspection-step__number">03 / REPORT</span>
+            <h3 id="inspection-step-3">Generate a site inspection report PDF</h3>
+            <p>Finish the session, review its route and activity details, then generate a structured PDF report. A shareable record is easier for customers, supervisors and your own team to review than separate photos and manual notes.</p>
+            <a class="blog-text-link" href="../../sample-report.pdf" target="_blank" rel="noopener">View an example PDF report <span aria-hidden="true">↗</span></a>
+          </div>
+          <figure class="inspection-visual">
+            <a href="./images/route-verification-report.jpg" target="_blank" rel="noopener" aria-label="View full-size Route Verification Report screenshot">
+              <img src="./images/route-verification-report.jpg" alt="Track Reporter Route Verification Report PDF displaying session data, route maps and timeline" width="230" height="512" loading="lazy" decoding="async">
+            </a>
+            <figcaption>Route Verification Report with session details and maps.</figcaption>
+          </figure>
+        </section>
+
+        <div class="inspection-mid-cta">
+          <div><strong>Ready to document your next inspection?</strong><span>Record the route. Capture the evidence. Generate the report.</span></div>
+          <a class="blog-button blog-button--light" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get the Android app <span aria-hidden="true">↗</span></a>
+        </div>
+
+        <h2 id="teams">For individuals and field teams</h2>
+        <p>Track Reporter supports inspections, maintenance visits, field service work, security patrols and other activities that need location-based documentation.</p>
+        <p>For teams, <strong>Fleet Live Monitoring</strong> lets authorized administrators see locations shared by participating workers. Live sharing requires connectivity and an active sharing session.</p>
+        <figure class="inspection-visual inspection-visual--inline">
+          <a href="./images/fleet-live-map.jpg" target="_blank" rel="noopener" aria-label="View full-size live fleet map screenshot">
+            <img src="./images/fleet-live-map.jpg" alt="Track Reporter Fleet Live Map showing the shared live location of a field worker" width="230" height="512" loading="lazy" decoding="async">
+          </a>
+          <figcaption>Fleet Live Map for shared worker locations.</figcaption>
+        </figure>
+
+        <h2 id="demo">See a recorded route before you install</h2>
+        <p>Want to see how route playback and photo evidence look together? Explore Track Reporter’s interactive 3D route demo on the website.</p>
+        <figure class="inspection-visual inspection-visual--wide">
+          <a href="../../#fleet-web" aria-label="Open the Track Reporter interactive map demo">
+            <img src="./images/interactive-route-demo.jpg" alt="Track Reporter website interactive 3D route demo with controls and route photo gallery" width="742" height="948" loading="lazy" decoding="async">
+          </a>
+          <figcaption>Interactive 3D demo route with photo thumbnails. <a href="../../#fleet-web">Explore the demo ↗</a></figcaption>
+        </figure>
+
+        <h2 id="faq">Frequently asked questions</h2>
+        <div class="blog-faq">
+          <details><summary>Can I create a site inspection report on Android?</summary><p>Yes. Track Reporter lets you record GPS routes, associate photo evidence with the visit and generate PDF documentation on Android.</p></details>
+          <details><summary>Can I record GPS routes without internet access?</summary><p>Yes. Basic GPS route recording works offline. Real-time fleet location sharing requires internet access.</p></details>
+          <details><summary>Does a GPS route prove that a job was completed?</summary><p>A recorded route and timestamped photos provide supporting evidence of a visit; they are not an absolute guarantee that every task was completed.</p></details>
+        </div>
+
+        <h2 id="get-started">Create your next site inspection report</h2>
+        <p>Keep GPS routes, site photos and report documentation in one place instead of collecting evidence across multiple apps.</p>
+        <div class="blog-article-bottom-cta"><div><span class="blog-eyebrow">TRACK REPORTER FOR ANDROID</span><h3>Turn site visits into documented work.</h3><p>Record the route. Capture the evidence. Generate the report.</p></div><a class="blog-button blog-button--light" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Track Reporter <span aria-hidden="true">↗</span></a></div>
+        <p class="inspection-related"><strong>Related guide:</strong> <a href="../how-to-prove-field-work-was-completed/">How to Prove Field Work Was Completed with GPS Photos &amp; Reports</a></p>
+        <p class="blog-back-link"><a href="../">← Back to Track Reporter Blog</a></p>
+      </article>
+      <aside class="blog-reading-sidebar" aria-label="Article contents">
+        <div class="blog-sidebar-sticky">
+          <span class="blog-eyebrow">IN THIS GUIDE</span>
+          <nav aria-label="On this page">
+            <a href="#what-to-include">What to include</a>
+            <a href="#how-it-works">Create a report</a>
+            <a href="#teams">Field teams</a>
+            <a href="#demo">Route demo</a>
+            <a href="#faq">FAQs</a>
+          </nav>
+          <div class="blog-sidebar-promo"><img src="../../trackreporter1024x1024-transparent.png?v=20260605" alt="" width="38" height="38"><strong>Track Reporter</strong><p>GPS routes, photo evidence &amp; PDF reports.</p><a href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get the app ↗</a></div>
+        </div>
+      </aside>
+    </div>
+    <footer class="blog-footer">
+      <div><strong>Track Reporter</strong><span>GPS evidence for professional field work.</span></div>
+      <nav aria-label="Footer navigation"><a href="../../">Home</a><a href="../">Blog</a><a href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Android app</a></nav>
+      <small>© 2026 Track Reporter</small>
+    </footer>
+  </main>
+</body>
+</html>
