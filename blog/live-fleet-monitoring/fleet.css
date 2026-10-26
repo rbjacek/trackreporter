@@ -1,0 +1,68 @@
+/* Third Track Reporter article — scoped to /blog/live-fleet-monitoring/ only. */
+.fleet-article-page .blog-article-content { overflow: visible; }
+.fleet-article-hero { display:grid; grid-template-columns:minmax(0,1.27fr) minmax(285px,.73fr); gap:clamp(26px,5vw,67px); align-items:center; padding:26px 0 58px; border-bottom:1px solid var(--blog-line); }
+.fleet-article-hero__copy h1 { color:#f3fbff; font-weight:850; letter-spacing:-.06em; font-size:clamp(2.65rem,5.15vw,4.7rem); line-height:1.09; margin:19px 0 22px; }
+.fleet-article-hero__copy h1 span { color:#80e3ef; }
+.fleet-article-hero__actions { margin-top:27px; display:flex; gap:16px; align-items:center; flex-wrap:wrap; }
+.fleet-outline-link { color:#9ae6f5!important; text-decoration:none; font-size:.92rem; font-weight:750; }
+.fleet-outline-link:hover { text-decoration:underline; }
+.fleet-article-byline { color:#9ab2c6; font-size:.82rem; margin-top:21px; }
+.fleet-article-hero__visual { min-width:0; margin:0; padding:20px; border:1px solid var(--blog-line); border-radius:24px; background:radial-gradient(circle at 49% 45%,#194963 0%,#102a44 65%,#0b1c2e 100%); box-shadow:0 21px 55px rgba(0,0,0,.24); display:flex; flex-direction:column; gap:11px; align-items:center; }
+.fleet-article-hero__visual a { display:block; width:100%; max-width:300px; }
+.fleet-article-hero__visual img { width:100%; max-height:390px; height:auto; object-fit:contain; border-radius:12px; display:block; margin:0 auto; box-shadow:0 16px 40px #0005; }
+.fleet-article-hero__visual figcaption { text-align:center; color:#b2c9d9; font-size:.78rem; line-height:1.5; }
+.fleet-reading-layout { padding-top:50px; }
+.fleet-benefit-grid { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:11px; margin:25px 0 42px; }
+.fleet-benefit-grid>div { background:rgba(31,82,109,.25); border:1px solid var(--blog-line); border-radius:15px; padding:18px 16px; display:flex; flex-direction:column; align-items:flex-start; gap:7px; }
+.fleet-benefit-grid span { color:#83e4f0; font-size:1.7rem; line-height:1; }
+.fleet-benefit-grid strong { color:#f6fbff; font-size:.95rem; }
+.fleet-benefit-grid small { font-size:.79rem; color:#afc7d8; line-height:1.5; }
+.fleet-image-section { display:grid; grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); gap:25px; align-items:center; margin:25px 0 32px; }
+.fleet-image-section--flip { grid-template-columns:minmax(0,.85fr) minmax(0,1.15fr); }
+.fleet-image-section__text h3 { margin:0 0 13px; font-size:1.22rem; }
+.fleet-image-section__text p { font-size:.98rem; }
+.fleet-figure { background:linear-gradient(145deg,#15344b,#0c2238); border:1px solid var(--blog-line); border-radius:19px; padding:19px; margin:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:11px; text-align:center; }
+.fleet-figure a { max-width:100%; display:block; }
+.fleet-figure img { display:block; max-height:410px; max-width:100%; width:auto; height:auto; object-fit:contain; border-radius:11px; box-shadow:0 16px 35px rgba(0,0,0,.33); }
+.fleet-figure figcaption { color:#b8d0df; font-size:.79rem; line-height:1.48; }
+.fleet-figure--center { width:min(100%,440px); margin:24px auto 29px; }
+.fleet-demo-card { display:grid; grid-template-columns:minmax(0,1fr) minmax(190px,.62fr); align-items:center; gap:22px; margin:48px 0 41px; padding:clamp(25px,3vw,35px); background:linear-gradient(125deg,#11495d,#113353); border:1px solid rgba(114,218,235,.35); border-radius:22px; }
+.fleet-demo-card h2 { color:white; margin:12px 0 16px!important; }
+.fleet-demo-card p { color:#e1f1fa; }
+.fleet-demo-card__image { display:block; max-width:260px; margin:auto; }
+.fleet-demo-card__image img { display:block; max-width:100%; width:auto; height:auto; max-height:330px; object-fit:contain; border-radius:13px; box-shadow:0 14px 30px #0005; }
+.fleet-demo-disclaimer { font-size:.79rem; line-height:1.5; opacity:.8; margin:15px 0 0!important; }
+.fleet-steps { padding-left:26px; margin:18px 0 30px; }
+.fleet-steps li { margin:0 0 14px; padding-left:7px; }
+.fleet-inline-cta { margin:31px 0 42px; border-radius:17px; padding:25px; background:linear-gradient(110deg,#0b6780,#124e7e); display:flex; align-items:center; justify-content:space-between; gap:22px; }
+.fleet-inline-cta>div { display:flex; flex-direction:column; gap:8px; }
+.fleet-inline-cta strong { color:white; font-size:1.13rem; }
+.fleet-inline-cta span { color:#d7ecf7; font-size:.92rem; }
+.fleet-bottom-cta { background:linear-gradient(115deg,#0b748e,#15497c); border-radius:22px; padding:clamp(25px,4vw,39px); margin:43px 0 30px; }
+.fleet-bottom-cta h2 { margin:12px 0!important; color:white; }
+.fleet-bottom-cta p { color:#e5f5ff; margin:0 0 20px; }
+.fleet-bottom-cta__actions { display:flex; flex-wrap:wrap; gap:18px; align-items:center; }
+.fleet-bottom-cta .blog-eyebrow { color:#c2f8ff; }
+.fleet-related { border-top:1px solid var(--blog-line); padding-top:22px; margin-top:33px!important; font-size:.9rem; }
+.fleet-related a { color:#8ee2f2; }
+@media (max-width:900px){
+ .fleet-article-hero { grid-template-columns:minmax(0,1fr) minmax(220px,.65fr); gap:24px; }
+ .fleet-article-hero__visual { padding:12px; }
+}
+@media (max-width:650px){
+ .fleet-article-hero { grid-template-columns:1fr; padding:18px 0 38px; gap:26px; }
+ .fleet-article-hero__copy h1 { font-size:clamp(2.3rem,9vw,3.5rem); }
+ .fleet-article-hero__visual { max-width:390px; width:100%; margin:auto; }
+ .fleet-article-hero__visual img { max-height:350px; }
+ .fleet-reading-layout { padding-top:33px; }
+ .fleet-benefit-grid { grid-template-columns:1fr; }
+ .fleet-image-section, .fleet-image-section--flip { grid-template-columns:1fr; }
+ .fleet-image-section__text { order:0; }
+ .fleet-image-section .fleet-figure { order:1; }
+ .fleet-figure img { max-height:365px; }
+ .fleet-demo-card { grid-template-columns:1fr; }
+ .fleet-demo-card__image img { max-height:300px; }
+ .fleet-inline-cta { flex-direction:column; align-items:flex-start; }
+ .fleet-bottom-cta__actions { flex-direction:column; align-items:stretch; }
+}
+@media(prefers-reduced-motion:reduce){.fleet-article-page .blog-button{transition:none;}}
