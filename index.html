@@ -55,6 +55,49 @@ gtag('event', 'TrackReporterView2');
 
   <link rel="stylesheet" href="./style.min.css?v=20261026-active-live">
   <link rel="stylesheet" href="./blog/blog.css?v=20261026">
+  <!-- Mobile navigation: keep Android app, Your Fleet and Blog visible. -->
+  <style>
+    @media (max-width: 640px) {
+      .page > .nav {
+        display: grid !important;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        align-items: center;
+        overflow: visible !important;
+      }
+
+      .page > .nav > .brand {
+        grid-column: 1 / -1;
+        min-width: 0;
+      }
+
+      .page > .nav > .nav-cta {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+        position: static !important;
+        align-items: center;
+        justify-content: center;
+        width: auto !important;
+        max-width: none !important;
+        min-width: 0;
+        margin: 0 !important;
+        white-space: nowrap;
+      }
+
+      .page > .nav > .nav-cta:not(.fleet-nav-link):not(.blog-nav-link) {
+        grid-column: 1 / -1;
+      }
+
+      .page > .nav > .fleet-nav-link {
+        grid-column: 1;
+      }
+
+      .page > .nav > .blog-nav-link {
+        grid-column: 2;
+      }
+    }
+  </style>
 </head>
 
 <body class="fleet-guest fleet-demo-loading">
