@@ -304,6 +304,39 @@ window.addEventListener('load', function() {
   let map, marker, lastPosition;
   let follow = true;
   let mapsReady = false;
+  let speedKmh = null;
+  let targetRange = 250;
+  let lastFrame = 0;
+  const speedRanges = [[0,200],[5,250],[20,350],[40,450],[60,600],[80,800],[100,800]];
+  function rangeForSpeed(speed) {
+    for (let i = 1; i < speedRanges.length; i++) {
+      if (speed <= speedRanges[i][0]) {
+        const [s0,r0] = speedRanges[i-1], [s1,r1] = speedRanges[i];
+        return r0 + (r1-r0) * (speed-s0)/(s1-s0);
+      }
+    }
+    return 800;
+  }
+  function animateCamera(now) {
+    const dt = lastFrame ? Math.min((now-lastFrame)/1000,0.1) : 0;
+    lastFrame = now;
+    if (map && mapsReady) {
+      const alpha = 1-Math.exp(-dt/1.8);
+      const currentRange = Number(map.range) || targetRange;
+      if (Math.abs(currentRange-targetRange)>0.5)
+        map.range = currentRange + (targetRange-currentRange)*alpha;
+      if (follow && lastPosition) {
+        const c = map.center;
+        const lat = Number(c?.lat ?? lastPosition.lat);
+        const lng = Number(c?.lng ?? lastPosition.lng);
+        const dLng = ((lastPosition.lng-lng+540)%360)-180;
+        map.center = {lat:lat+(lastPosition.lat-lat)*alpha,
+          lng:lng+dLng*alpha,altitude:0};
+      }
+    }
+    requestAnimationFrame(animateCamera);
+  }
+  requestAnimationFrame(animateCamera);
 
   recenter.addEventListener('click', () => {
     follow = true;
@@ -324,7 +357,7 @@ window.addEventListener('load', function() {
       document.head.appendChild(script);
     });
     const {Map3DElement, Marker3DElement} = await google.maps.importLibrary('maps3d');
-    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:800,tilt:65,heading:0,mode:'HYBRID'});
+    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:250,tilt:65,heading:0,mode:'HYBRID'});
     map.style.width = '100%';
     map.style.height = '100%';
     holder.replaceChildren(map);
@@ -337,7 +370,7 @@ window.addEventListener('load', function() {
   function updateMap() {
     if (!mapsReady || !lastPosition) return;
     marker.position = lastPosition;
-    if (follow) map.center = {...lastPosition, altitude:180};
+    // Camera follows smoothly in animateCamera().
   }
 
   if (!window.isSecureContext || !navigator.geolocation) {
@@ -347,7 +380,14 @@ window.addEventListener('load', function() {
     navigator.geolocation.watchPosition(
       position => {
         lastPosition = {lat:position.coords.latitude,lng:position.coords.longitude,altitude:0};
-        status.textContent = 'LIVE · GPS accuracy approximately ' + Math.round(position.coords.accuracy) + ' m';
+        const rawSpeed = position.coords.speed;
+        if (Number.isFinite(rawSpeed) && rawSpeed >= 0) {
+          const measured = Math.min(100,rawSpeed*3.6);
+          speedKmh = speedKmh === null ? measured : speedKmh*0.7 + measured*0.3;
+          targetRange = rangeForSpeed(speedKmh);
+        }
+        status.textContent = 'LIVE · GPS accuracy approximately ' + Math.round(position.coords.accuracy) + ' m'
+          + (speedKmh === null ? ' · speed unavailable' : ' · ' + Math.round(speedKmh) + ' km/h');
         updateMap();
       },
       error => {
