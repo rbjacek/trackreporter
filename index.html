@@ -305,6 +305,9 @@ window.addEventListener('load', function() {
   let mapsReady = false;
   let wakeLock = null;
   let trackingActive = false;
+  let displayedPosition = null;
+  let animationFrame = null;
+  let lastFrameTime = 0;
 
   async function requestScreenWakeLock() {
     if (!trackingActive || document.visibilityState !== 'visible' || wakeLock || !('wakeLock' in navigator)) return;
@@ -320,12 +323,19 @@ window.addEventListener('load', function() {
   }
 
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'visible') requestScreenWakeLock();
+    if (document.visibilityState === 'visible') {
+      requestScreenWakeLock();
+      updateMap();
+    } else {
+      lastFrameTime = 0;
+      if (animationFrame !== null) cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
   });
 
   recenter.addEventListener('click', () => {
     follow = true;
-    if (map && lastPosition) map.center = lastPosition;
+    if (map && displayedPosition) map.center = {...displayedPosition, altitude:180};
   });
 
   async function loadMaps() {
@@ -342,7 +352,7 @@ window.addEventListener('load', function() {
       document.head.appendChild(script);
     });
     const {Map3DElement, Marker3DElement} = await google.maps.importLibrary('maps3d');
-    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:800,tilt:65,heading:0,mode:'HYBRID'});
+    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:600,tilt:65,heading:0,mode:'HYBRID'});
     map.style.width = '100%';
     map.style.height = '100%';
     holder.replaceChildren(map);
@@ -352,10 +362,43 @@ window.addEventListener('load', function() {
     if (lastPosition) updateMap();
   }
 
+  // Smooth GPS updates with a time-based interpolation loop.
+  // No simulated movement beyond the latest actual GPS coordinate.
+  function animatePosition(now) {
+    animationFrame = null;
+    if (!mapsReady || !lastPosition || document.visibilityState !== 'visible') return;
+    if (!displayedPosition) displayedPosition = {...lastPosition};
+
+    const dt = lastFrameTime ? Math.min(now - lastFrameTime, 100) : 16;
+    lastFrameTime = now;
+    // ~1.2-second smoothing, independent of the GPS update frequency.
+    const alpha = 1 - Math.exp(-dt / 450);
+    const latDiff = lastPosition.lat - displayedPosition.lat;
+    let lngDiff = lastPosition.lng - displayedPosition.lng;
+    if (lngDiff > 180) lngDiff -= 360;
+    if (lngDiff < -180) lngDiff += 360;
+    displayedPosition.lat += latDiff * alpha;
+    displayedPosition.lng += lngDiff * alpha;
+    if (displayedPosition.lng > 180) displayedPosition.lng -= 360;
+    if (displayedPosition.lng < -180) displayedPosition.lng += 360;
+
+    marker.position = {...displayedPosition, altitude:0};
+    if (follow) map.center = {...displayedPosition, altitude:180};
+    // Keep animating while tracking; each new GPS fix updates the target.
+    animationFrame = requestAnimationFrame(animatePosition);
+  }
+
   function updateMap() {
     if (!mapsReady || !lastPosition) return;
-    marker.position = lastPosition;
-    if (follow) map.center = {...lastPosition, altitude:180};
+    if (!displayedPosition) {
+      displayedPosition = {...lastPosition};
+      marker.position = {...displayedPosition};
+      if (follow) map.center = {...displayedPosition, altitude:180};
+    }
+    if (animationFrame === null && document.visibilityState === 'visible') {
+      lastFrameTime = 0;
+      animationFrame = requestAnimationFrame(animatePosition);
+    }
   }
 
   if (!window.isSecureContext || !navigator.geolocation) {
