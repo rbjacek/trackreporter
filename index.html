@@ -151,6 +151,30 @@ gtag('event', 'TrackReporterView2');
       #self-map-container:fullscreen #self-map-3d,
       #self-map-container:-webkit-full-screen #self-map-3d{height:100% !important}
     }
+    /* Full viewport overlay, independent of mobile Fullscreen API and page layout. */
+    body.self-map-expanded { overflow:hidden !important; }
+    body.self-map-expanded #self-map-container {
+      position:fixed !important; inset:0 !important;
+      width:100vw !important; height:100vh !important;
+      height:100dvh !important; max-width:none !important; max-height:none !important;
+      margin:0 !important; padding:0 !important; border:0 !important;
+      border-radius:0 !important; z-index:2147483640 !important;
+      overflow:hidden !important; background:#152235 !important;
+    }
+    body.self-map-expanded #self-map-3d {
+      position:absolute !important; inset:0 !important;
+      width:100% !important; height:100% !important;
+      max-height:none !important; min-height:0 !important;
+      border-radius:0 !important;
+    }
+    body.self-map-expanded #self-map-3d gmp-map-3d {
+      display:block !important; width:100% !important; height:100% !important;
+    }
+    body.self-map-expanded #self-map-fullscreen {
+      position:absolute !important; z-index:2147483641 !important;
+      top:calc(12px + env(safe-area-inset-top)) !important;
+      right:calc(12px + env(safe-area-inset-right)) !important;
+    }
   </style>
 </head>
 
@@ -349,27 +373,31 @@ window.addEventListener('load', function() {
   const recenter = document.getElementById('self-map-recenter');
   const fullscreenContainer = document.getElementById('self-map-container');
   const fullscreenButton = document.getElementById('self-map-fullscreen');
-  fullscreenButton.addEventListener('click', async () => {
-    try {
-      if (document.fullscreenElement === fullscreenContainer) {
-        await document.exitFullscreen();
-      } else if (fullscreenContainer.requestFullscreen) {
-        await fullscreenContainer.requestFullscreen();
-      } else {
-        status.textContent = 'Full-screen mode is not supported in this browser.';
-      }
-    } catch (error) {
-      status.textContent = 'Cannot open full-screen map: ' + error.message;
+  // Match the demo map's full-window presentation: move the map container
+  // to document.body, outside the responsive page's height constraints.
+  const originalParent = fullscreenContainer.parentNode;
+  const originalNextSibling = fullscreenContainer.nextSibling;
+  let expanded = false;
+  function setMapExpanded(next) {
+    if (expanded === next) return;
+    expanded = next;
+    if (expanded) {
+      document.body.appendChild(fullscreenContainer);
+      document.body.classList.add('self-map-expanded');
+    } else {
+      document.body.classList.remove('self-map-expanded');
+      originalParent.insertBefore(fullscreenContainer, originalNextSibling);
     }
-  });
-  document.addEventListener('fullscreenchange', () => {
-    const active = document.fullscreenElement === fullscreenContainer;
-    fullscreenButton.setAttribute('aria-pressed', String(active));
-    fullscreenButton.setAttribute('aria-label', active ? 'Exit full screen' : 'Expand map to full screen');
-    fullscreenButton.title = active ? 'Exit full screen' : 'Full screen';
-    fullscreenButton.querySelector('svg').innerHTML = active
+    fullscreenButton.setAttribute('aria-pressed', String(expanded));
+    fullscreenButton.setAttribute('aria-label', expanded ? 'Exit full screen' : 'Expand map to full screen');
+    fullscreenButton.title = expanded ? 'Exit full screen' : 'Full screen';
+    fullscreenButton.querySelector('svg').innerHTML = expanded
       ? '<path d="M3 9h6V3M21 9h-6V3M3 15h6v6M21 15h-6v6"/>'
       : '<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>';
+  }
+  fullscreenButton.addEventListener('click', () => setMapExpanded(!expanded));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && expanded) setMapExpanded(false);
   });
   let map, marker, lastPosition;
   let follow = true;
