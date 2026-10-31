@@ -108,6 +108,12 @@ gtag('event', 'TrackReporterView2');
     #self-map-status{margin:8px 0 12px;font-size:.92rem}
     #self-map-3d{height:480px;width:100%;border-radius:16px;overflow:hidden;background:#152235}
     #self-map-3d gmp-map-3d{display:block;width:100%;height:100%}
+    .self-map-container{position:relative}
+    #self-map-fullscreen{position:absolute;right:12px;top:12px;z-index:10;width:44px;height:44px;display:flex;align-items:center;justify-content:center;background:rgba(24,52,81,.94);border:1px solid #88a8cc;border-radius:10px;color:white;cursor:pointer;box-shadow:0 2px 8px #0005}
+    #self-map-fullscreen svg{width:23px;height:23px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+    .self-map-container:fullscreen,.self-map-container:-webkit-full-screen{width:100vw;height:100dvh;background:#152235}
+    .self-map-container:fullscreen #self-map-3d,.self-map-container:-webkit-full-screen #self-map-3d{width:100%;height:100%;border-radius:0}
+    .self-map-container:fullscreen #self-map-fullscreen,.self-map-container:-webkit-full-screen #self-map-fullscreen{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
     @media(max-width:640px){.self-map-section{padding:14px}#self-map-3d{height:360px}}
   </style>
 </head>
@@ -175,7 +181,12 @@ gtag('event', 'TrackReporterView2');
     <button type="button" id="self-map-recenter">Center on me</button>
   </div>
   <p id="self-map-status" role="status" aria-live="polite">Waiting for location permission…</p>
-  <div id="self-map-3d" aria-label="Live photorealistic 3D map of your current location"></div>
+  <div id="self-map-container" class="self-map-container">
+    <div id="self-map-3d" aria-label="Live photorealistic 3D map of your current location"></div>
+    <button type="button" id="self-map-fullscreen" title="Full screen" aria-label="Expand map to full screen" aria-pressed="false">
+      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/></svg>
+    </button>
+  </div>
 </section>
 
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
@@ -300,6 +311,30 @@ window.addEventListener('load', function() {
   const status = document.getElementById('self-map-status');
   const holder = document.getElementById('self-map-3d');
   const recenter = document.getElementById('self-map-recenter');
+  const fullscreenContainer = document.getElementById('self-map-container');
+  const fullscreenButton = document.getElementById('self-map-fullscreen');
+  fullscreenButton.addEventListener('click', async () => {
+    try {
+      if (document.fullscreenElement === fullscreenContainer) {
+        await document.exitFullscreen();
+      } else if (fullscreenContainer.requestFullscreen) {
+        await fullscreenContainer.requestFullscreen();
+      } else {
+        status.textContent = 'Full-screen mode is not supported in this browser.';
+      }
+    } catch (error) {
+      status.textContent = 'Cannot open full-screen map: ' + error.message;
+    }
+  });
+  document.addEventListener('fullscreenchange', () => {
+    const active = document.fullscreenElement === fullscreenContainer;
+    fullscreenButton.setAttribute('aria-pressed', String(active));
+    fullscreenButton.setAttribute('aria-label', active ? 'Exit full screen' : 'Expand map to full screen');
+    fullscreenButton.title = active ? 'Exit full screen' : 'Full screen';
+    fullscreenButton.querySelector('svg').innerHTML = active
+      ? '<path d="M3 9h6V3M21 9h-6V3M3 15h6v6M21 15h-6v6"/>'
+      : '<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>';
+  });
   let map, marker, lastPosition;
   let follow = true;
   let mapsReady = false;
@@ -352,7 +387,7 @@ window.addEventListener('load', function() {
       document.head.appendChild(script);
     });
     const {Map3DElement, Marker3DElement} = await google.maps.importLibrary('maps3d');
-    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:600,tilt:65,heading:0,mode:'HYBRID'});
+    map = new Map3DElement({center:{lat:0,lng:0,altitude:200},range:400,tilt:65,heading:0,mode:'HYBRID'});
     map.style.width = '100%';
     map.style.height = '100%';
     holder.replaceChildren(map);
