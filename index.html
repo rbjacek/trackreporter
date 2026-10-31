@@ -114,7 +114,43 @@ gtag('event', 'TrackReporterView2');
     .self-map-container:fullscreen,.self-map-container:-webkit-full-screen{width:100vw;height:100dvh;background:#152235}
     .self-map-container:fullscreen #self-map-3d,.self-map-container:-webkit-full-screen #self-map-3d{width:100%;height:100%;border-radius:0}
     .self-map-container:fullscreen #self-map-fullscreen,.self-map-container:-webkit-full-screen #self-map-fullscreen{top:max(12px,env(safe-area-inset-top));right:max(12px,env(safe-area-inset-right))}
+    /* Fullscreen must override the mobile 360px map height and all parent layouts. */
+    #self-map-container:fullscreen,
+    #self-map-container:-webkit-full-screen {
+      position:fixed !important;
+      inset:0 !important;
+      width:100vw !important;
+      height:100vh !important;
+      height:100dvh !important;
+      max-width:none !important;
+      max-height:none !important;
+      margin:0 !important;
+      padding:0 !important;
+      border-radius:0 !important;
+      overflow:hidden !important;
+      background:#152235;
+    }
+    #self-map-container:fullscreen #self-map-3d,
+    #self-map-container:-webkit-full-screen #self-map-3d {
+      position:absolute !important;
+      inset:0 !important;
+      width:100% !important;
+      height:100% !important;
+      min-height:100% !important;
+      max-height:none !important;
+      border-radius:0 !important;
+    }
+    #self-map-container:fullscreen gmp-map-3d,
+    #self-map-container:-webkit-full-screen gmp-map-3d {
+      width:100% !important;
+      height:100% !important;
+    }
     @media(max-width:640px){.self-map-section{padding:14px}#self-map-3d{height:360px}}
+    /* Keep this after mobile styles so fullscreen always wins. */
+    @media(max-width:640px){
+      #self-map-container:fullscreen #self-map-3d,
+      #self-map-container:-webkit-full-screen #self-map-3d{height:100% !important}
+    }
   </style>
 </head>
 
