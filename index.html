@@ -99,6 +99,33 @@ gtag('event', 'TrackReporterView2');
       }
     }
   </style>
+
+  <style>
+    /* Fleet administrator's Work Orders list; existing site styling remains intact. */
+    .fleet-work-orders{margin:18px 0;padding:15px;border:1px solid rgba(148,163,184,.38);border-radius:14px;background:rgba(15,23,42,.32)}
+    .fleet-work-orders[hidden]{display:none!important}
+    .fleet-work-orders h3{margin:0 0 8px;font-size:1.1rem}
+    .wo-toolbar{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0}
+    .wo-toolbar button,.wo-toolbar select{background:#1b3853;color:#fff;border:1px solid #7193af;border-radius:9px;padding:9px 10px;font:inherit;cursor:pointer}
+    .wo-toolbar button:disabled{opacity:.45;cursor:not-allowed}
+    .wo-toolbar select{width:100%;max-width:250px}
+    .wo-list{display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+    .wo-card{display:flex;align-items:flex-start;gap:10px;padding:11px;border:1px solid rgba(148,163,184,.35);border-radius:10px;cursor:pointer;background:rgba(15,23,42,.36)}
+    .wo-card.is-selected{border-color:#38bdf8;background:rgba(56,189,248,.13)}
+    .wo-card input{margin:4px 0 0;flex-shrink:0;accent-color:#38bdf8;width:17px;height:17px}
+    .wo-card-main{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
+    .wo-card-title{font-weight:650;font-size:.92rem}
+    .wo-card-sub{font-size:.8rem;opacity:.84}
+    .wo-status{font-size:.7rem;font-weight:700;letter-spacing:.02em;border-radius:20px;padding:3px 8px;display:inline-block;align-self:flex-start;background:rgba(100,116,139,.24)}
+    .wo-status.IN_PROGRESS{background:rgba(25,118,210,.3)}
+    .wo-status.COMPLETED{background:rgba(46,125,50,.35)}
+    .wo-status.REJECTED{background:rgba(178,106,0,.35)}
+    .wo-status.CANCELLED{background:rgba(185,28,28,.35)}
+    .wo-feedback{font-size:.83rem;min-height:1.2em;margin:8px 0;overflow-wrap:anywhere}
+    .wo-feedback.error{color:#fda4af}
+    .wo-feedback.success{color:#86efac}
+    @media(max-width:640px){.fleet-work-orders{padding:10px}.wo-list{max-height:350px}}
+  </style>
 </head>
 
 <body class="fleet-guest fleet-demo-loading">
@@ -158,7 +185,7 @@ gtag('event', 'TrackReporterView2');
     </section>
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
-  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet and browse shared GPS routes. Manage Work Orders in the Android app.</p></div>
+  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view Work Orders with linked routes and photos. Create and assign Work Orders in the Android app.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
   <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
@@ -166,6 +193,15 @@ gtag('event', 'TrackReporterView2');
     <h3 id="fleet-name">My Fleet</h3>
     <div class="fleet-layout">
       <aside class="fleet-sidebar"><h3>Members</h3><div id="fleet-members"></div><div id="fleet-empty-invite" class="fleet-empty-invite" hidden role="status"><h4>Invite your first fleet member</h4><p>Your fleet is ready! Invite team members in the Track Reporter Android app to start monitoring live locations and viewing shared routes here.</p><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Get Track Reporter on Google Play ↗</a></div>
+        <section id="fleet-work-orders-section" class="fleet-work-orders" hidden aria-labelledby="fleet-work-orders-title">
+          <h3 id="fleet-work-orders-title">Work Orders</h3>
+          <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more Work Orders to show their GPS routes and photos on the map.</p>
+          <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
+          <div id="wo-list" class="wo-list" aria-live="polite">Loading Work Orders…</div>
+          <div class="wo-toolbar"><button type="button" id="wo-select-visible">Select visible</button><button type="button" id="wo-clear-selection">Clear</button></div>
+          <div class="wo-toolbar"><button type="button" id="wo-show-routes" disabled>Show selected Work Orders (0)</button></div>
+          <p id="wo-feedback" class="wo-feedback" role="status" aria-live="polite"></p>
+        </section>
         <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
       </aside>
@@ -276,7 +312,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261104-marker-always"></script>
+<script type="module" src="./app.min.js?v=20261104-work-order-map"></script>
 
 </body>
 </html>
