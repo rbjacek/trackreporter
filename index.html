@@ -116,6 +116,14 @@ gtag('event', 'TrackReporterView2');
     .wo-card-main{display:flex;flex-direction:column;gap:4px;min-width:0;overflow-wrap:anywhere}
     .wo-card-title{font-weight:650;font-size:.92rem}
     .wo-card-sub{font-size:.8rem;opacity:.84}
+    .wo-card-status-date{font-size:.79rem;opacity:.92;font-weight:550;font-variant-numeric:tabular-nums}
+    .wo-route-list{width:100%;margin-top:5px;padding-top:7px;border-top:1px solid rgba(148,163,184,.24);display:flex;flex-direction:column;gap:7px}
+    .wo-route-row{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:7px;background:rgba(15,23,42,.28);min-width:0}
+    .wo-route-name{font-size:.79rem;font-weight:650;color:#bae6fd;overflow-wrap:anywhere}
+    .wo-route-measures{font-size:.77rem;line-height:1.4;opacity:.96;font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+    .wo-route-loading{display:inline-flex;align-items:center;gap:7px;font-size:.77rem;opacity:.84}
+    .wo-route-note{font-size:.77rem;opacity:.76}
+    @media(max-width:640px){.wo-route-measures{font-size:.74rem}}
     .wo-status{font-size:.7rem;font-weight:700;letter-spacing:.02em;border-radius:20px;padding:3px 8px;display:inline-block;align-self:flex-start;background:rgba(100,116,139,.24)}
     .wo-status.IN_PROGRESS{background:rgba(25,118,210,.3)}
     .wo-status.COMPLETED{background:rgba(46,125,50,.35)}
@@ -373,7 +381,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261104-select-routes-manually"></script>
+<script type="module" src="./app.min.js?v=20261104-work-order-route-metrics"></script>
 
 </body>
 </html>
