@@ -1,1 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#081628">
+  <meta name="author" content="Track Reporter">
+  <title>Field Service Work Order Management with GPS Evidence | Track Reporter</title>
+  <meta name="description" content="Create and assign field work orders, track job status, attach GPS routes and review completed work with Track Reporter for Android and fleet teams.">
+  <link rel="canonical" href="https://www.trackreporter.com/blog/work-order-management/">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Track Reporter">
+  <meta property="og:title" content="Field Service Work Order Management with GPS Route Evidence">
+  <meta property="og:description" content="A practical guide to assigning Work Orders, following job progress and linking GPS route evidence to completed field work.">
+  <meta property="og:url" content="https://www.trackreporter.com/blog/work-order-management/">
+  <meta property="og:image" content="https://www.trackreporter.com/trackreporter1024x1024.png">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Field Service Work Order Management with GPS Evidence | Track Reporter">
+  <meta name="twitter:description" content="Assign field jobs, manage Work Order statuses and link recorded GPS routes to field work.">
+  <meta name="twitter:image" content="https://www.trackreporter.com/trackreporter1024x1024.png">
+  <link rel="stylesheet" href="../../style.min.css?v=20261026-active-live">
+  <link rel="stylesheet" href="../blog.css?v=20261026">
+  <link rel="stylesheet" href="./work-orders.css?v=20261104">
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"BlogPosting",
+    "headline":"Field Service Work Order Management with GPS Route Evidence",
+    "description":"How to create and assign field Work Orders, track job status and attach recorded GPS routes to completed work in Track Reporter.",
+    "inLanguage":"en",
+    "datePublished":"2026-11-04",
+    "dateModified":"2026-11-04",
+    "author":{"@type":"Organization","name":"Track Reporter"},
+    "publisher":{"@type":"Organization","name":"Track Reporter","url":"https://www.trackreporter.com/"},
+    "image":"https://www.trackreporter.com/trackreporter1024x1024.png",
+    "mainEntityOfPage":{"@type":"WebPage","@id":"https://www.trackreporter.com/blog/work-order-management/"}
+  }
+  </script>
+  <script type="application/ld+json">
+  {
+    "@context":"https://schema.org",
+    "@type":"BreadcrumbList",
+    "itemListElement":[
+      {"@type":"ListItem","position":1,"name":"Home","item":"https://www.trackreporter.com/"},
+      {"@type":"ListItem","position":2,"name":"Blog","item":"https://www.trackreporter.com/blog/"},
+      {"@type":"ListItem","position":3,"name":"Work Order Management","item":"https://www.trackreporter.com/blog/work-order-management/"}
+    ]
+  }
+  </script>
+  <!-- Retain the existing Google Ads conversion destination used by the blog. -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=AW-17236374089"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js',new Date());
+    gtag('config','AW-17236374089');
+    function gtag_report_conversion(url) {
+      var navigated=false;
+      function openTarget(){if(!navigated && url){navigated=true;window.location.href=url;}}
+      gtag('event','conversion',{
+        send_to:'AW-17236374089/leRNCLrjh8McEMnk-JpA',
+        value:1.0, currency:'PLN', event_callback:openTarget, event_timeout:1500
+      });
+      window.setTimeout(openTarget,1700);
+      return false;
+    }
+  </script>
+</head>
+<body class="blog-page blog-article-page wo-article-page">
+<main class="page blog-site">
+  <nav class="nav blog-site-nav" aria-label="Main navigation">
+    <a class="brand blog-brand" href="../../" aria-label="Track Reporter home">
+      <img src="../../trackreporter1024x1024-transparent.png?v=20260605" alt="" width="42" height="42">
+      <span>Track Reporter</span>
+    </a>
+    <div class="blog-site-nav__links">
+      <a class="blog-site-nav__link" href="../../">Home</a>
+      <a class="blog-site-nav__link is-active" href="../" aria-current="page">Blog</a>
+      <a class="nav-cta blog-site-nav__app" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Android app</a>
+    </div>
+  </nav>
 
+  <nav class="blog-breadcrumbs" aria-label="Breadcrumb">
+    <a href="../../">Home</a><span aria-hidden="true">/</span>
+    <a href="../">Blog</a><span aria-hidden="true">/</span>
+    <span aria-current="page">Work Order Management</span>
+  </nav>
+
+  <header class="wo-hero" aria-labelledby="wo-title">
+    <div class="wo-hero__copy">
+      <span class="blog-eyebrow">FIELD SERVICE · WORK ORDERS · GPS EVIDENCE</span>
+      <h1 id="wo-title">Work Order Management with <span>GPS Route Evidence</span></h1>
+      <p class="blog-lead">Assign field jobs, follow their progress and connect recorded GPS routes to specific Work Orders — all within the Track Reporter field operations workflow.</p>
+      <div class="wo-hero__actions">
+        <a class="blog-button blog-button--primary" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Track Reporter for Android <span aria-hidden="true">↗</span></a>
+        <a class="wo-outline-link" href="../../#fleet-web">Explore the fleet web demo <span aria-hidden="true">↗</span></a>
+      </div>
+      <p class="wo-byline">By Track Reporter · November 4, 2026 · 5 min read</p>
+    </div>
+    <figure class="wo-hero__visual">
+      <img src="./images/work-order-workflow.svg" alt="Illustration of the work order process from assigned to in progress and completed, with a linked GPS route" width="780" height="540" fetchpriority="high">
+      <figcaption>Illustrative workflow — not a screenshot of the application.</figcaption>
+    </figure>
+  </header>
+
+  <div class="blog-reading-layout wo-reading-layout">
+    <article class="blog-article-content">
+      <p class="blog-intro"><strong>Field service teams need more than a task list.</strong> Supervisors want to know who was assigned, how a job progressed and what field activity was recorded. Track Reporter brings Work Orders together with GPS route recording and shared fleet history.</p>
+      <p>Use the Work Orders workflow for site inspections, maintenance visits, property checks, patrols and other assignments where a recorded visit can help support a completion review.</p>
+
+      <div class="wo-benefit-grid" aria-label="Main Work Order benefits">
+        <div><span aria-hidden="true">01</span><strong>Assign work</strong><small>Connect a job with a fleet member</small></div>
+        <div><span aria-hidden="true">02</span><strong>Follow progress</strong><small>Review the current Work Order status</small></div>
+        <div><span aria-hidden="true">03</span><strong>Review GPS evidence</strong><small>Link a recorded route to a specific job</small></div>
+      </div>
+
+      <h2 id="what-is-work-order">What Is a Field Service Work Order?</h2>
+      <p>A field service Work Order is a job assigned to a person or team, such as inspecting a property, checking a construction site or completing a maintenance visit. It helps connect the assignment, responsible worker, progress and completion review in one place.</p>
+      <p>Track Reporter adds a useful field-work dimension: a worker can record a GPS route and associate that recorded session with the Work Order. A route shows where the device traveled during recording; photos and reports can provide additional context when available.</p>
+
+      <h2 id="workflow">How Work Order Management Works in Track Reporter</h2>
+      <div class="wo-steps">
+        <section class="wo-step">
+          <span class="wo-step__number" aria-hidden="true">1</span>
+          <div><h3>Create a Work Order</h3><p>A fleet administrator creates a job for a field visit or task. Give the Work Order a clear description so the assigned member knows what needs to be done.</p></div>
+        </section>
+        <section class="wo-step">
+          <span class="wo-step__number" aria-hidden="true">2</span>
+          <div><h3>Assign the Job to a Fleet Member</h3><p>Select the team member responsible for the assignment. The member can then open their own Work Orders and see the job details.</p></div>
+        </section>
+        <section class="wo-step">
+          <span class="wo-step__number" aria-hidden="true">3</span>
+          <div><h3>Update Work Order Progress</h3><p>Use statuses such as <strong>Assigned</strong>, <strong>In Progress</strong> and <strong>Completed</strong> to distinguish pending jobs from active and finished work.</p></div>
+        </section>
+        <section class="wo-step">
+          <span class="wo-step__number" aria-hidden="true">4</span>
+          <div><h3>Record a GPS Route and Link It to the Job</h3><p>Record a field visit with the Android app, then select a recorded route to associate with the relevant Work Order. This connects a particular assignment with route history rather than leaving the evidence in a separate list.</p></div>
+        </section>
+        <section class="wo-step">
+          <span class="wo-step__number" aria-hidden="true">5</span>
+          <div><h3>Review the Completed Work</h3><p>Fleet administrators can review the Work Order status and the associated recorded route. Where a route includes photos or other session details, those records can help explain the field activity.</p></div>
+        </section>
+      </div>
+
+      <figure class="wo-route-figure">
+        <img src="../../tr_routeview.jpg" alt="Track Reporter Android GPS route view showing a recorded route on a map" loading="lazy" decoding="async">
+        <figcaption>Example of a GPS route recorded in Track Reporter. This is a route-view screenshot, not a Work Order screen.</figcaption>
+      </figure>
+
+      <h2 id="statuses">Understand Work Order Statuses</h2>
+      <p>Clear statuses make it easier to see which assignments still need attention. Track Reporter uses these Work Order states:</p>
+      <div class="wo-status-list" aria-label="Work Order status meanings">
+        <div><span class="wo-status wo-status--assigned">Assigned</span><p>A job has been assigned to a fleet member.</p></div>
+        <div><span class="wo-status wo-status--progress">In Progress</span><p>The assigned job is being worked on.</p></div>
+        <div><span class="wo-status wo-status--completed">Completed</span><p>The job has been marked as completed.</p></div>
+        <div><span class="wo-status wo-status--rejected">Rejected</span><p>The assigned job has been rejected, with a reason when provided.</p></div>
+        <div><span class="wo-status wo-status--cancelled">Cancelled</span><p>The Work Order has been cancelled, with a reason when provided.</p></div>
+      </div>
+      <p>Fleet administrators can also reopen a Work Order when additional work or review is needed.</p>
+
+      <h2 id="gps-evidence">Why Link GPS Routes to Work Orders?</h2>
+      <p>Traditional task lists show whether someone marked a job complete. A linked GPS route adds context about the recorded field visit, including the route and timing. If photos were captured during the session, they can provide visual context for the work.</p>
+      <div class="wo-use-cases">
+        <div><h3>Site inspections</h3><p>Associate a site visit with a specific inspection assignment and review its recorded route.</p></div>
+        <div><h3>Maintenance visits</h3><p>Keep a clearer connection between a service job and the field session performed for it.</p></div>
+        <div><h3>Property checks</h3><p>Review visit history for assigned checks across multiple locations.</p></div>
+        <div><h3>Field operations</h3><p>Combine assigned work, job status and route evidence within a fleet workflow.</p></div>
+      </div>
+      <div class="wo-note"><strong>GPS data is supporting evidence, not automatic proof of every task.</strong><p>A recorded route indicates device movement during a session. It does not independently verify the quality of an inspection or that every required task was performed. Review the job details and supporting documentation together.</p></div>
+
+      <h2 id="android-web">Android Work Orders and the Fleet Web Experience</h2>
+      <p>The Android app supports field activity, Work Orders and GPS route recording. Track Reporter also provides a browser-based fleet experience for managing and reviewing field operations. Available actions can differ between the Android and web interfaces.</p>
+      <p>Route recording can continue offline in the Android app. Internet access is needed for online fleet features and synchronization; offline route recording should not be confused with offline Work Order synchronization.</p>
+      <div class="wo-inline-cta">
+        <div><strong>Start with Track Reporter for Android.</strong><span>Record a route, organize your fleet and connect field activity to assigned jobs.</span></div>
+        <a class="blog-button blog-button--light" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get the app <span aria-hidden="true">↗</span></a>
+      </div>
+
+      <h2 id="faq">Frequently Asked Questions</h2>
+      <div class="blog-faq">
+        <details><summary>Can I assign Work Orders to fleet members?</summary><p>Yes. Fleet administrators can create and assign Work Orders to members of their fleet.</p></details>
+        <details><summary>Can I attach a previously recorded GPS route to a Work Order?</summary><p>Yes. Track Reporter supports selecting a recorded route and associating it with a Work Order.</p></details>
+        <details><summary>What Work Order statuses are available?</summary><p>Assigned, In Progress, Completed, Rejected and Cancelled. Administrators can also reopen a Work Order when needed.</p></details>
+        <details><summary>Does a GPS route prove that every task was completed?</summary><p>No. A route documents recorded movement and can support a review, but completion should be assessed alongside the job requirements and other available evidence.</p></details>
+        <details><summary>Is Track Reporter a vehicle telematics platform?</summary><p>No. Track Reporter focuses on field work documentation, Work Orders, GPS routes, photos and shared fleet activity rather than vehicle hardware or engine diagnostics.</p></details>
+      </div>
+
+      <section class="wo-bottom-cta" aria-labelledby="wo-bottom-title">
+        <span class="blog-eyebrow">WORK ORDERS · FIELD TEAMS · GPS ROUTES</span>
+        <h2 id="wo-bottom-title">Connect assigned work with recorded field activity.</h2>
+        <p>Use Track Reporter to organize field Work Orders, record GPS routes and review work in context.</p>
+        <div class="wo-bottom-cta__actions">
+          <a class="blog-button blog-button--light" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Track Reporter on Google Play <span aria-hidden="true">↗</span></a>
+          <a class="wo-outline-link" href="../../#fleet-web">Explore fleet web demo <span aria-hidden="true">↗</span></a>
+        </div>
+      </section>
+
+      <p class="wo-related"><strong>Related field work guides:</strong> <a href="../live-fleet-monitoring/">GPS fleet monitoring</a> · <a href="../site-inspection-report/">Site inspection reports with GPS photos</a> · <a href="../how-to-prove-field-work-was-completed/">How to prove field work was completed</a></p>
+      <p class="blog-back-link"><a href="../">← Back to all Track Reporter guides</a></p>
+    </article>
+
+    <aside class="blog-reading-sidebar" aria-label="On this page">
+      <div class="blog-sidebar-sticky">
+        <span class="blog-eyebrow">ON THIS PAGE</span>
+        <nav aria-label="Article sections">
+          <a href="#what-is-work-order">What is a Work Order?</a>
+          <a href="#workflow">Step-by-step workflow</a>
+          <a href="#statuses">Work Order statuses</a>
+          <a href="#gps-evidence">GPS route evidence</a>
+          <a href="#android-web">Android and web</a>
+          <a href="#faq">FAQ</a>
+        </nav>
+        <div class="blog-sidebar-promo">
+          <img src="../../trackreporter1024x1024-transparent.png?v=20260605" alt="" width="48" height="48">
+          <strong>Track Reporter for Android</strong>
+          <p>Work Orders, GPS routes, photo evidence and field reports.</p>
+          <a href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get the app ↗</a>
+        </div>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="blog-footer">
+    <div><strong>Track Reporter</strong><span>GPS evidence for professional field work.</span></div>
+    <nav aria-label="Footer navigation"><a href="../../">Home</a><a href="../">Blog</a><a href="../live-fleet-monitoring/">Fleet monitoring</a><a href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Android app</a></nav>
+    <small>© 2026 Track Reporter</small>
+  </footer>
+</main>
+</body>
+</html>
