@@ -117,6 +117,10 @@ gtag('event', 'TrackReporterView2');
     .wo-card-title{font-weight:650;font-size:.92rem}
     .wo-card-sub{font-size:.8rem;opacity:.84}
     .wo-card-status-date{font-size:.79rem;opacity:.92;font-weight:550;font-variant-numeric:tabular-nums}
+    /* Keep distance/duration/photo count below each Shared routes date. */
+    .shared-route-metrics{display:flex;align-items:center;flex-wrap:wrap;gap:6px;margin-top:4px;font-size:.77rem;line-height:1.45;opacity:.91;font-weight:400;font-variant-numeric:tabular-nums;overflow-wrap:anywhere;white-space:normal}
+    .shared-route-metrics .fleet-route-spinner{display:inline-block;flex:0 0 auto}
+    @media(max-width:640px){.shared-route-metrics{font-size:.73rem}}
     .wo-route-list{width:100%;margin-top:5px;padding-top:7px;border-top:1px solid rgba(148,163,184,.24);display:flex;flex-direction:column;gap:7px}
     .wo-route-row{display:flex;flex-direction:column;gap:2px;padding:6px 8px;border-radius:7px;background:rgba(15,23,42,.28);min-width:0}
     .wo-route-name{font-size:.79rem;font-weight:650;color:#bae6fd;overflow-wrap:anywhere}
@@ -381,7 +385,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261104-work-order-route-metrics"></script>
+<script type="module" src="./app.min.js?v=20261104-shared-route-metrics"></script>
 
 </body>
 </html>
