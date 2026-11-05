@@ -29,7 +29,7 @@
     "description":"How to create and assign field Work Orders, track job status and attach recorded GPS routes to completed work in Track Reporter.",
     "inLanguage":"en",
     "datePublished":"2026-11-04",
-    "dateModified":"2026-11-04",
+    "dateModified":"2026-11-05",
     "author":{"@type":"Organization","name":"Track Reporter"},
     "publisher":{"@type":"Organization","name":"Track Reporter","url":"https://www.trackreporter.com/"},
     "image":"https://www.trackreporter.com/trackreporter1024x1024.png",
@@ -122,15 +122,15 @@
       <div class="wo-steps">
         <section class="wo-step">
           <span class="wo-step__number" aria-hidden="true">1</span>
-          <div><h3>Create a Work Order</h3><p>A fleet administrator creates a job for a field visit or task. Give the Work Order a clear description so the assigned member knows what needs to be done.</p></div>
+          <div><h3>Create a Work Order</h3><p>A fleet administrator creates a job for a field visit or task. Enter the Work Order number, client name, site name and a clear description of the field assignment.</p></div>
         </section>
         <section class="wo-step">
           <span class="wo-step__number" aria-hidden="true">2</span>
-          <div><h3>Assign the Job to a Fleet Member</h3><p>Select the team member responsible for the assignment. The member can then open their own Work Orders and see the job details.</p></div>
+          <div><h3>Assign the Job to a Fleet Member</h3><p>Select the responsible employee by email. After the assignment is saved, the member can open My Work Orders and review the job details.</p></div>
         </section>
         <section class="wo-step">
           <span class="wo-step__number" aria-hidden="true">3</span>
-          <div><h3>Update Work Order Progress</h3><p>Use statuses such as <strong>Assigned</strong>, <strong>In Progress</strong> and <strong>Completed</strong> to distinguish pending jobs from active and finished work.</p></div>
+          <div><h3>Update Work Order Progress</h3><p>Review grouped statuses such as <strong>Assigned</strong>, <strong>In Progress</strong> and <strong>Completed</strong> to distinguish pending jobs from active and finished work. Administrators use Manage Work Orders, while assignees see My Work Orders.</p></div>
         </section>
         <section class="wo-step">
           <span class="wo-step__number" aria-hidden="true">4</span>
@@ -141,6 +141,32 @@
           <div><h3>Review the Completed Work</h3><p>Fleet administrators can review the Work Order status and the associated recorded route. Where a route includes photos or other session details, those records can help explain the field activity.</p></div>
         </section>
       </div>
+
+      <section class="wo-screens" id="android-screenshots" aria-labelledby="wo-screens-title">
+        <span class="blog-eyebrow">REAL ANDROID SCREENSHOTS</span>
+        <h2 id="wo-screens-title">Work Order Management in the Track Reporter App</h2>
+        <p>These screenshots show the actual Android interface for creating field assignments and managing work from both sides: fleet administrator and assigned employee. Select an image to open it at full resolution.</p>
+        <div class="wo-screens-grid">
+          <figure class="wo-screen-card">
+            <a href="./images/work-orders-admin.jpg" target="_blank" rel="noopener" aria-label="Open full-size Manage Work Orders Android screenshot">
+              <img src="./images/work-orders-admin.jpg" alt="Track Reporter Manage Work Orders screen with status sorting, grouped Assigned, In progress, Rejected, Cancelled and Completed jobs, and Add Work Order button" width="921" height="2048" loading="lazy" decoding="async">
+            </a>
+            <figcaption><strong>1. Manage Work Orders</strong><span>Administrators view assignments grouped by status, choose a sort order and create new jobs.</span></figcaption>
+          </figure>
+          <figure class="wo-screen-card">
+            <a href="./images/work-order-create.jpg" target="_blank" rel="noopener" aria-label="Open full-size Add Work Order form Android screenshot">
+              <img src="./images/work-order-create.jpg" alt="Track Reporter Add Work Order form with Work Order Number, Client Name, Site Name, Description, Employee Email and Save Work Order action" width="921" height="2048" loading="lazy" decoding="async">
+            </a>
+            <figcaption><strong>2. Create and assign</strong><span>Enter a job number, client, site and description, then select the assigned employee.</span></figcaption>
+          </figure>
+          <figure class="wo-screen-card">
+            <a href="./images/my-work-orders.jpg" target="_blank" rel="noopener" aria-label="Open full-size My Work Orders employee Android screenshot">
+              <img src="./images/my-work-orders.jpg" alt="Track Reporter My Work Orders screen showing employee assignments grouped under Assigned, Rejected, Cancelled and Completed" width="921" height="2048" loading="lazy" decoding="async">
+            </a>
+            <figcaption><strong>3. My Work Orders</strong><span>Assigned team members can expand grouped work orders and review their status.</span></figcaption>
+          </figure>
+        </div>
+      </section>
 
       <figure class="wo-route-figure">
         <img src="../../tr_routeview.jpg" alt="Track Reporter Android GPS route view showing a recorded route on a map" loading="lazy" decoding="async">
@@ -205,6 +231,7 @@
         <nav aria-label="Article sections">
           <a href="#what-is-work-order">What is a Work Order?</a>
           <a href="#workflow">Step-by-step workflow</a>
+          <a href="#android-screenshots">Android screenshots</a>
           <a href="#statuses">Work Order statuses</a>
           <a href="#gps-evidence">GPS route evidence</a>
           <a href="#android-web">Android and web</a>
