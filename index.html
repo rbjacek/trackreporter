@@ -133,6 +133,13 @@ gtag('event', 'TrackReporterView2');
     .wo-status.COMPLETED{background:rgba(46,125,50,.35)}
     .wo-status.REJECTED{background:rgba(178,106,0,.35)}
     .wo-status.CANCELLED{background:rgba(185,28,28,.35)}
+    /* New Work Order fields and calculated overdue state (not a Firestore status). */
+    .wo-card.is-overdue:not(.is-selected){border-color:#fb7185;background:rgba(190,24,93,.13)}
+    .wo-overdue-badge{display:inline-block;align-self:flex-start;padding:3px 8px;border-radius:18px;background:rgba(190,24,93,.34);border:1px solid rgba(251,113,133,.65);color:#fecdd3;font-size:.71rem;font-weight:700}
+    .wo-extra-meta{display:flex;flex-direction:column;gap:3px;margin-top:4px;font-size:.79rem;line-height:1.45;overflow-wrap:anywhere}
+    .wo-extra-meta .wo-due-overdue{color:#fda4af;font-weight:700}
+    .wo-extra-meta .wo-urgent{color:#fdba74;font-weight:700}
+    .wo-completion-notes{white-space:pre-wrap;overflow-wrap:anywhere;margin-top:4px;border-left:2px solid #60a5fa;padding-left:8px}
     .wo-feedback{font-size:.83rem;min-height:1.2em;margin:8px 0;overflow-wrap:anywhere}
     .wo-feedback.error{color:#fda4af}
     .wo-feedback.success{color:#86efac}
@@ -310,6 +317,16 @@ gtag('event', 'TrackReporterView2');
             <label>Client name <input id="web-wo-client" maxlength="160" placeholder="Client / company"></label>
             <label>Site name <input id="web-wo-site" maxlength="160" placeholder="Inspection site"></label>
             <label>Description <textarea id="web-wo-description" maxlength="3000" rows="3" placeholder="Work to be performed"></textarea></label>
+            <label>Due date (optional) <input id="web-wo-due-date" type="date" aria-label="Work Order due date"></label>
+            <label>Priority
+              <select id="web-wo-priority">
+                <option value="LOW">Low</option>
+                <option value="NORMAL" selected>Normal</option>
+                <option value="HIGH">High</option>
+                <option value="URGENT">Urgent</option>
+              </select>
+            </label>
+            <label class="web-check"><input id="web-wo-photo-required" type="checkbox"> Photos required to complete (GPS route always required)</label>
             <label>Assign to member <select id="web-wo-assignee" required><option value="">Select a member</option></select></label>
             <label class="web-check"><input id="web-wo-email-notify" type="checkbox"> Send email confirmation to assigned member</label>
             <div class="web-form-actions"><button type="submit">Create Work Order</button><button id="web-create-wo-close" type="button">Close</button></div>
@@ -326,7 +343,7 @@ gtag('event', 'TrackReporterView2');
             </form>
           </dialog>
           <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more Work Orders to show their GPS routes and photos on the map.</p>
-          <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
+          <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="OVERDUE">Overdue</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
           <div id="wo-list" class="wo-list" aria-live="polite">Loading Work Orders…</div>
           <div class="wo-toolbar"><button type="button" id="wo-select-visible">Select visible</button><button type="button" id="wo-clear-selection">Clear</button></div>
           <div class="wo-toolbar"><button type="button" id="wo-show-routes" disabled>Show selected Work Orders (0)</button></div>
@@ -442,7 +459,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261104-fleet-admin-web-v1"></script>
+<script type="module" src="./app.min.js?v=20261107-work-orders-fields-overdue-v1"></script>
 
 </body>
 </html>
