@@ -251,6 +251,7 @@ gtag('event', 'TrackReporterView2');
     /* The old public route demo may still be instantiated by app.min.js.
        Never display its map or controls to anonymous website visitors. */
     body.fleet-guest #fleet-content { display:none !important; }
+    body.fleet-guest #fleet-status:empty { display:none !important; }
     body.fleet-guest .fleet-map-caption-guest,
     body.fleet-guest #fleet-demo-play-overlay { display:none !important; }
 
@@ -289,7 +290,7 @@ gtag('event', 'TrackReporterView2');
   </style>
 </head>
 
-<body class="fleet-guest fleet-demo-loading">
+<body class="fleet-guest">
   <main class="page">
     <nav class="nav">
       <div class="brand">
@@ -350,7 +351,7 @@ gtag('event', 'TrackReporterView2');
   <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
-  <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
+  <p id="fleet-status" class="fleet-status" role="status" aria-live="polite"></p>
 
   <!-- Public visitors see feature screenshots, not a playable / interactive demo map.
        This section disappears when app.min.js removes the fleet-guest body class on login. -->
@@ -545,7 +546,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261107-work-orders-fields-overdue-v1"></script>
+<script type="module" src="./app.min.js?v=20261115-guest-no-demo-v1"></script>
 
 </body>
 </html>
