@@ -389,7 +389,9 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
 .fleet-shell #fleet-work-orders-title{display:none;}
 .fleet-shell #fleet-work-orders-section>.wo-toolbar:first-of-type{display:none;}
 .fleet-shell .wo-card-wrap{border-bottom:1px solid #26384a;padding:2px 0 5px;}
-.fleet-shell .wo-card{padding:13px 14px!important;background:transparent!important;border:0!important;border-radius:9px!important;gap:14px;cursor:default;}
+.fleet-shell .wo-card{padding:13px 14px!important;background:transparent!important;border:0!important;border-radius:9px!important;gap:14px;cursor:pointer;}
+.fleet-shell .wo-card:focus-visible{outline:2px solid #38bdf8;outline-offset:-2px;}
+.fleet-shell .wo-card.is-selected{background:#15334c!important;box-shadow:inset 3px 0 #38bdf8;}
 .fleet-shell .wo-card:hover{background:#1c2d40!important;}
 .fleet-shell .wo-card.is-overdue:not(.is-selected){background:#3d23302e!important;}
 .fleet-shell .wo-card-main{gap:5px;flex:1;}
@@ -648,7 +650,7 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
             </form>
           </dialog>
           <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more work orders to show their GPS routes and photos on the map.</p>
-          <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="OVERDUE">Overdue</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
+          <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="OVERDUE">Overdue</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED" selected>Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
           <div id="wo-list" class="wo-list" aria-live="polite">Loading Work Orders…</div>
           <div class="wo-toolbar"><button type="button" id="wo-select-visible">Select visible</button><button type="button" id="wo-clear-selection">Clear</button></div>
           <div class="wo-toolbar"><button type="button" id="wo-show-routes" disabled>Show selected Work Orders (0)</button></div>
@@ -761,7 +763,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261115-fleet-member-scope-v1"></script>
+<script type="module" src="./app.min.js?v=20261115-work-orders-completed-evidence-v1"></script>
 
 </body>
 </html>
