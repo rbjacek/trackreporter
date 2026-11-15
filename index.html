@@ -480,6 +480,27 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
  .fleet-shell .wo-cancel-action{grid-row:3;grid-column:1;}
 }
 </style>
+<style id="fleet-member-scope-style">
+/* Persistent cross-screen member filter and click-to-select directory. */
+.fleet-member-scope-bar{display:flex;align-items:center;gap:10px;flex:none;padding:9px 25px;background:#102a39;border-bottom:1px solid #2e6379;color:#d6eefa;font-size:12px;min-height:44px;}
+.fleet-member-scope-dot{width:8px;height:8px;background:#38bdf8;border-radius:50%;flex:none;}
+.fleet-member-scope-bar strong{color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:min(24vw,270px);font-weight:750;}
+.fleet-member-scope-help{font-size:11px;color:#8dbacf;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;}
+.fleet-member-scope-bar button{margin-left:auto;flex:none;color:#b0e7ff;background:#143b52;border:1px solid #407d98;border-radius:8px;padding:6px 11px;font-weight:680;font-size:11px;}
+.fleet-member-scope-bar button:hover{background:#20516d;color:#fff;}
+.fleet-member-select{display:flex;align-items:center;gap:15px;text-align:left;flex:1;min-width:0;background:transparent;color:inherit;border:0;border-radius:9px;padding:7px 8px;margin:-7px 0;cursor:pointer;}
+.fleet-member-select:hover{background:#1b3045;}
+.fleet-member-select:focus-visible{outline:2px solid #38bdf8;outline-offset:2px;}
+.fleet-directory-row.is-member-selected{background:#122f43;box-shadow:inset 3px 0 #38bdf8;}
+.fleet-directory-row.is-member-selected .fleet-member-select .fleet-directory-name{color:#8bddff;}
+@media(max-width:760px){
+ .fleet-member-scope-bar{padding:8px 12px;gap:7px;font-size:11px;min-height:43px;}
+ .fleet-member-scope-help{display:none;}
+ .fleet-member-scope-bar strong{max-width:35vw;}
+ .fleet-member-scope-bar button{font-size:10px;padding:6px 8px;}
+ .fleet-member-select{gap:9px;padding:6px;margin:-6px 0;}
+}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -740,7 +761,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261115-route-fast-v2"></script>
+<script type="module" src="./app.min.js?v=20261115-fleet-member-scope-v1"></script>
 
 </body>
 </html>
