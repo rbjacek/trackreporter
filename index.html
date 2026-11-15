@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage Work Orders for inspections, maintenance and site visits.">  
+  <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
 
@@ -347,7 +347,7 @@ gtag('event', 'TrackReporterView2');
     </section>
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
-  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view Work Orders with linked routes and photos. Create and assign Work Orders in your fleet dashboard or Android app.</p></div>
+  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
   <p id="fleet-status" class="fleet-status" role="status">Sign in to access your fleet.</p>
@@ -357,14 +357,14 @@ gtag('event', 'TrackReporterView2');
   <section id="fleet-public-preview" class="fleet-public-preview" aria-label="Fleet features preview">
     <div class="fleet-public-copy">
       <span class="fleet-public-eyebrow">For field teams and inspectors</span>
-      <h3>GPS evidence, team routes and Work Orders in one place.</h3>
+      <h3>GPS evidence, team routes and work orders in one place.</h3>
       <p>See what your team has recorded, review route and photo evidence,
          and link completed jobs to documented field activity.</p>
       <ul class="fleet-public-points">
         <li>Recorded GPS routes with time and distance</li>
         <li>Location-tagged photos and inspection reports</li>
         <li>Shared route history and fleet monitoring</li>
-        <li>Assign Work Orders and review completed jobs</li>
+        <li>Assign work orders and review completed jobs</li>
       </ul>
       <a class="fleet-preview-install"
          href="https://play.google.com/store/apps/details?id=com.trackreporter"
@@ -431,7 +431,7 @@ gtag('event', 'TrackReporterView2');
               <p id="web-wo-cancel-feedback" class="web-admin-feedback" role="status" aria-live="polite"></p>
             </form>
           </dialog>
-          <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more Work Orders to show their GPS routes and photos on the map.</p>
+          <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more work orders to show their GPS routes and photos on the map.</p>
           <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="OVERDUE">Overdue</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED">Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
           <div id="wo-list" class="wo-list" aria-live="polite">Loading Work Orders…</div>
           <div class="wo-toolbar"><button type="button" id="wo-select-visible">Select visible</button><button type="button" id="wo-clear-selection">Clear</button></div>
@@ -441,7 +441,7 @@ gtag('event', 'TrackReporterView2');
         <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
       </aside>
-      <div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" aria-pressed="false">Hybrid</button><button type="button" id="fleet-mode-3d" class="active" aria-pressed="true">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><button type="button" id="fleet-demo-pause" class="fleet-demo-pause" hidden aria-label="Pause demo animation">❚❚ Pause</button><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"><div id="fleet-map-selection-prompt" role="status" aria-live="polite" hidden>Select a route to display GPS tracks and photos.</div><button id="fleet-demo-play-overlay" type="button" hidden aria-label="Play 3D demo route"><span class="fleet-demo-play-circle" aria-hidden="true">▶</span><span class="fleet-demo-play-label">Watch 3D demo</span></button></div><section id="fleet-photo-gallery" class="fleet-photo-gallery" hidden><div class="fleet-photo-head"><h3><span id="fleet-photo-gallery-title">Route photos</span> <span id="fleet-photo-count"></span></h3><span id="fleet-photo-message" role="status"></span></div><div id="fleet-photo-items" class="fleet-photo-items"></div></section><div id="fleet-photo-lightbox" class="fleet-photo-lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo preview"><button id="fleet-photo-close" type="button" aria-label="Close photo preview">✕</button><img id="fleet-photo-large" alt="Route photo"><p id="fleet-photo-caption"></p></div><p class="fleet-status fleet-map-caption-guest">Sign in with Google to access your fleet’s shared routes, Work Orders and GPS photos.</p><p id="fleet-map-caption-member" class="fleet-status fleet-map-caption-member">Live fleet locations are shown with colored markers. Select shared routes to display their GPS tracks and photo thumbnails. Click a thumbnail to view the full photo. Active recordings show LIVE member positions.</p><p id="fleet-map-caption-work-orders" class="fleet-status fleet-map-caption-work-orders" hidden>Work Orders map view: routes from the selected Work Orders are displayed together, with their GPS photo thumbnails. Click any thumbnail or gallery photo to open the full image. Use Hybrid to compare several routes, or select one route for 3D playback.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" aria-pressed="false">Hybrid</button><button type="button" id="fleet-mode-3d" class="active" aria-pressed="true">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><button type="button" id="fleet-demo-pause" class="fleet-demo-pause" hidden aria-label="Pause demo animation">❚❚ Pause</button><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"><div id="fleet-map-selection-prompt" role="status" aria-live="polite" hidden>Select a route to display GPS tracks and photos.</div><button id="fleet-demo-play-overlay" type="button" hidden aria-label="Play 3D demo route"><span class="fleet-demo-play-circle" aria-hidden="true">▶</span><span class="fleet-demo-play-label">Watch 3D demo</span></button></div><section id="fleet-photo-gallery" class="fleet-photo-gallery" hidden><div class="fleet-photo-head"><h3><span id="fleet-photo-gallery-title">Route photos</span> <span id="fleet-photo-count"></span></h3><span id="fleet-photo-message" role="status"></span></div><div id="fleet-photo-items" class="fleet-photo-items"></div></section><div id="fleet-photo-lightbox" class="fleet-photo-lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo preview"><button id="fleet-photo-close" type="button" aria-label="Close photo preview">✕</button><img id="fleet-photo-large" alt="Route photo"><p id="fleet-photo-caption"></p></div><p class="fleet-status fleet-map-caption-guest">Sign in with Google to access your fleet’s shared routes, work orders and GPS photos.</p><p id="fleet-map-caption-member" class="fleet-status fleet-map-caption-member">Live fleet locations are shown with colored markers. Select shared routes to display their GPS tracks and photo thumbnails. Click a thumbnail to view the full photo. Active recordings show LIVE member positions.</p><p id="fleet-map-caption-work-orders" class="fleet-status fleet-map-caption-work-orders" hidden>Work Orders map view: routes from the selected Work Orders are displayed together, with their GPS photo thumbnails. Click any thumbnail or gallery photo to open the full image. Use Hybrid to compare several routes, or select one route for 3D playback.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -474,7 +474,7 @@ gtag('event', 'TrackReporterView2');
 
 <div class="card">
   <h3>Work Order Management</h3>
-  <p>Create and assign Work Orders to fleet members, track progress and completion, and link recorded GPS routes to specific jobs.</p>
+  <p>Create and assign work orders to fleet members, track progress and completion, and link recorded GPS routes to specific jobs.</p>
 </div>
   
 </section>
@@ -506,7 +506,7 @@ gtag('event', 'TrackReporterView2');
   monitor field teams live, browse shared route
   history on an interactive map and generate
   professional reports for customers, audits
-  and internal documentation. Assign Work Orders
+  and internal documentation. Assign work orders
   and link GPS routes to completed tasks.
 </p>
 
