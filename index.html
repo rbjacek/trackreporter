@@ -459,6 +459,8 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
 .fleet-no-permission{padding:25px;border:1px solid #2e4156;border-radius:11px;background:#142336;color:#aabed1;font-size:13px;margin:18px 0;}
 #fleet-unlinked-notice{border:1px solid #3a5369;border-radius:15px;background:#142b3e;padding:24px;color:#deedf8;margin:20px 0;}
 #fleet-unlinked-notice[hidden]{display:none!important;}
+#fleet-unlinked-notice #fleet-user {margin:17px 0 8px;color:#b9d6e8;overflow-wrap:anywhere;}
+#fleet-unlinked-notice #fleet-logout {margin-top:6px;padding:10px 17px;border:1px solid #609bbf;border-radius:10px;background:#173955;color:#fff;font-weight:650;cursor:pointer;}
 @media(max-width:1100px){.fleet-rail{width:75px;align-items:center;}.fleet-rail-caption,.fleet-rail-foot,.fleet-nav-btn .fleet-nav-label{display:none;}.fleet-nav-btn{justify-content:center;padding:13px;}.fleet-screen-head{padding:22px 20px 17px;}.fleet-screen-content{padding:0 20px 20px;}.fleet-split{grid-template-columns:minmax(230px,290px) minmax(300px,1fr);}#fleet-content.fleet-orders-map-open .fleet-orders-area{grid-template-columns:1fr 1fr;}}
 @media(max-width:760px){body.fleet-workspace-active #fleet-status:not(:empty){left:12px;bottom:82px;max-width:calc(100vw - 24px);}.fleet-topbar{height:59px;padding:0 13px;gap:10px;}.fleet-brand{min-width:0;}.fleet-brand img{width:29px;height:29px;}.fleet-brand .fleet-brand-text{display:none;}.fleet-title-box{padding-left:10px;}.fleet-top-state{display:none;}.fleet-top-account #fleet-user{display:none;}.fleet-top-account #fleet-logout{padding:8px 11px;}.fleet-rail{display:none;}.fleet-mobile-nav{display:flex;justify-content:space-around;gap:4px;padding:8px 6px calc(8px + env(safe-area-inset-bottom));background:#101d2b;border-top:1px solid #304054;flex:none;}.fleet-mobile-nav .fleet-nav-btn{flex:1;justify-content:center;flex-direction:column;gap:3px;font-size:9px;padding:6px 2px;min-height:49px;}.fleet-mobile-nav .fleet-nav-btn svg{height:19px;width:19px;}.fleet-screen-head{padding:15px 14px 14px;gap:8px;}.fleet-screen-head h2{font-size:20px;}.fleet-screen-head p{font-size:11px;}.fleet-screen-content{padding:0 10px 11px;}.fleet-split{display:flex;flex-direction:column;}.fleet-split>.fleet-list-panel{flex:0 0 38%;min-height:160px;}.fleet-split>.fleet-map-slot{flex:1;min-height:200px;}.fleet-list-top{padding:10px;gap:7px;}.fleet-list-body{padding:4px 7px;}.fleet-screen-head .fleet-toolbar-actions{gap:5px;}.fleet-cta,.fleet-quiet-btn{min-height:34px;font-size:11px;padding:8px 11px;}.fleet-map-slot{padding:7px;}#fleet-map-workspace .fleet-map{min-height:230px!important;flex-basis:230px!important;}#fleet-content.fleet-orders-map-open .fleet-orders-area{display:flex;flex-direction:column;}.fleet-orders-map-open .fleet-orders-panel{max-height:38%;}.fleet-orders-map-open #fleet-orders-map-holder{flex:1;min-height:200px;}.fleet-orders-panel{padding:10px;}.fleet-orders-controls{gap:6px;}.fleet-orders-summary{width:100%;margin:0;}.fleet-directory-row{gap:9px;padding:12px 4px;}.fleet-directory-avatar{width:32px;height:32px;border-radius:10px;}}
 </style>
@@ -763,7 +765,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261115-work-orders-completed-evidence-v1"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-signout-unlinked-v1"></script>
 
 </body>
 </html>
