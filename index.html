@@ -338,6 +338,7 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
 #fleet-content[data-view="live"] .fleet-screen[data-screen="live"],
 #fleet-content[data-view="routes"] .fleet-screen[data-screen="routes"],
 #fleet-content[data-view="orders"] .fleet-screen[data-screen="orders"],
+#fleet-content[data-view="reports"] .fleet-screen[data-screen="reports"],
 #fleet-content[data-view="members"] .fleet-screen[data-screen="members"]{display:flex;}
 .fleet-screen-head{display:flex;align-items:center;justify-content:space-between;gap:20px;padding:26px 30px 20px;flex:none;}
 .fleet-screen-head h2{font-size:24px;line-height:1.16;letter-spacing:-.045em;font-weight:720;color:#f2f7fb;margin:0 0 5px;}
@@ -703,6 +704,70 @@ body.fleet-workspace-active .fleet-main{
   body.fleet-workspace-active .fleet-main{scroll-behavior:auto;}
 }
 </style>
+<style id="fleet-reports-styles-20261116">
+/* Work Order Reports — same workspace typography and scrolling as Members / Orders. */
+#fleet-content .fleet-reports-content{padding-bottom:42px;}
+#fleet-content .fleet-reports-note{color:#97b6cc;font-size:12px;line-height:1.6;margin-bottom:13px;}
+#fleet-content .fleet-report-range-label{font-size:11px;color:#9db3c5;white-space:nowrap;}
+#fleet-content #fleet-report-period{min-width:144px;}
+#fleet-content .fleet-reports-kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:13px;margin-bottom:15px;}
+#fleet-content .fleet-report-kpi{min-width:0;display:flex;flex-direction:column;gap:10px;padding:18px 18px 16px;background:#111e2b;border:1px solid #26384a;border-radius:14px;box-shadow:0 4px 14px #0001;}
+#fleet-content .fleet-report-kpi.is-late{border-left:3px solid #fb7185;}
+#fleet-content .fleet-report-kpi.is-soon{border-left:3px solid #fbbf24;}
+#fleet-content .fleet-report-kpi.is-ontime{border-left:3px solid #34d399;}
+#fleet-content .fleet-report-kpi-label{font-size:12px;font-weight:650;color:#a2b9cb;}
+#fleet-content .fleet-report-kpi-value{font-size:34px;line-height:1.05;font-weight:740;letter-spacing:-.05em;color:#f5f9fe;font-variant-numeric:tabular-nums;}
+#fleet-content .fleet-report-kpi-detail{font-size:11px;color:#89a0b8;line-height:1.4;min-height:2.8em;}
+#fleet-content .fleet-reports-columns{display:grid;grid-template-columns:minmax(0,1.6fr) minmax(285px,.85fr);gap:15px;align-items:stretch;}
+#fleet-content .fleet-report-card{padding:20px;background:#111e2b;border:1px solid #26384a;border-radius:14px;min-width:0;margin-bottom:15px;}
+#fleet-content .fleet-report-card-head{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;margin-bottom:18px;}
+#fleet-content .fleet-report-card h3{margin:0 0 5px;font-size:16px;color:#f2f8fd;font-weight:740;letter-spacing:-.03em;}
+#fleet-content .fleet-report-card-head p{margin:0;color:#8ca8bf;font-size:11px;line-height:1.6;}
+#fleet-content .fleet-report-chart-legend{display:flex;align-items:center;flex-wrap:wrap;gap:12px;color:#a6bed0;font-size:11px;white-space:nowrap;}
+#fleet-content .fleet-report-chart-legend span{display:flex;align-items:center;gap:6px;}
+#fleet-content .fleet-report-dot{display:inline-block;width:10px;height:10px;border-radius:3px;flex:none;background:#70829b;}
+#fleet-content .fleet-report-dot.is-created{background:#4ca7ff;}
+#fleet-content .fleet-report-dot.is-completed{background:#34d399;}
+#fleet-content .fleet-report-chart-scroll{overflow-x:auto;overflow-y:hidden;padding:15px 0 3px;}
+#fleet-content .fleet-report-chart{height:230px;display:grid;grid-template-columns:repeat(var(--report-weeks,12),minmax(34px,1fr));align-items:stretch;gap:8px;min-width:max-content;border-bottom:1px solid #334a60;}
+#fleet-content .fleet-report-week{width:44px;min-width:0;display:flex;flex-direction:column;align-items:stretch;justify-content:flex-end;gap:6px;}
+#fleet-content .fleet-report-bars{display:flex;flex:1;gap:4px;align-items:flex-end;border-bottom:1px solid #304456;background:repeating-linear-gradient(to top,transparent 0,transparent calc(25% - 1px),#25364a calc(25% - 1px),#25364a 25%);min-height:1px;}
+#fleet-content .fleet-report-bar{flex:1;position:relative;min-width:0;border-radius:5px 5px 0 0;transition:height .2s;}
+#fleet-content .fleet-report-bar.is-created{background:#4ca7ff;}
+#fleet-content .fleet-report-bar.is-completed{background:#34d399;}
+#fleet-content .fleet-report-bar-value{position:absolute;top:-18px;left:50%;transform:translateX(-50%);font-size:10px;color:#d7e8f2;font-variant-numeric:tabular-nums;}
+#fleet-content .fleet-report-week-label{font-size:10px;color:#91acc0;text-align:center;font-variant-numeric:tabular-nums;white-space:nowrap;}
+#fleet-content .fleet-report-footnote{font-size:11px;color:#8ea6b8;line-height:1.6;margin:11px 0 0;}
+#fleet-content .fleet-report-status-bar{display:flex;gap:3px;height:15px;border-radius:8px;background:#2b3d4c;overflow:hidden;margin:22px 0;}
+#fleet-content .fleet-report-status-segment{min-width:3px;background:#7185a0;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-ASSIGNED,#fleet-content .fleet-report-dot.fleet-wo-status-ASSIGNED{background:#60a5fa;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-IN_PROGRESS,#fleet-content .fleet-report-dot.fleet-wo-status-IN_PROGRESS{background:#a78bfa;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-COMPLETED,#fleet-content .fleet-report-dot.fleet-wo-status-COMPLETED{background:#34d399;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-REJECTED,#fleet-content .fleet-report-dot.fleet-wo-status-REJECTED{background:#fbbf24;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-CANCELLED,#fleet-content .fleet-report-dot.fleet-wo-status-CANCELLED{background:#fb7185;}
+#fleet-content .fleet-report-status-segment.fleet-wo-status-CREATED,#fleet-content .fleet-report-dot.fleet-wo-status-CREATED{background:#94a3b8;}
+#fleet-content .fleet-report-status-list{display:grid;gap:11px;}
+#fleet-content .fleet-report-status-row{display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:12px;}
+#fleet-content .fleet-report-status-row strong{font-size:12px;color:#e8f1fc;font-variant-numeric:tabular-nums;}
+#fleet-content .fleet-report-status-name{display:flex;align-items:center;gap:10px;color:#a9c0d3;}
+#fleet-content .fleet-report-attention{margin-bottom:10px;}
+#fleet-content .fleet-report-pill{font-size:11px;border:1px solid #405a73;background:#1d3246;border-radius:20px;padding:6px 11px;color:#cfdeeb;white-space:nowrap;}
+#fleet-content .fleet-report-risk-list{display:flex;flex-direction:column;gap:6px;}
+#fleet-content .fleet-report-risk-row{display:flex;align-items:center;justify-content:space-between;gap:15px;text-align:left;width:100%;padding:12px 13px;background:#14283a;border:1px solid #30495f;border-radius:9px;color:#e7f2f9;cursor:pointer;}
+#fleet-content .fleet-report-risk-row:hover{background:#1d3c54;border-color:#5297c3;}
+#fleet-content .fleet-report-risk-row:focus-visible{outline:3px solid #70c9f7;outline-offset:2px;}
+#fleet-content .fleet-report-risk-row.is-overdue{border-left:3px solid #fb7185;}
+#fleet-content .fleet-report-risk-summary{display:flex;flex-direction:column;gap:4px;min-width:0;}
+#fleet-content .fleet-report-risk-summary strong{font-size:12px;overflow-wrap:anywhere;}
+#fleet-content .fleet-report-risk-summary small{font-size:11px;color:#8ea8bd;overflow-wrap:anywhere;}
+#fleet-content .fleet-report-risk-meta{display:flex;align-items:center;gap:11px;font-size:11px;color:#b5c9d9;white-space:nowrap;font-variant-numeric:tabular-nums;}
+#fleet-content .fleet-report-risk-pill{padding:4px 9px;border-radius:9px;background:#194d50;color:#a6f3ce;font-weight:690;}
+#fleet-content .fleet-report-risk-pill.is-overdue{background:#552c3d;color:#fecdd3;}
+#fleet-content .fleet-report-empty{padding:17px 4px;color:#9bb4c5;font-size:12px;}
+#fleet-content #fleet-reports-dashboard[hidden],#fleet-content #fleet-reports-restricted[hidden]{display:none!important;}
+@media(max-width:1150px){#fleet-content .fleet-reports-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}#fleet-content .fleet-reports-columns{grid-template-columns:1fr;}}
+@media(max-width:760px){#fleet-content .fleet-reports-content{padding-bottom:28px;}#fleet-content .fleet-report-kpi{padding:13px;}#fleet-content .fleet-report-kpi-value{font-size:29px;}#fleet-content .fleet-report-card{padding:14px;}#fleet-content .fleet-report-card-head{flex-wrap:wrap;}#fleet-content .fleet-report-chart{height:205px;}#fleet-content .fleet-report-risk-row{flex-direction:column;align-items:flex-start;gap:10px;}#fleet-content .fleet-report-risk-meta{flex-wrap:wrap;}#fleet-content .fleet-report-range-label{display:none;}#fleet-content .fleet-nav-btn{min-width:0;}#fleet-content .fleet-nav-btn .fleet-nav-label{font-size:8.5px;}}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -963,7 +1028,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261116-fleet-scroll-layout-v1"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-reports-v1"></script>
 
 </body>
 </html>
