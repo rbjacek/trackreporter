@@ -421,6 +421,22 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
 #fleet-orders-map-holder{display:none;min-width:0;min-height:0;}
 #fleet-content.fleet-orders-map-open #fleet-orders-map-holder{display:flex;flex-direction:column;gap:8px;}
 .fleet-orders-map-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#cde2f5;}
+
+/* Selecting any Work Order opens its GPS evidence and concise job details together. */
+.fleet-orders-selected-details{flex:none;min-width:0;max-height:215px;overflow-y:auto;padding:12px 14px;background:#132337;border:1px solid #334b63;border-radius:11px;color:#e5f2fc;display:grid;gap:9px;}
+.fleet-orders-selected-details[hidden]{display:none!important;}
+.fleet-wo-evidence-heading{display:flex;align-items:center;flex-wrap:wrap;gap:9px;min-width:0;}
+.fleet-wo-evidence-title{font-size:13px;font-weight:750;overflow-wrap:anywhere;}
+.fleet-wo-evidence-more{margin-left:auto;border:1px solid #426a88;background:#1c425d;color:#e5f6ff;font-size:11px;border-radius:8px;padding:6px 9px;cursor:pointer;}
+.fleet-wo-evidence-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;}
+.fleet-wo-evidence-fact{min-width:0;font-size:11px;line-height:1.4;overflow-wrap:anywhere;}
+.fleet-wo-evidence-fact small{display:block;color:#8baac2;font-size:10px;letter-spacing:.01em;}
+.fleet-wo-evidence-desc{margin:0;font-size:11px;color:#b5cade;line-height:1.5;white-space:pre-wrap;overflow-wrap:anywhere;}
+.fleet-wo-evidence-routes{min-width:0;}
+.fleet-wo-evidence-routes>.wo-route-list{display:flex!important;max-height:110px;overflow-y:auto;margin-top:0;padding-top:0;}
+.fleet-wo-evidence-routes .wo-route-row{padding:5px 8px;}
+#fleet-orders-map-holder>.fleet-map-slot{flex:1;min-height:285px;overflow:hidden;}
+@media(max-width:760px){#fleet-content.fleet-orders-map-open #fleet-orders-map-holder{overflow-y:auto;overscroll-behavior:contain;}.fleet-orders-selected-details{max-height:147px;padding:8px 10px;gap:7px;}.fleet-wo-evidence-facts{grid-template-columns:repeat(2,minmax(0,1fr));}.fleet-wo-evidence-desc{font-size:10px;}#fleet-orders-map-holder>.fleet-map-slot{min-height:235px;}#fleet-content.fleet-orders-map-open .fleet-orders-panel{max-height:30%;}}
 .fleet-member-directory{overflow:auto;padding:8px 16px;}
 .fleet-directory-row{display:flex;align-items:center;gap:15px;padding:15px 10px;border-bottom:1px solid var(--fleet-line);}
 .fleet-directory-row.is-pending .fleet-directory-avatar{background:#453423;color:#ffcf8d;}
@@ -841,7 +857,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261116-fleet-calendar-timeline-v1"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-auto-map-details-v2"></script>
 
 </body>
 </html>
