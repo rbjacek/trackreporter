@@ -597,6 +597,112 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
  .fleet-member-select{gap:9px;padding:6px;margin:-6px 0;}
 }
 </style>
+
+<style id="fleet-scroll-layout-20261116">
+/* A single, full-height scroll surface per workspace screen.
+   Lists grow naturally; no nested 30%/38% panes or fixed 350/420px list caps. */
+body.fleet-workspace-active .fleet-main{
+  overflow-y:auto!important;
+  overflow-x:hidden!important;
+  scrollbar-gutter:stable;
+  overscroll-behavior-y:contain;
+  scroll-behavior:smooth;
+}
+#fleet-content .fleet-screen{height:auto;min-height:100%;overflow:visible;}
+#fleet-content .fleet-screen-content{flex:none;min-height:0;overflow:visible;}
+#fleet-content .fleet-orders-area{height:auto;min-height:0;align-items:start;}
+#fleet-content .fleet-orders-panel{overflow:visible;min-height:0;}
+#fleet-content #fleet-orders-slot{flex:none!important;min-height:0;display:block!important;}
+#fleet-content #fleet-work-orders-section{flex:none;min-height:0;overflow:visible;display:flex;}
+#fleet-content #wo-list{flex:none;min-height:0;height:auto;max-height:none!important;overflow:visible!important;}
+#fleet-content .fleet-order-calendar{max-height:none!important;overflow:visible!important;}
+#fleet-content .fleet-split{height:auto;min-height:0;align-items:start;}
+#fleet-content .fleet-list-panel{height:auto;min-height:0;overflow:visible;}
+#fleet-content .fleet-list-body{height:auto;min-height:0;flex:none;overflow:visible;}
+#fleet-content .fleet-member-directory{height:auto;min-height:0;overflow:visible;}
+#fleet-content .fleet-list-top{position:sticky;top:0;z-index:12;background:#111c2a;border-radius:13px 13px 0 0;gap:8px;padding:12px;}
+#fleet-content .fleet-list-top .fleet-route-controls{margin:0;display:flex;flex-wrap:wrap;gap:7px;}
+#fleet-content .fleet-list-top .fleet-route-controls select{flex:1;min-width:0;width:auto;}
+#fleet-content .fleet-list-top .fleet-route-controls button{flex:1;min-width:0;}
+#fleet-content .fleet-members-controls{position:sticky;top:0;z-index:12;background:#0b111b;padding:10px 0 12px;}
+#fleet-content .fleet-orders-controls{gap:8px;padding-bottom:12px;}
+#fleet-content #fleet-wo-toolbar-top{
+  position:sticky;top:0;z-index:12;
+  display:flex;align-items:center;flex-wrap:wrap;gap:8px;
+  background:#111c2a;padding:10px 0;
+  border-top:1px solid #2b4053;border-bottom:1px solid #2b4053;
+}
+#fleet-content #fleet-wo-toolbar-top .wo-toolbar{display:flex;flex:0 1 auto;gap:6px;flex-wrap:wrap;margin:0;}
+#fleet-content #fleet-wo-toolbar-top .wo-toolbar:last-child{margin-left:auto;}
+#fleet-content #fleet-wo-toolbar-top button,
+#fleet-content #fleet-wo-toolbar-top select{min-height:36px;max-width:none;width:auto;font-size:11px;padding:7px 10px;}
+#fleet-content #fleet-wo-toolbar-top select{min-width:132px;}
+#fleet-content #wo-feedback{max-height:none!important;overflow:visible;}
+#fleet-content .wo-card-wrap{scroll-margin-top:85px;}
+#fleet-content #fleet-order-calendar[hidden]{display:none!important;}
+#fleet-content .fleet-orders-map-actions{display:flex;gap:7px;align-items:center;flex-wrap:wrap;justify-content:flex-end;}
+#fleet-content .fleet-small-screen-only{display:none;}
+/* The GPS map stays visible while scrolling long lists on wider screens. */
+@media(min-width:1101px){
+  #fleet-content .fleet-split>.fleet-map-slot{
+    position:sticky;top:14px;align-self:start;
+    height:max(460px,calc(100dvh - 120px));
+    max-height:calc(100dvh - 110px);
+  }
+  #fleet-content.fleet-orders-map-open #fleet-orders-map-holder{
+    position:sticky;top:14px;align-self:start;
+    height:max(480px,calc(100dvh - 120px));
+    max-height:calc(100dvh - 110px);
+  }
+  #fleet-content #fleet-orders-map-holder>.fleet-map-slot{min-height:0;}
+}
+/* Phones/tablets: no shrunken panes. Order evidence appears above the list when opened. */
+@media(max-width:1100px){
+  #fleet-content .fleet-small-screen-only{display:inline-flex;}
+  #fleet-content .fleet-split,
+  #fleet-content.fleet-orders-map-open .fleet-orders-area{display:flex!important;flex-direction:column!important;gap:12px;}
+  #fleet-content .fleet-split>.fleet-list-panel,
+  #fleet-content .fleet-split>.fleet-map-slot{flex:none!important;width:100%;min-height:0!important;}
+  #fleet-content .fleet-split>.fleet-map-slot{position:static;min-height:430px!important;height:430px;}
+  #fleet-content.fleet-orders-map-open #fleet-orders-map-holder{
+    order:-1;position:static!important;flex:none!important;
+    width:100%;height:auto;max-height:none!important;min-height:0;
+    overflow:visible!important;
+  }
+  #fleet-content.fleet-orders-map-open .fleet-orders-panel{
+    order:1;position:static;max-height:none!important;height:auto!important;
+    min-height:0!important;flex:none!important;width:100%;
+  }
+  #fleet-content #fleet-orders-map-holder>.fleet-map-slot{
+    flex:none!important;height:440px;min-height:440px!important;
+  }
+  #fleet-content #fleet-orders-map-holder>.fleet-orders-selected-details{
+    max-height:none!important;overflow:visible!important;
+  }
+  #fleet-content #fleet-map-workspace{min-height:0;}
+  #fleet-content .fleet-map-slot{overflow:hidden;}
+  #fleet-content .fleet-list-top{position:static;}
+  #fleet-content #fleet-wo-toolbar-top{position:sticky;top:0;}
+}
+@media(max-width:760px){
+  #fleet-content .fleet-split>.fleet-list-panel{flex:none!important;max-height:none!important;min-height:0!important;}
+  #fleet-content .fleet-split>.fleet-map-slot{flex:none!important;min-height:380px!important;height:380px;}
+  #fleet-content .fleet-orders-panel{max-height:none!important;}
+  #fleet-content #fleet-orders-map-holder>.fleet-map-slot{min-height:390px!important;height:390px;}
+  #fleet-content .fleet-order-calendar{margin-bottom:10px;}
+  #fleet-content #fleet-wo-toolbar-top{padding:9px 0;gap:7px;}
+  #fleet-content #fleet-wo-toolbar-top .wo-toolbar{flex:1 1 auto;}
+  #fleet-content #fleet-wo-toolbar-top .wo-toolbar:last-child{margin-left:0;}
+  #fleet-content #fleet-wo-toolbar-top button{flex:1 1 auto;}
+  #fleet-content #fleet-wo-toolbar-top select{flex:1 1 auto;width:100%;}
+  #fleet-content .fleet-screen-head{align-items:flex-start;}
+  #fleet-content .fleet-screen-head .fleet-toolbar-actions{justify-content:flex-end;}
+  #fleet-content .fleet-wo-evidence-routes>.wo-route-list{max-height:none;overflow:visible;}
+}
+@media(prefers-reduced-motion:reduce){
+  body.fleet-workspace-active .fleet-main{scroll-behavior:auto;}
+}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -857,7 +963,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261116-fleet-auto-map-details-v2"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-scroll-layout-v1"></script>
 
 </body>
 </html>
