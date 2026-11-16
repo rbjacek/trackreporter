@@ -637,7 +637,7 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
               </select>
             </label>
             <label class="web-check"><input id="web-wo-photo-required" type="checkbox"> Photos required to complete (GPS route always required)</label>
-            <label>Assign to member <select id="web-wo-assignee" required><option value="">Select a member</option></select></label>
+            <label>Assign to member <select id="web-wo-assignee" required><option value="">Select a member</option></select><small>Pending invitees can receive Work Orders before completing registration.</small></label>
             <label class="web-check"><input id="web-wo-email-notify" type="checkbox"> Send email confirmation to assigned member</label>
             <div class="web-form-actions"><button type="submit">Create Work Order</button><button id="web-create-wo-close" type="button">Close</button></div>
             <p id="web-create-wo-feedback" class="web-admin-feedback" role="status" aria-live="polite"></p>
@@ -766,7 +766,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261116-fleet-pending-v1"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-pending-workorders-v2"></script>
 
 </body>
 </html>
