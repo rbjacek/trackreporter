@@ -423,6 +423,7 @@ body.fleet-workspace-active #fleet-status:empty {display:none!important;}
 .fleet-orders-map-head{display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:#cde2f5;}
 .fleet-member-directory{overflow:auto;padding:8px 16px;}
 .fleet-directory-row{display:flex;align-items:center;gap:15px;padding:15px 10px;border-bottom:1px solid var(--fleet-line);}
+.fleet-directory-row.is-pending .fleet-directory-avatar{background:#453423;color:#ffcf8d;}
 .fleet-directory-avatar{height:38px;width:38px;border-radius:12px;background:#203b54;display:grid;place-items:center;font-weight:780;color:#7dd5ff;flex:none;}
 .fleet-directory-name{font-weight:650;color:#ecf5fc;font-size:13px;min-width:0;overflow-wrap:anywhere;}
 .fleet-directory-email{font-size:11px;color:#9eafc1;overflow-wrap:anywhere;}
@@ -765,7 +766,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261116-fleet-lookup-v2"></script>
+<script type="module" src="./app.min.js?v=20261116-fleet-pending-v1"></script>
 
 </body>
 </html>
