@@ -290,7 +290,7 @@ gtag('event', 'TrackReporterView2');
   </style>
 <style id="fleet-workspace-style">
 /* Fleet Workspace 2026 — authenticated workspace, separated from public website. */
-body.fleet-workspace-active { background:#0b111b; overflow:hidden; }
+body.fleet-workspace-active { margin:0!important; padding:0!important; background:#0b111b; overflow:hidden; }
 body.fleet-workspace-active .page {max-width:none!important;width:100%;min-height:100vh;margin:0;padding:0!important;background:#0b111b;}
 body.fleet-workspace-active .page > .nav,
 body.fleet-workspace-active .page > .hero,
@@ -890,12 +890,6 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
   <p id="fleet-status" class="fleet-status" role="status" aria-live="polite"></p>
 
 
-  <!-- This account toolbar is OUTSIDE #fleet-content, which is hidden when the fleet lookup fails. -->
-  <div id="fleet-auth-fallback" role="region" aria-label="Google account controls">
-    <span id="fleet-fallback-user">Signed in to Google</span>
-    <button type="button" id="fleet-fallback-retry">Retry fleet lookup</button>
-    <button type="button" id="fleet-fallback-signout">Sign out / switch Google account</button>
-  </div>
 
 
   <section id="fleet-unlinked-notice" hidden role="status" class="fleet-access-notice"><h3>Fleet access</h3><p id="fleet-unlinked-detail">Checking your fleet access…</p><div class="fleet-access-actions"><button type="button" id="fleet-unlinked-retry">Retry fleet lookup</button><button type="button" id="fleet-unlinked-signout">Sign out / switch Google account</button><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Open Track Reporter for Android</a></div></section>
@@ -1143,7 +1137,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261117-v4-demo-login-reports"></script>
+<script type="module" src="./app.min.js?v=20261117-v5-navigation-fix"></script>
 
 </body>
 </html>
