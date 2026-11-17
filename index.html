@@ -253,8 +253,7 @@ gtag('event', 'TrackReporterView2');
        Never display its map or controls to anonymous website visitors. */
     body.fleet-guest #fleet-content { display:none !important; }
     body.fleet-guest #fleet-status:empty { display:none !important; }
-    body.fleet-guest .fleet-map-caption-guest,
-    body.fleet-guest #fleet-demo-play-overlay { display:none !important; }
+    body.fleet-guest .fleet-map-caption-guest { display:none !important; }
 
     /* Public marketing preview, not the interactive demo. */
     body:not(.fleet-guest) #fleet-public-preview { display:none !important; }
@@ -811,6 +810,10 @@ body.fleet-workspace-active #fleet-public-demo { display:none!important; }
   .fleet-public-demo-head a {width:100%;}
   #fleet-guest-map-slot #fleet-map-workspace .fleet-map {height:clamp(320px,87vw,500px)!important;min-height:320px!important;}
 }
+
+/* Show public demo while signed out OR when a signed-in Google account has no verified fleet. */
+body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-demo {display:block!important;}
+body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {display:none!important;}
 </style>
 <style id="fleet-access-recovery-style">
 #fleet-unlinked-notice.fleet-access-notice{padding:24px;margin:16px 0 24px;border:1px solid #3d6176;border-radius:16px;background:#112537;color:#e4f2fa;}
@@ -1140,7 +1143,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.fleet-reports-merged-20261117-v3.js?v=3"></script>
+<script type="module" src="./app.min.js?v=20261117-v4-demo-login-reports"></script>
 
 </body>
 </html>
