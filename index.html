@@ -833,6 +833,22 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
 .fleet-access-actions button,.fleet-access-actions a{border:1px solid #52738b;background:#1d3850;color:#e5f4ff;border-radius:10px;padding:11px 15px;font:inherit;font-size:13px;text-decoration:none;cursor:pointer;}
 .fleet-access-actions button:first-child{background:#199acc;border-color:#61d2f6;color:#072138;font-weight:700;}
 </style>
+<style id="fleet-mobile-calendar-agenda-fix">
+/* Mobile calendar is a date picker, not a clipped miniature Work Order list.
+   Tap the date/count to open the complete, scrollable agenda below. */
+@media(max-width:760px){
+  #fleet-content .fleet-order-calendar{overflow:visible!important;max-height:none!important;}
+  #fleet-content .fleet-cal-grid{overflow:visible;}
+  #fleet-content .fleet-cal-cell{min-height:59px!important;padding:3px 2px;}
+  #fleet-content .fleet-cal-day{min-height:48px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;padding:3px 1px;touch-action:manipulation;}
+  #fleet-content .fleet-cal-day span:last-child:not(:empty){background:#285d7b;border:1px solid #58bce9;color:white;border-radius:99px;min-width:20px;line-height:19px;text-align:center;font-size:11px;padding:0 4px;}
+  #fleet-content .fleet-cal-events{display:none!important;}
+  #fleet-content #fleet-orders-slot{scroll-margin-top:76px;}
+  #fleet-content #wo-list{max-height:none!important;height:auto!important;overflow:visible!important;}
+  #fleet-content .fleet-orders-panel{overflow:visible!important;max-height:none!important;}
+  #fleet-content .fleet-cal-foot{gap:8px;}
+}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -1147,7 +1163,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261120-sort-pdf-inline-v1"></script>
+<script type="module" src="./app.min.js?v=20261120-mobile-calendar-agenda-v2"></script>
 
 </body>
 </html>
