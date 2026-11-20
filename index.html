@@ -287,7 +287,16 @@ gtag('event', 'TrackReporterView2');
       .fleet-public-visual figcaption { font-size:.71rem; }
       .hero-install-link, .fleet-preview-install { width:100%; }
     }
-  </style>
+    .wo-pdf-action{display:inline-flex;flex-direction:column;align-items:stretch;justify-content:center;gap:5px;min-width:118px;vertical-align:middle}
+  .wo-pdf-action .wo-pdf-progress{display:block;height:4px;width:100%;background:#26394d;border-radius:5px;overflow:hidden}
+  .wo-pdf-action .wo-pdf-progress[hidden]{display:none!important}
+  .wo-pdf-progress-fill{display:block;height:100%;background:#38bdf8;transition:width .15s}
+  .wo-pdf-progress.is-indeterminate .wo-pdf-progress-fill{width:40%!important;animation:woPdfLoading 1s ease-in-out infinite alternate}
+  @keyframes woPdfLoading{from{transform:translateX(-100%)}to{transform:translateX(250%)}}
+  .wo-sort-toolbar{align-items:center;font-size:12px}
+  .wo-sort-toolbar label{color:#b7cce0;white-space:nowrap}
+  #fleet-content .wo-sort-toolbar select{max-width:240px;width:auto;min-width:160px}
+</style>
 <style id="fleet-workspace-style">
 /* Fleet Workspace 2026 — authenticated workspace, separated from public website. */
 body.fleet-workspace-active { margin:0!important; padding:0!important; background:#0b111b; overflow:hidden; }
@@ -1025,6 +1034,7 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
           </dialog>
           <p style="font-size:.83rem;opacity:.85;margin:6px 0 8px">Select one or more work orders to show their GPS routes and photos on the map.</p>
           <div class="wo-toolbar"><select id="wo-status-filter" aria-label="Filter Work Orders by status"><option value="ALL">All statuses</option><option value="OVERDUE">Overdue</option><option value="ASSIGNED">Assigned</option><option value="IN_PROGRESS">In progress</option><option value="COMPLETED" selected>Completed</option><option value="REJECTED">Rejected</option><option value="CANCELLED">Cancelled</option></select></div>
+          <div class="wo-toolbar wo-sort-toolbar"><label for="wo-sort-order">Sort by</label><select id="wo-sort-order" aria-label="Sort Work Orders"><option value="due-asc">Due date · earliest</option><option value="due-desc">Due date · latest</option><option value="created-desc">Created · newest</option><option value="created-asc">Created · oldest</option><option value="completed-desc">Completed · newest</option><option value="completed-asc">Completed · oldest</option><option value="priority-desc">Priority · highest</option><option value="name-asc">Work Order · A–Z</option></select></div>
           <div id="wo-list" class="wo-list" aria-live="polite">Loading Work Orders…</div>
           <div class="wo-toolbar"><button type="button" id="wo-select-visible">Select visible</button><button type="button" id="wo-clear-selection">Clear</button></div>
           <div class="wo-toolbar"><button type="button" id="wo-show-routes" disabled>Show selected Work Orders (0)</button></div>
@@ -1137,7 +1147,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261120-workorder-pdf-deleting"></script>
+<script type="module" src="./app.min.js?v=20261120-sort-pdf-inline-v1"></script>
 
 </body>
 </html>
