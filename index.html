@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="trackreporter-build" content="20261117-fleet-reports-merged-v3">
+  <meta name="trackreporter-build" content="20261124-no-public-demo-v1">
   <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
@@ -249,14 +249,13 @@ gtag('event', 'TrackReporterView2');
     .hero-install-link:focus-visible, .fleet-preview-install:focus-visible { outline:3px solid #fff; outline-offset:3px; }
     .hero-plan-note { color:#b9cfdf; font-size:.86rem; line-height:1.5; max-width:340px; }
 
-    /* The old public route demo may still be instantiated by app.min.js.
-       Never display its map or controls to anonymous website visitors. */
+    /* The fleet map is available only after verified fleet access. */
     body.fleet-guest #fleet-content { display:none !important; }
     body.fleet-guest #fleet-status:empty { display:none !important; }
     body.fleet-guest .fleet-map-caption-guest { display:none !important; }
 
     /* Public marketing preview, not the interactive demo. */
-    body:not(.fleet-guest) #fleet-public-preview { display:none !important; }
+    body:not(.fleet-guest):not(.fleet-no-access) #fleet-public-preview { display:none !important; }
     #fleet-public-preview[hidden] { display:none !important; }
     .fleet-public-preview {
       display:grid; grid-template-columns:minmax(0,1.05fr) minmax(0,.95fr);
@@ -777,53 +776,6 @@ body.fleet-workspace-active .fleet-main{
 @media(max-width:1150px){#fleet-content .fleet-reports-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}#fleet-content .fleet-reports-columns{grid-template-columns:1fr;}}
 @media(max-width:760px){#fleet-content .fleet-reports-content{padding-bottom:28px;}#fleet-content .fleet-report-kpi{padding:13px;}#fleet-content .fleet-report-kpi-value{font-size:29px;}#fleet-content .fleet-report-card{padding:14px;}#fleet-content .fleet-report-card-head{flex-wrap:wrap;}#fleet-content .fleet-report-chart{height:205px;}#fleet-content .fleet-report-risk-row{flex-direction:column;align-items:flex-start;gap:10px;}#fleet-content .fleet-report-risk-meta{flex-wrap:wrap;}#fleet-content .fleet-report-range-label{display:none;}#fleet-content .fleet-nav-btn{min-width:0;}#fleet-content .fleet-nav-btn .fleet-nav-label{font-size:8.5px;}}
 </style>
-<style id="fleet-public-demo-restored-style">
-/* Only the public demonstration map is visible without Google sign-in. */
-#fleet-public-demo { display:none; }
-body.fleet-guest #fleet-public-demo { display:block; }
-body.fleet-guest #fleet-public-preview { display:none!important; }
-body.fleet-signed-in #fleet-public-demo,
-body.fleet-workspace-active #fleet-public-demo { display:none!important; }
-.fleet-public-demo {
-  margin:20px 0 8px; padding:clamp(16px,2.5vw,28px);
-  background:linear-gradient(150deg,#101f31,#101b2a);
-  border:1px solid rgba(117,171,201,.35);border-radius:19px;
-  color:#ecf6ff;
-}
-.fleet-public-demo-head {display:flex;align-items:center;justify-content:space-between;gap:20px;flex-wrap:wrap;margin-bottom:18px;}
-.fleet-public-demo-head > div {max-width:650px;}
-.fleet-public-demo-head h3 {margin:8px 0 9px;font-size:clamp(1.35rem,2.5vw,2.05rem);letter-spacing:-.025em;color:#f2fbff;}
-.fleet-public-demo-head p {margin:0;color:#bdd3e3;line-height:1.55;font-size:.94rem;}
-.fleet-public-demo-head a {flex-shrink:0;}
-#fleet-guest-map-slot {display:block;min-width:0;}
-#fleet-guest-map-slot #fleet-map-workspace {height:auto!important;overflow:visible!important;display:flex;flex-direction:column;gap:9px;}
-#fleet-guest-map-slot #fleet-map-workspace .fleet-map-switch {display:flex;flex-wrap:wrap;gap:8px;}
-#fleet-guest-map-slot #fleet-map-workspace .fleet-map {
-  position:relative!important;display:block!important;
-  flex:none!important;height:clamp(340px,48vw,590px)!important;
-  min-height:340px!important;width:100%;max-height:none!important;
-  border-radius:14px;overflow:hidden;border:1px solid #36546a;
-}
-#fleet-guest-map-slot #fleet-playback-timeline {display:flex;align-items:center;gap:8px;}
-#fleet-guest-map-slot #fleet-playback-timeline[hidden],
-#fleet-guest-map-slot #fleet-photo-gallery[hidden] {display:none!important;}
-#fleet-guest-map-slot #fleet-photo-gallery {max-height:none;overflow:visible;padding:8px 0;}
-#fleet-guest-map-slot .fleet-map-caption-guest,
-#fleet-guest-map-slot #fleet-map-caption-member,
-#fleet-guest-map-slot #fleet-map-caption-work-orders,
-#fleet-guest-map-slot #fleet-live-diagnostics {display:none!important;}
-.fleet-public-demo-note {color:#98b6ca;margin:13px 0 0;font-size:.82rem;line-height:1.5;}
-@media(max-width:760px){
-  .fleet-public-demo {padding:12px;border-radius:15px;}
-  .fleet-public-demo-head {gap:13px;}
-  .fleet-public-demo-head a {width:100%;}
-  #fleet-guest-map-slot #fleet-map-workspace .fleet-map {height:clamp(320px,87vw,500px)!important;min-height:320px!important;}
-}
-
-/* Show public demo while signed out OR when a signed-in Google account has no verified fleet. */
-body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-demo {display:block!important;}
-body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {display:none!important;}
-</style>
 <style id="fleet-access-recovery-style">
 #fleet-unlinked-notice.fleet-access-notice{padding:24px;margin:16px 0 24px;border:1px solid #3d6176;border-radius:16px;background:#112537;color:#e4f2fa;}
 #fleet-unlinked-notice.fleet-access-notice[hidden]{display:none!important;}
@@ -918,24 +870,7 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
 
 
   <section id="fleet-unlinked-notice" hidden role="status" class="fleet-access-notice"><h3>Fleet access</h3><p id="fleet-unlinked-detail">Checking your fleet access…</p><div class="fleet-access-actions"><button type="button" id="fleet-unlinked-retry">Retry fleet lookup</button><button type="button" id="fleet-unlinked-signout">Sign out / switch Google account</button><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Open Track Reporter for Android</a></div></section>
-  <!-- Public interactive demo. Uses embedded GPS coordinates and photos only.
-       No Firebase fleet data is exposed to visitors. -->
-  <section id="fleet-public-demo" class="fleet-public-demo" aria-label="Interactive GPS demo route">
-    <header class="fleet-public-demo-head">
-      <div>
-        <span class="fleet-public-eyebrow">Interactive GPS demonstration</span>
-        <h3>Explore a recorded route in 3D</h3>
-        <p>Watch a 10-second replay, then explore the full GPS track and its location-tagged photos in Hybrid view. Pause, replay and inspect the route on the map.</p>
-      </div>
-      <a class="fleet-preview-install"
-         href="https://play.google.com/store/apps/details?id=com.trackreporter"
-         onclick="return gtag_report_conversion(this.href);">Get Track Reporter for Android</a>
-    </header>
-    <div id="fleet-guest-map-slot" class="fleet-guest-map-slot" aria-label="Demo map and playback controls"></div>
-    <p class="fleet-public-demo-note">Demo data only — sign in with Google above to manage your own fleet, shared routes and Work Orders.</p>
-  </section>
-
-  <!-- Public visitors see feature screenshots, not a playable / interactive demo map.
+<!-- Public visitors see feature screenshots, not a playable / interactive demo map.
        This section disappears when app.min.js removes the fleet-guest body class on login. -->
   <section id="fleet-public-preview" class="fleet-public-preview" aria-label="Fleet features preview">
     <div class="fleet-public-copy">
@@ -969,38 +904,6 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
 
   <!-- Existing private dashboard, map and Work Orders remain intact for signed-in users. -->
   
-  <!-- Public visitors see feature screenshots, not a playable / interactive demo map.
-       This section disappears when app.min.js removes the fleet-guest body class on login. -->
-  <section id="fleet-public-preview" class="fleet-public-preview" aria-label="Fleet features preview">
-    <div class="fleet-public-copy">
-      <span class="fleet-public-eyebrow">For field teams and inspectors</span>
-      <h3>GPS evidence, team routes and work orders in one place.</h3>
-      <p>See what your team has recorded, review route and photo evidence,
-         and link completed jobs to documented field activity.</p>
-      <ul class="fleet-public-points">
-        <li>Recorded GPS routes with time and distance</li>
-        <li>Location-tagged photos and inspection reports</li>
-        <li>Shared route history and fleet monitoring</li>
-        <li>Assign work orders and review completed jobs</li>
-      </ul>
-      <a class="fleet-preview-install"
-         href="https://play.google.com/store/apps/details?id=com.trackreporter"
-         onclick="return gtag_report_conversion(this.href);">
-        Get Android app
-      </a>
-    </div>
-    <div class="fleet-public-visual" aria-label="Track Reporter screenshots">
-      <figure>
-        <img src="tr_routeview.jpg" alt="Track Reporter GPS route and map screen" loading="lazy">
-        <figcaption>GPS route evidence</figcaption>
-      </figure>
-      <figure>
-        <img src="tr_photogallery.jpg" alt="Track Reporter location-tagged photo gallery" loading="lazy">
-        <figcaption>GPS photo documentation</figcaption>
-      </figure>
-    </div>
-  </section>
-
   <!-- Existing private dashboard, map and Work Orders remain intact for signed-in users. -->
   <div id="fleet-content" hidden>
     <h3 id="fleet-name">My Fleet</h3>
@@ -1059,7 +962,7 @@ body.fleet-demo-preview:not(.fleet-workspace-active) #fleet-public-preview {disp
         <div id="fleet-shared-routes-section"><h3>Shared routes</h3><div class="fleet-route-controls"><select id="fleet-route-filter"><option value="all">All routes</option><option value="ACTIVE">Active only</option></select></div>
         <div id="fleet-route-progress" class="fleet-route-progress" role="status" aria-live="polite" hidden><span class="fleet-route-spinner"></span><span id="fleet-route-progress-text"></span></div><div id="fleet-route-selection-info" class="fleet-route-selection-info">Select routes to display them together.</div><div id="fleet-routes" class="fleet-route-list"></div><div class="fleet-route-controls"><button id="fleet-routes-select-all" class="fleet-btn ghost" type="button">Select visible</button><button id="fleet-routes-clear" class="fleet-btn ghost" type="button">Clear selection</button></div></div>
       </aside>
-      <div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" aria-pressed="false">Hybrid</button><button type="button" id="fleet-mode-3d" class="active" aria-pressed="true">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><button type="button" id="fleet-demo-pause" class="fleet-demo-pause" hidden aria-label="Pause demo animation">❚❚ Pause</button><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"><div id="fleet-map-selection-prompt" role="status" aria-live="polite" hidden>Select a route to display GPS tracks and photos.</div><button id="fleet-demo-play-overlay" type="button" hidden aria-label="Play 3D demo route"><span class="fleet-demo-play-circle" aria-hidden="true">▶</span><span class="fleet-demo-play-label">Watch 3D demo</span></button></div><section id="fleet-photo-gallery" class="fleet-photo-gallery" hidden><div class="fleet-photo-head"><h3><span id="fleet-photo-gallery-title">Route photos</span> <span id="fleet-photo-count"></span></h3><span id="fleet-photo-message" role="status"></span></div><div id="fleet-photo-items" class="fleet-photo-items"></div></section><div id="fleet-photo-lightbox" class="fleet-photo-lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo preview"><button id="fleet-photo-close" type="button" aria-label="Close photo preview">✕</button><img id="fleet-photo-large" alt="Route photo"><p id="fleet-photo-caption"></p></div><p class="fleet-status fleet-map-caption-guest">Sign in with Google to access your fleet’s shared routes, work orders and GPS photos.</p><p id="fleet-map-caption-member" class="fleet-status fleet-map-caption-member">Live fleet locations are shown with colored markers. Select shared routes to display their GPS tracks and photo thumbnails. Click a thumbnail to view the full photo. Active recordings show LIVE member positions.</p><p id="fleet-map-caption-work-orders" class="fleet-status fleet-map-caption-work-orders" hidden>Work Orders map view: routes from the selected Work Orders are displayed together, with their GPS photo thumbnails. Click any thumbnail or gallery photo to open the full image. Use Hybrid to compare several routes, or select one route for 3D playback.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
+      <div><div class="fleet-map-switch"><button type="button" id="fleet-route-play" disabled aria-label="Start route animation">▶ Play routes</button><button type="button" id="fleet-mode-normal" aria-pressed="false">Normal</button><button type="button" id="fleet-mode-satellite" aria-pressed="false">Hybrid</button><button type="button" id="fleet-mode-3d" class="active" aria-pressed="true">3D</button></div><div id="fleet-playback-timeline" class="fleet-playback-timeline" hidden><span id="fleet-playback-elapsed">0:00</span><input id="fleet-playback-seek" type="range" min="0" max="1000" value="0" step="1" aria-label="Route playback progress; drag to seek"><span id="fleet-playback-total">0:16</span></div><div id="fleet-map" class="fleet-map" aria-label="Fleet map"><div id="fleet-map-selection-prompt" role="status" aria-live="polite" hidden>Select a route to display GPS tracks and photos.</div></div><section id="fleet-photo-gallery" class="fleet-photo-gallery" hidden><div class="fleet-photo-head"><h3><span id="fleet-photo-gallery-title">Route photos</span> <span id="fleet-photo-count"></span></h3><span id="fleet-photo-message" role="status"></span></div><div id="fleet-photo-items" class="fleet-photo-items"></div></section><div id="fleet-photo-lightbox" class="fleet-photo-lightbox" hidden role="dialog" aria-modal="true" aria-label="Photo preview"><button id="fleet-photo-close" type="button" aria-label="Close photo preview">✕</button><img id="fleet-photo-large" alt="Route photo"><p id="fleet-photo-caption"></p></div><p class="fleet-status fleet-map-caption-guest">Sign in with Google to access your fleet’s shared routes, work orders and GPS photos.</p><p id="fleet-map-caption-member" class="fleet-status fleet-map-caption-member">Live fleet locations are shown with colored markers. Select shared routes to display their GPS tracks and photo thumbnails. Click a thumbnail to view the full photo. Active recordings show LIVE member positions.</p><p id="fleet-map-caption-work-orders" class="fleet-status fleet-map-caption-work-orders" hidden>Work Orders map view: routes from the selected Work Orders are displayed together, with their GPS photo thumbnails. Click any thumbnail or gallery photo to open the full image. Use Hybrid to compare several routes, or select one route for 3D playback.</p><p id="fleet-live-diagnostics" class="fleet-status" aria-live="polite">LIVE: waiting for data...</p></div>
     </div>
   </div>
 </section>
@@ -1163,7 +1066,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261120-pdf-inline-preview-v5"></script>
+<script type="module" src="./app.min.js?v=20261124-no-public-demo-v1"></script>
 
 </body>
 </html>
