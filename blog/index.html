@@ -55,6 +55,81 @@
 .blog-articles .blog-feature-article + .blog-feature-article { margin-top: 27px; }
 .blog-articles .blog-feature-article__media > img { width: auto; max-width: 78%; height: auto; max-height: 290px; object-fit: contain; object-position: center; }
 @media(max-width:650px) { .blog-articles .blog-feature-article__media > img { max-height: 255px; } }
+
+/* Keep the embedded Soro blog readable on Track Reporter's dark theme. */
+#soro-blog .soro-blog {
+  color: #e5f1fb !important;
+  color-scheme: dark;
+  background: transparent !important;
+}
+#soro-blog .soro-blog-card {
+  background: #102438 !important;
+  border-color: #29485f !important;
+  color: #e5f1fb !important;
+}
+#soro-blog .soro-blog-card:hover {
+  background: #153047 !important;
+  border-color: #70dce9 !important;
+  box-shadow: 0 4px 14px rgba(0,0,0,.24) !important;
+}
+#soro-blog .soro-blog-card-title,
+#soro-blog .soro-blog-article-title,
+#soro-blog .soro-blog-article-content h1,
+#soro-blog .soro-blog-article-content h2,
+#soro-blog .soro-blog-article-content h3,
+#soro-blog .soro-blog-article-content h4,
+#soro-blog .soro-blog-article-content h5,
+#soro-blog .soro-blog-article-content h6 {
+  color: #f0f7ff !important;
+}
+#soro-blog .soro-blog-article-content,
+#soro-blog .soro-blog-article-content p,
+#soro-blog .soro-blog-article-content li,
+#soro-blog .soro-blog-card-excerpt {
+  color: #c9ddef !important;
+}
+#soro-blog .soro-blog-card-date,
+#soro-blog .soro-blog-article-date,
+#soro-blog .soro-blog-empty,
+#soro-blog .soro-blog-loading {
+  color: #a9c3d8 !important;
+}
+#soro-blog .soro-blog-article-content a,
+#soro-blog .soro-blog-article-content a:visited {
+  color: #79e1ef !important;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+#soro-blog .soro-blog-back {
+  color: #c9f4ff !important;
+  background: #102438 !important;
+  border-color: #36586f !important;
+}
+#soro-blog .soro-blog-back:hover {
+  background: #1b3a50 !important;
+  border-color: #79e1ef !important;
+}
+#soro-blog a:focus-visible {
+  outline: 2px solid #79e1ef;
+  outline-offset: 4px;
+}
+#soro-blog .soro-blog-spinner {
+  border-color: #29485f !important;
+  border-top-color: #79e1ef !important;
+}
+#soro-blog .soro-blog-error {
+  color: #fda4af !important;
+}
+#soro-blog .soro-blog-article-content blockquote,
+#soro-blog .soro-blog-article-content pre,
+#soro-blog .soro-blog-article-content th {
+  color: #e5f1fb;
+  background: #102438;
+  border-color: #36586f;
+}
+#soro-blog .soro-blog-article-content td {
+  border-color: #36586f;
+}
 </style></head>
 <body class="blog-page blog-index">
 <main class="page blog-site">
