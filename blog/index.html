@@ -51,6 +51,7 @@
     }
   </script>
 <style>
+.blog-soro-articles { margin-top: 32px; }
 .blog-articles .blog-feature-article + .blog-feature-article { margin-top: 27px; }
 .blog-articles .blog-feature-article__media > img { width: auto; max-width: 78%; height: auto; max-height: 290px; object-fit: contain; object-position: center; }
 @media(max-width:650px) { .blog-articles .blog-feature-article__media > img { max-height: 255px; } }
@@ -82,7 +83,7 @@
 </div>
 </section>
 <section aria-labelledby="blog-latest-title" class="blog-articles">
-<div class="blog-section-label"><span class="blog-eyebrow">FIELD WORK GUIDES</span><h2 id="blog-latest-title">Latest guides</h2></div>
+<div class="blog-section-label"><span class="blog-eyebrow">FIELD WORK GUIDES</span><h2 id="blog-latest-title">Featured guides</h2></div>
 <article class="blog-feature-article">
 <a aria-label="Read the guide to field service work order management with GPS evidence" class="blog-feature-article__media" href="./work-order-management/">
 <img alt="Illustrated work order workflow: assigned job, work in progress, completed job and linked GPS route evidence" loading="lazy" src="./work-order-management/images/work-order-workflow.svg"/>
@@ -120,7 +121,9 @@
 <p>Create professional site inspection records using GPS routes, location-tagged photos and PDF reports. Follow the practical Android workflow and view real screenshots.</p>
 <a class="blog-text-link" href="./site-inspection-report/">Read the guide <span aria-hidden="true">↗</span></a>
 </div>
-</article><article class="blog-feature-article">
+</article>
+
+<article class="blog-feature-article">
 <a aria-label="Read how to prove field work was completed" class="blog-feature-article__media" href="./how-to-prove-field-work-was-completed/">
 <img alt="Track Reporter GPS route displayed on a map" loading="lazy" src="../tr_routeview.jpg"/>
 <span class="blog-media-chip">GUIDE • GPS EVIDENCE</span>
@@ -133,9 +136,10 @@
 </div>
 </article>
 
+</section>
+<section aria-labelledby="blog-soro-title" class="blog-articles blog-soro-articles">
+<div class="blog-section-label"><span class="blog-eyebrow">FIELD SERVICE INSIGHTS</span><h2 id="blog-soro-title">Latest articles</h2></div>
 <div id="soro-blog"></div>
-<script src="https://app.trysoro.com/api/embed/09431eeb-179b-4674-b040-9e369e19a223" defer></script>
-  <div id="soro-blog"></div>
 <script src="https://app.trysoro.com/api/embed/09431eeb-179b-4674-b040-9e369e19a223" defer></script>
 </section>
 <section aria-labelledby="blog-end-title" class="blog-end-cta">
