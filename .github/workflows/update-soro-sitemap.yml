@@ -1,9 +1,9 @@
 name: Update Soro sitemap
 
-on:
+"on":
   schedule:
     - cron: '37 5 * * *'
-  workflow_dispatch:
+  workflow_dispatch: {}
 
 permissions:
   contents: read
@@ -16,6 +16,7 @@ jobs:
   update:
     runs-on: ubuntu-latest
     timeout-minutes: 5
+
     steps:
       - name: Checkout main
         uses: actions/checkout@v4
@@ -34,12 +35,14 @@ jobs:
       - name: Commit and publish changes
         run: |
           git add -- sitemap-soro.xml
+
           if git diff --cached --quiet; then
             echo 'Sitemap is already up to date.'
             exit 0
           fi
+
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
           git commit -m 'Update Soro article sitemap'
           git push origin HEAD:main
-
