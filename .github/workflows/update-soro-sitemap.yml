@@ -1,1 +1,45 @@
+name: Update Soro sitemap
+
+on:
+  schedule:
+    - cron: '37 5 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: soro-sitemap
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.SORO_PAGES_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Generate sitemap
+        run: python update_soro_sitemap.py
+
+      - name: Commit and publish changes
+        run: |
+          git add -- sitemap-soro.xml
+          if git diff --cached --quiet; then
+            echo 'Sitemap is already up to date.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git commit -m 'Update Soro article sitemap'
+          git push origin HEAD:main
 
