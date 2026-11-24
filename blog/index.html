@@ -7,7 +7,7 @@
 <meta content="Guides to field service work orders, GPS route evidence, inspection reports, fleet monitoring and photo documentation with Track Reporter." name="description"/>
 <meta content="Track Reporter" name="author"/>
 <meta content="#081628" name="theme-color"/>
-<link href="https://www.trackreporter.com/blog/" rel="canonical"/>
+<!-- Canonical is set by the blog integration below, after the active view is known. -->
 <meta content="website" property="og:type"/>
 <meta content="Track Reporter Blog | Work Orders, GPS Proof of Work &amp; Field Inspections" property="og:title"/>
 <meta content="Practical guides to work order management, GPS inspection evidence, field reports and fleet monitoring with Track Reporter." property="og:description"/>
@@ -130,6 +130,15 @@
 #soro-blog .soro-blog-article-content td {
   border-color: #36586f;
 }
+/* In article view, keep the navigation and call to action, not the guide list. */
+html.soro-article-view .blog-list-hero,
+html.soro-article-view .blog-articles:not(.blog-soro-articles),
+html.soro-article-view .blog-soro-articles > .blog-section-label {
+  display: none !important;
+}
+html.soro-article-view .blog-soro-articles {
+  margin-top: 24px;
+}
 </style></head>
 <body class="blog-page blog-index">
 <main class="page blog-site">
@@ -215,6 +224,55 @@
 <section aria-labelledby="blog-soro-title" class="blog-articles blog-soro-articles">
 <div class="blog-section-label"><span class="blog-eyebrow">FIELD SERVICE INSIGHTS</span><h2 id="blog-soro-title">Latest articles</h2></div>
 <div id="soro-blog"></div>
+<script>
+(function () {
+  'use strict';
+  const base = 'https://www.trackreporter.com/blog/';
+  const container = document.getElementById('soro-blog');
+  const section = document.querySelector('.blog-soro-articles');
+  const headingId = section.getAttribute('aria-labelledby');
+
+  function syncBlogView() {
+    const slug = new URLSearchParams(window.location.search).get('post');
+    const header = container.querySelector('.soro-blog-header');
+    const articleView = Boolean(slug && header && header.style.display !== 'none');
+    document.documentElement.classList.toggle('soro-article-view', articleView);
+    if (articleView) {
+      section.removeAttribute('aria-labelledby');
+      section.setAttribute('aria-label', 'Blog article');
+    } else {
+      section.removeAttribute('aria-label');
+      section.setAttribute('aria-labelledby', headingId);
+    }
+
+    // On a direct article link, wait for Soro to resolve the slug before
+    // choosing a canonical. Never give that link the list canonical early.
+    if (slug && !header) return;
+    const url = new URL(base);
+    if (articleView) url.searchParams.set('post', slug);
+
+    // Use Soro's own canonical element, not a competing static tag.
+    let canonical = document.head.querySelector('link[rel="canonical"][data-soro]');
+    if (!canonical) {
+      canonical = document.createElement('link');
+      canonical.rel = 'canonical';
+      canonical.setAttribute('data-soro', 'true');
+      document.head.appendChild(canonical);
+    }
+    if (canonical.getAttribute('href') !== url.href) canonical.href = url.href;
+    document.head.querySelectorAll('link[rel="canonical"]').forEach(function (link) {
+      if (link !== canonical) link.remove();
+    });
+  }
+
+  // The widget uses pushState and changes its DOM for both navigation directions.
+  // Observe only the widget, so editing metadata cannot retrigger this observer.
+  const observer = new MutationObserver(syncBlogView);
+  observer.observe(container, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+  window.addEventListener('popstate', function () { queueMicrotask(syncBlogView); });
+  syncBlogView();
+})();
+</script>
 <script src="https://app.trysoro.com/api/embed/09431eeb-179b-4674-b040-9e369e19a223" defer></script>
 </section>
 <section aria-labelledby="blog-end-title" class="blog-end-cta">
