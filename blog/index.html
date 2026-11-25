@@ -139,6 +139,16 @@ html.soro-article-view .blog-soro-articles > .blog-section-label {
 html.soro-article-view .blog-soro-articles {
   margin-top: 24px;
 }
+
+/* Top navigation uses ordinary links, not the global CTA-button appearance. */
+.blog-site-nav__links > a.blog-site-nav__app {
+  display:inline-flex;min-height:0;height:auto;padding:0;margin:0;
+  background:transparent;border:0;border-radius:0;box-shadow:none;
+  color:inherit;text-decoration:none;font:inherit;transform:none;
+}
+.blog-site-nav__links > a.blog-site-nav__app:hover {
+  text-decoration:underline;text-underline-offset:4px;
+}
 </style></head>
 <body class="blog-page blog-index">
 <main class="page blog-site">
@@ -150,7 +160,7 @@ html.soro-article-view .blog-soro-articles {
 <div class="blog-site-nav__links">
 <a class="blog-site-nav__link" href="../">Home</a>
 <a aria-current="page" class="blog-site-nav__link is-active" href="../blog/">Blog</a>
-<a class="nav-cta blog-site-nav__app" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Android app</a>
+<a class="blog-site-nav__link blog-site-nav__app" href="https://play.google.com/store/apps/details?id=com.trackreporter" onclick="return gtag_report_conversion(this.href);">Get Android app</a>
 </div>
 </nav>
 <section aria-labelledby="blog-title" class="blog-list-hero">
@@ -232,11 +242,32 @@ html.soro-article-view .blog-soro-articles {
   const section = document.querySelector('.blog-soro-articles');
   const headingId = section.getAttribute('aria-labelledby');
 
+  // Soro's showArticle() invokes this container's scrollIntoView({behavior:'smooth'}).
+  // The embed sits below Featured guides; that call causes an unwanted jump.
+  // Only override this widget's scroll; do not change the global scroll API.
+  const originalScrollIntoView = container.scrollIntoView.bind(container);
+  container.scrollIntoView = function (options) {
+    if (new URLSearchParams(window.location.search).has('post')) {
+      window.scrollTo({ top: 0, left: 0, behavior: 'instant' });
+      requestAnimationFrame(() => window.scrollTo(0, 0));
+    } else {
+      originalScrollIntoView(options);
+    }
+  };
+  if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
+  let lastArticleSlug = null;
+
   function syncBlogView() {
     const slug = new URLSearchParams(window.location.search).get('post');
     const header = container.querySelector('.soro-blog-header');
     const articleView = Boolean(slug && header && header.style.display !== 'none');
     document.documentElement.classList.toggle('soro-article-view', articleView);
+    if (articleView && lastArticleSlug !== slug) {
+      lastArticleSlug = slug;
+      requestAnimationFrame(() => window.scrollTo(0, 0));
+    } else if (!articleView) {
+      lastArticleSlug = null;
+    }
     if (articleView) {
       section.removeAttribute('aria-labelledby');
       section.setAttribute('aria-label', 'Blog article');
