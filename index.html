@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="trackreporter-build" content="20261124-no-public-demo-v1">
+  <meta name="trackreporter-build" content="20261125-soro-widget-v3">
   <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
@@ -801,6 +801,68 @@ body.fleet-workspace-active .fleet-main{
   #fleet-content .fleet-cal-foot{gap:8px;}
 }
 </style>
+
+<style id="public-navigation-and-articles-20261125">
+/* Public navigation: understated, real text links rather than CTA-style buttons. */
+body:not(.fleet-workspace-active) .page > .nav {display:flex;align-items:center;flex-wrap:wrap;gap:10px 24px;}
+body:not(.fleet-workspace-active) .page > .nav > .brand {margin-right:auto;}
+body:not(.fleet-workspace-active) .page > .nav > a.nav-cta,
+body:not(.fleet-workspace-active) .page > .nav > a.nav-cta:not(.fleet-nav-link):not(.blog-nav-link) {
+  display:inline-flex!important;visibility:visible!important;opacity:1!important;
+  position:static!important;width:auto!important;max-width:none!important;min-width:0!important;
+  height:auto!important;min-height:0!important;margin:0!important;padding:6px 0!important;
+  background:none!important;background-color:transparent!important;border:0!important;
+  border-radius:0!important;box-shadow:none!important;transform:none!important;
+  text-decoration:none!important;font-weight:600;font-size:.92rem;line-height:1.4;
+  color:#c8e2f5!important;white-space:normal;
+}
+body:not(.fleet-workspace-active) .page > .nav > a.nav-cta:hover {color:#83dbff!important;text-decoration:underline!important;text-underline-offset:5px;}
+body:not(.fleet-workspace-active) .page > .nav > a.nav-cta:focus-visible {outline:2px solid #83dbff;outline-offset:5px;}
+.public-how {padding:12px 0 25px;}
+.public-how__heading{font-size:clamp(1.4rem,2.5vw,2rem);margin:0 0 8px;color:#f4faff;}
+.public-how__intro{font-size:.96rem;line-height:1.6;color:#b5cfdf;max-width:750px;margin:0 0 18px;}
+.public-how__steps{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.public-how__step{padding:18px;border:1px solid rgba(137,185,218,.33);border-radius:14px;background:rgba(15,38,60,.54);}
+.public-how__step strong{display:block;font-size:1rem;color:#f0faff;margin-bottom:7px;}
+.public-how__step p{margin:0;color:#bad0e0;font-size:.87rem;line-height:1.6;}
+.latest-guides{padding:25px 0 34px;scroll-margin-top:30px;}
+.latest-guides__heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;margin-bottom:18px;flex-wrap:wrap;}
+.latest-guides__heading h2{font-size:clamp(1.45rem,2.5vw,2rem);line-height:1.2;color:#f4faff;margin:6px 0;}
+.latest-guides__intro{color:#b5cfdf;margin:0;max-width:760px;line-height:1.55;font-size:.93rem;}
+.latest-guides__viewall{color:#8bdcff;font-size:.9rem;text-underline-offset:4px;white-space:nowrap;}
+.latest-guides__grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;}
+.latest-guides__card{display:flex;flex-direction:column;gap:9px;min-width:0;padding:22px;border:1px solid rgba(134,184,217,.32);border-radius:16px;background:linear-gradient(150deg,rgba(15,43,64,.92),rgba(10,27,47,.87));}
+.latest-guides__card .category{color:#79d7f0;font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;font-weight:780;}
+.latest-guides__card h3{font-size:1.12rem;line-height:1.38;margin:0;color:#f4faff;}
+.latest-guides__card p{color:#bfd5e4;line-height:1.6;font-size:.87rem;margin:0 0 5px;flex:1;}
+.latest-guides__card a{color:#83dcff;text-underline-offset:5px;display:inline-block;align-self:flex-start;font-weight:700;font-size:.88rem;}
+@media(max-width:850px){.latest-guides__grid{grid-template-columns:repeat(2,minmax(0,1fr));}}
+@media(max-width:640px){
+  body:not(.fleet-workspace-active) .page > .nav {display:flex!important;justify-content:flex-start;gap:3px 16px;align-items:center;}
+  body:not(.fleet-workspace-active) .page > .nav > .brand {width:100%;margin-right:0;grid-column:auto!important;}
+  body:not(.fleet-workspace-active) .page > .nav > a.nav-cta {grid-column:auto!important;justify-content:flex-start!important;padding:6px 0!important;}
+  .public-how__steps,.latest-guides__grid{grid-template-columns:1fr;}
+  .latest-guides__card{padding:18px;}
+}
+
+/* Soro live preview on the home page. Keep canonical articles on /blog/. */
+.latest-guides #soro-blog .soro-blog {max-width:none!important;background:transparent!important;color:#e6f2fb!important;}
+.latest-guides #soro-blog .soro-blog-header {display:none!important;}
+.latest-guides #soro-blog .soro-blog-list {display:grid!important;grid-template-columns:repeat(3,minmax(0,1fr))!important;gap:15px!important;}
+.latest-guides #soro-blog .soro-blog-card {display:flex!important;flex-direction:column!important;min-width:0!important;background:#122c43!important;color:#ecf7ff!important;border:1px solid #35556c!important;border-radius:16px!important;overflow:hidden!important;text-decoration:none!important;}
+.latest-guides #soro-blog .soro-blog-card:nth-child(n+4) {display:none!important;}
+.latest-guides #soro-blog .soro-blog-card:hover {border-color:#72d4ed!important;background:#193850!important;}
+.latest-guides #soro-blog .soro-blog-card-image {width:100%!important;height:160px!important;object-fit:cover!important;}
+.latest-guides #soro-blog .soro-blog-card-content {padding:16px!important;flex:1!important;}
+.latest-guides #soro-blog .soro-blog-card-title {font-size:1.05rem!important;line-height:1.35!important;color:#f5fbff!important;margin:0 0 8px!important;}
+.latest-guides #soro-blog .soro-blog-card-excerpt {font-size:.86rem!important;line-height:1.55!important;color:#c6ddec!important;}
+.latest-guides #soro-blog .soro-blog-card-date {color:#9bbbd0!important;font-size:.77rem!important;}
+.latest-guides #soro-blog .soro-blog-empty {color:#b3cddd!important;}
+.latest-guides__widget > p a {color:#8bdcff;}
+body.fleet-workspace-active .page > .latest-guides,body.fleet-workspace-active .page > .public-how {display:none!important;}
+@media(max-width:850px){.latest-guides #soro-blog .soro-blog-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
+@media(max-width:640px){.latest-guides #soro-blog .soro-blog-list{grid-template-columns:1fr!important;}}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -859,6 +921,110 @@ body.fleet-workspace-active .fleet-main{
         </div>
       </div>
     </section>
+<section id="features" class="section features">
+  <div class="card">
+    <h3>GPS Documentation</h3>
+    <p>Record routes with timestamps, distance and map visualization for reliable inspection records.</p>
+  </div>
+
+  <div class="card">
+    <h3>GPS Photo Evidence</h3>
+    <p>Capture photos linked to precise GPS coordinates, timestamps, categories and notes.</p>
+  </div>
+
+  <div class="card">
+    <h3>Professional PDF Reports</h3>
+    <p>Generate professional PDF reports and share verified field work with clients or your team.</p>
+  </div>
+
+  
+<div class="card">
+  <h3>Fleet Monitoring & Route History</h3>
+  <p>
+    Monitor fleet members' locations in real time,
+    browse their shared route history and display
+    multiple recorded routes on an interactive map.
+  </p>
+</div>
+
+<div class="card">
+  <h3>Work Order Management</h3>
+  <p>Create and assign work orders to fleet members, track progress and completion, and link recorded GPS routes to specific jobs.</p>
+</div>
+  
+</section>
+    
+
+  <section class="sample-report-section" aria-label="Sample inspection report">
+    <p class="sample-report-note">Want to check the format of a completed inspection report?</p>
+    <a class="secondary" href="sample-report.pdf" target="_blank" rel="noopener noreferrer">
+      View Sample Inspection Report (PDF)
+    </a>
+  </section>
+    
+
+<section class="public-how" aria-labelledby="public-how-title">
+  <h2 id="public-how-title" class="public-how__heading">From field visit to documented proof.</h2>
+  <p class="public-how__intro">Keep the assignment, GPS route, inspection photos and PDF evidence together—without collecting records from separate apps.</p>
+  <div class="public-how__steps">
+    <div class="public-how__step"><strong>1. Record the visit</strong><p>Capture the route, location and time while working in the field.</p></div>
+    <div class="public-how__step"><strong>2. Document the work</strong><p>Add GPS-tagged photos and associate recorded routes with Work Orders.</p></div>
+    <div class="public-how__step"><strong>3. Share the results</strong><p>Review the completed job and create a professional PDF report.</p></div>
+  </div>
+</section>
+<section id="latest-articles" class="latest-guides" aria-labelledby="latest-guides-title">
+  <div class="latest-guides__heading">
+    <div>
+      <span class="blog-eyebrow">FIELD WORK INSIGHTS</span>
+      <h2 id="latest-guides-title">Latest articles</h2>
+      <p class="latest-guides__intro">New articles from our blog on GPS documentation, inspections, and work orders.</p>
+    </div>
+    <a class="latest-guides__viewall" href="./blog/">All articles</a>
+  </div>
+  <div class="latest-guides__widget" id="soro-blog" aria-label="Latest articles from Track Reporter Blog">
+    <p class="latest-guides__intro">Browse the <a href="./blog/">Track Reporter Blog</a> for the latest guides.</p>
+  </div>
+  <script>
+  // On the landing page Soro is used as a LIVE LIST only; each article belongs
+  // to the canonical /blog/?post=... page, not to the homepage.
+  (function () {
+    const host = document.getElementById('soro-blog');
+    host.addEventListener('click', function (event) {
+      const card = event.target.closest('.soro-blog-card[data-slug]');
+      if (!card || !host.contains(card)) return;
+      const slug = card.getAttribute('data-slug');
+      if (!slug) return;
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      const target = './blog/?post=' + encodeURIComponent(slug);
+      if (event.metaKey || event.ctrlKey || event.shiftKey || event.button === 1) {
+        window.open(target, '_blank', 'noopener');
+      } else {
+        window.location.assign(target);
+      }
+    }, true);
+    // The vendor generates BlogPosting URLs relative to its host page.
+    // Keep the landing page metadata free of incorrectly located blog schema.
+    const cleanSoroSchema = function () {
+      document.getElementById('soro-blog-jsonld')?.remove();
+    };
+    const metaObserver = new MutationObserver(cleanSoroSchema);
+    metaObserver.observe(document.head, {childList:true});
+    const updateArticleLinks = function () {
+      host.querySelectorAll('.soro-blog-card[data-slug]').forEach(function (card) {
+        const slug = card.getAttribute('data-slug');
+        const href = './blog/?post=' + encodeURIComponent(slug);
+        if (card.getAttribute('href') !== href) card.setAttribute('href', href);
+      });
+    };
+    const listObserver = new MutationObserver(updateArticleLinks);
+    listObserver.observe(host, {childList:true,subtree:true});
+  })();
+  </script>
+  <script defer src="https://app.trysoro.com/api/embed/09431eeb-179b-4674-b040-9e369e19a223"></script>
+  <noscript><a href="./blog/">Read our latest articles</a></noscript>
+</section>
+
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
   <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app.</p></div>
@@ -967,60 +1133,8 @@ body.fleet-workspace-active .fleet-main{
   </div>
 </section>
 
-<section class="section features">
-  <div class="card">
-    <h3>GPS Documentation</h3>
-    <p>Record routes with timestamps, distance and map visualization for reliable inspection records.</p>
-  </div>
 
-  <div class="card">
-    <h3>GPS Photo Evidence</h3>
-    <p>Capture photos linked to precise GPS coordinates, timestamps, categories and notes.</p>
-  </div>
-
-  <div class="card">
-    <h3>Professional PDF Reports</h3>
-    <p>Generate professional PDF reports and share verified field work with clients or your team.</p>
-  </div>
-
-  
-<div class="card">
-  <h3>Fleet Monitoring & Route History</h3>
-  <p>
-    Monitor fleet members' locations in real time,
-    browse their shared route history and display
-    multiple recorded routes on an interactive map.
-  </p>
-</div>
-
-<div class="card">
-  <h3>Work Order Management</h3>
-  <p>Create and assign work orders to fleet members, track progress and completion, and link recorded GPS routes to specific jobs.</p>
-</div>
-  
-</section>
-    
-
-  <section class="sample-report-section" aria-label="Sample inspection report">
-    <p class="sample-report-note">Want to check the format of a completed inspection report?</p>
-    <a class="secondary" href="sample-report.pdf" target="_blank" rel="noopener noreferrer">
-      View Sample Inspection Report (PDF)
-    </a>
-  </section>
-    
-<section class="blog-home-preview" aria-labelledby="home-blog-title">
-      <div class="blog-home-preview__content">
-        <span class="blog-eyebrow">FROM THE TRACK REPORTER BLOG</span>
-        <h2 id="home-blog-title">Turn field visits into documented proof of work.</h2>
-        <p>Learn how GPS routes, location-tagged photos and PDF reports can help you document inspections, maintenance visits and other field activities.</p>
-        <a class="blog-button blog-button--primary" href="./blog/how-to-prove-field-work-was-completed/">Read the guide <span aria-hidden="true">↗</span></a>
-      </div>
-      <div class="blog-home-preview__visual">
-        <img src="tr_routeview.jpg" alt="Track Reporter showing a recorded GPS route on a map" loading="lazy">
-      </div>
-    </section>
-
-    <section class="section final-cta">
+<section class="section final-cta">
   <h2>Verify field work with GPS evidence.</h2>
 <p>
   Record routes, capture GPS photo evidence,
@@ -1066,7 +1180,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261124-no-public-demo-v1"></script>
+<script type="module" src="./app.min.js?v=20261125-soro-widget-v3"></script>
 
 </body>
 </html>
