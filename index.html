@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="trackreporter-build" content="20261125-soro-widget-v3">
+  <meta name="trackreporter-build" content="20261126-member-work-orders-v1">
   <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
@@ -861,6 +861,12 @@ body.fleet-workspace-active .page > .latest-guides,body.fleet-workspace-active .
 @media(max-width:850px){.latest-guides #soro-blog .soro-blog-list{grid-template-columns:repeat(2,minmax(0,1fr))!important;}}
 @media(max-width:640px){.latest-guides #soro-blog .soro-blog-list{grid-template-columns:1fr!important;}}
 </style>
+<style>
+body.fleet-workspace-member .fleet-nav-btn[hidden]{display:none!important}
+body.fleet-workspace-member .fleet-rail{display:none!important}
+body.fleet-workspace-member .fleet-mobile-nav{display:none!important}
+body.fleet-workspace-member #fleet-status:not(:empty){left:16px;max-width:calc(100vw - 32px)}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -1020,7 +1026,7 @@ body.fleet-workspace-active .page > .latest-guides,body.fleet-workspace-active .
 
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
-  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app.</p></div>
+  <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app. Fleet members can sign in to view their own assigned Work Orders.</p></div>
     <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
   <p id="fleet-status" class="fleet-status" role="status" aria-live="polite"></p>
@@ -1173,7 +1179,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261125-soro-widget-v3"></script>
+<script type="module" src="./app.min.js?v=20261126-member-work-orders-v1"></script>
 
 </body>
 </html>
