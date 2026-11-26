@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="trackreporter-build" content="20261126-member-work-orders-v1">
+  <meta name="trackreporter-build" content="20261126-member-access-v3">
   <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
@@ -863,9 +863,52 @@ body.fleet-workspace-active .page > .latest-guides,body.fleet-workspace-active .
 </style>
 <style>
 body.fleet-workspace-member .fleet-nav-btn[hidden]{display:none!important}
-body.fleet-workspace-member .fleet-rail{display:none!important}
-body.fleet-workspace-member .fleet-mobile-nav{display:none!important}
+/* A member has exactly one navigation item, My Work Orders. */
+body.fleet-workspace-member .fleet-rail-foot{display:none!important}
+body.fleet-workspace-member .fleet-nav-btn:not([data-fleet-nav="orders"]){display:none!important}
 body.fleet-workspace-member #fleet-status:not(:empty){left:16px;max-width:calc(100vw - 32px)}
+</style>
+<style id="fleet-account-logout-fix">
+/* Keep the account action visible for both owners and ordinary members. */
+body.fleet-workspace-active #fleet-content .fleet-topbar {min-width:0;}
+body.fleet-workspace-active #fleet-content .fleet-top-account {flex:0 1 auto;min-width:0;max-width:100%;}
+body.fleet-workspace-active #fleet-content #fleet-title-slot {flex:0 1 auto;min-width:0;overflow:hidden;}
+body.fleet-workspace-active #fleet-content .fleet-top-spacer {min-width:0;}
+body.fleet-workspace-active #fleet-content #fleet-user {min-width:0;flex:0 1 auto;}
+body.fleet-workspace-active #fleet-content #fleet-account-switcher {min-width:0!important;flex:0 1 190px;max-width:190px!important;}
+body.fleet-workspace-active #fleet-content #fleet-logout:not([hidden]) {
+  display:inline-flex!important;visibility:visible!important;opacity:1;position:static!important;
+  align-items:center;justify-content:center;flex:0 0 auto;width:auto!important;
+  min-width:84px;min-height:40px;margin:0!important;padding:9px 12px!important;
+  color:#e7f4ff;background:#142b43;border:1px solid #609bbf;border-radius:9px;
+  font-size:12px;white-space:nowrap;cursor:pointer;
+}
+body.fleet-workspace-active #fleet-content #fleet-logout:disabled {opacity:.6;cursor:wait;}
+@media(max-width:1050px){
+  body.fleet-workspace-active #fleet-content .fleet-topbar {gap:10px;padding-inline:13px;}
+  body.fleet-workspace-active #fleet-content .fleet-top-state {display:none;}
+  body.fleet-workspace-active #fleet-content .fleet-top-account #fleet-user {display:none;}
+  body.fleet-workspace-active #fleet-content .fleet-brand {min-width:0;flex:none;}
+  body.fleet-workspace-active #fleet-content .fleet-brand-text {display:none;}
+}
+@media(max-width:760px){
+  body.fleet-workspace-active #fleet-content .fleet-topbar {height:auto;min-height:59px;flex-wrap:wrap;padding-block:8px;}
+  body.fleet-workspace-active #fleet-content .fleet-title-box {flex:1 1 0;}
+  body.fleet-workspace-active #fleet-content .fleet-top-spacer {display:none;}
+  body.fleet-workspace-active #fleet-content .fleet-top-account {flex:0 0 auto;margin-left:auto;gap:8px;}
+  body.fleet-workspace-active #fleet-content .fleet-top-account:has(#fleet-account-switcher) {flex:1 1 100%;justify-content:flex-end;}
+  body.fleet-workspace-active #fleet-content #fleet-account-switcher {flex:1 1 0;max-width:none!important;}
+}
+</style>
+<style id="fleet-member-access-v3">
+/* The marketing landing page belongs only to signed-out visitors. */
+body.fleet-signed-in .page > :not(#fleet-web){display:none!important;}
+body.fleet-signed-in #fleet-public-preview{display:none!important;}
+body.fleet-signed-in:not(.fleet-workspace-active) .page{max-width:900px;margin:0 auto;min-height:100vh;display:grid;align-content:center;padding:24px!important;}
+body.fleet-signed-in:not(.fleet-workspace-active) #fleet-web{margin:0!important;}
+body.fleet-signed-in:not(.fleet-workspace-active) .fleet-heading{display:none!important;}
+#fleet-lookup-account{font-size:.8rem;color:#a9c7dc;overflow-wrap:anywhere;margin:0 0 16px;}
+#fleet-unlinked-retry:disabled{opacity:.55;cursor:wait;}
 </style>
 </head>
 
@@ -1027,14 +1070,14 @@ body.fleet-workspace-member #fleet-status:not(:empty){left:16px;max-width:calc(1
 <section id="fleet-web" class="fleet-panel" aria-labelledby="fleet-web-title">
   <div class="fleet-dashboard-brand"><img src="trackreporter1024x1024-transparent.png?v=20260605" alt="Track Reporter logo"><span>Track Reporter</span></div>
   <div class="fleet-heading"><div class="fleet-heading-copy"><h2 id="fleet-web-title">Your Fleet</h2><p>Monitor your fleet, browse shared GPS routes and view work orders with linked routes and photos. Create and assign work orders in your fleet dashboard or Android app. Fleet members can sign in to view their own assigned Work Orders.</p></div>
-    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" class="fleet-btn ghost" hidden>Sign out</button></div>
+    <div class="fleet-toolbar"><span id="fleet-user"></span><button id="fleet-login" class="fleet-btn">Sign in with Google</button><button id="fleet-logout" type="button" class="fleet-btn ghost" hidden>Sign out</button></div>
   </div>
   <p id="fleet-status" class="fleet-status" role="status" aria-live="polite"></p>
 
 
 
 
-  <section id="fleet-unlinked-notice" hidden role="status" class="fleet-access-notice"><h3>Fleet access</h3><p id="fleet-unlinked-detail">Checking your fleet access…</p><div class="fleet-access-actions"><button type="button" id="fleet-unlinked-retry">Retry fleet lookup</button><button type="button" id="fleet-unlinked-signout">Sign out / switch Google account</button><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Open Track Reporter for Android</a></div></section>
+  <section id="fleet-unlinked-notice" hidden role="status" class="fleet-access-notice"><h3>Fleet access</h3><p id="fleet-unlinked-detail">Checking your fleet access…</p><p id="fleet-lookup-account"></p><div class="fleet-access-actions"><button type="button" id="fleet-unlinked-retry">Retry fleet lookup</button><button type="button" id="fleet-unlinked-signout">Sign out / switch Google account</button><a href="https://play.google.com/store/apps/details?id=com.trackreporter" target="_blank" rel="noopener noreferrer">Open Track Reporter for Android</a></div></section>
 <!-- Public visitors see feature screenshots, not a playable / interactive demo map.
        This section disappears when app.min.js removes the fleet-guest body class on login. -->
   <section id="fleet-public-preview" class="fleet-public-preview" aria-label="Fleet features preview">
@@ -1179,7 +1222,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261126-member-work-orders-v1"></script>
+<script type="module" src="./app.min.js?v=20261126-member-access-v3"></script>
 
 </body>
 </html>
