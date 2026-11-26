@@ -37,7 +37,7 @@ gtag('event', 'TrackReporterView2');
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta name="trackreporter-build" content="20261126-pending-join-v4">
+  <meta name="trackreporter-build" content="20261126-fleet-picker-v5">
   <meta name="description" content="Create professional inspection reports with GPS routes, photo evidence and PDF documentation. Manage work orders for inspections, maintenance and site visits.">  
   <meta name="keywords" content="inspection report, inspection app, GPS evidence, photo evidence, insurance inspection, damage inspection, site inspection, field report, proof of work, audit report">
   <meta name="author" content="Track Reporter">
@@ -914,6 +914,15 @@ body.fleet-signed-in:not(.fleet-workspace-active) .fleet-heading{display:none!im
 .fleet-join-button{background:#199acc;color:#072138;border:1px solid #61d2f6;border-radius:10px;padding:11px 17px;font:inherit;font-weight:700;cursor:pointer;margin:4px 8px 4px 0;}
 .fleet-join-button:disabled{opacity:.55;cursor:wait;}
 </style>
+<style>
+#fleet-pending-join h4{margin:12px 0;color:#e3f3ff;font-size:1rem}
+.fleet-choice-row{display:flex;align-items:center;justify-content:space-between;gap:16px;padding:14px;margin:8px 0;border:1px solid #3d6176;border-radius:12px;background:#142c40}
+.fleet-choice-info{display:grid;gap:5px;min-width:0;overflow-wrap:anywhere}
+.fleet-choice-info strong{color:#f4fbff;font-size:1rem}.fleet-choice-info small{color:#b7d2e4;font-size:.8rem}.fleet-choice-info .fleet-choice-state{color:#7dd3fc}
+.fleet-choice-row .fleet-join-button{flex:none;margin:0;white-space:nowrap}
+body.fleet-workspace-active #fleet-content #fleet-account-switcher{flex:0 0 auto;min-width:0!important;max-width:none!important;padding:9px 12px;background:#19354b;border:1px solid #609bbf;border-radius:9px;color:#e7f4ff;font-size:12px;white-space:nowrap;cursor:pointer;min-height:40px}
+@media(max-width:480px){.fleet-choice-row{align-items:stretch;flex-direction:column;gap:8px}.fleet-choice-row .fleet-join-button{width:100%}}
+</style>
 </head>
 
 <body class="fleet-guest">
@@ -1226,7 +1235,7 @@ window.addEventListener('load', function() {
   }, 1800);
 });
 </script>
-<script type="module" src="./app.min.js?v=20261126-pending-join-v4"></script>
+<script type="module" src="./app.min.js?v=20261126-fleet-picker-v5"></script>
 
 </body>
 </html>
